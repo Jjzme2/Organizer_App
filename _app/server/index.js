@@ -21,11 +21,10 @@ const logger = winston.createLogger({
   ],
 });
 
-// Example route (replace with your actual API logic)
-app.get("/api/test", (req, res) => {
-  logger.info("Test route accessed"); // Example Winston log
-  res.send("Hello from my API!");
-});
+// Routes
+const apiRoutes = require('./.routes/api'); 
+app.use('/api', apiRoutes); // Mount all API routes under '/api'
+
 
 // Error handling middleware (example)
 app.use((err, req, res, next) => {
