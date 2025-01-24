@@ -9,13 +9,16 @@ router.get("/", userController.getAllItems);
 router.get("/:id", userController.getItemById);
 
 // Get items by activity
-router.get("/active", userController.getItemsByActivity(1));
+// *To be implemented*
+// router.get("/active", userController.getItemsByActivity(1));
 
 // Get Item by Username
-router.get("/username/:username", userController.getItemByUsername);
+// *To be implemented*
+// router.get("/username/:username", userController.getItemByUsername);
 
 // Get Item by Email
-router.get("/email/:email", userController.getItemByEmail);
+// *To be implemented*
+// router.get("/email/:email", userController.getItemByEmail);
 
 // Create a new item
 router.post("/", userController.createItem);
