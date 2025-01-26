@@ -1,5 +1,6 @@
 const { Op } = require("sequelize");
-const Task = require("../.models/Task"); // Import your Sequelize model
+const Task = require("../.models/Task");
+const logger = require("../utils/logger");
 
 /*
  ---------------------------------------------------------------
@@ -10,72 +11,64 @@ const Task = require("../.models/Task"); // Import your Sequelize model
 // Get all items with filtering
 exports.getAllItems = async (req, res) => {
   try {
-    if (!req || req == null) {
-      throw new Error("Request object is null");
+    // Ensure user is authenticated
+    if (!req.user || !req.user.id) {
+      logger.error('User not authenticated in getAllItems');
+      return res.status(401).json({ error: "User not authenticated" });
     }
 
-    const whereClause = {};
+    const whereClause = {
+      userId: req.user.id // Only get tasks for the authenticated user
+    };
+
+    // Add any additional filters from query parameters
     const allowedKeys = [
-      "id",
-      // "name", // -- Removed to potential issue with URL encoding
       "isComplete",
-      "isActive",
-      "createdAt",
-      "updatedAt" /* Add other allowed fields for Task */,
+      "isActive"
     ];
 
-    // Iterate over query parameters
-    for (const key in req.query) {
-      if (Object.hasOwnProperty.call(req.query, key)) {
-        const value = req.query[key];
-
-        // Check if the key is allowed for filtering
-        const field = key.includes("[") ? key.split(/\[|\]/)[0] : key;
-        if (!allowedKeys.includes(field)) {
-          throw new Error(`Invalid filter parameter: ${key}`);
-        }
-
-        // Handle operators in query parameters (e.g., createdAt[gte])
-        if (key.includes("[")) {
-          const [field, operator] = key.split(/\[|\]/); // Extract field and operator
-          whereClause[field] = whereClause[field] || {}; // Ensure nested object
-          whereClause[field][Op[operator]] = value;
-        } else {
-          // Direct field matching
-          whereClause[key] = value;
-        }
+    for (const key of allowedKeys) {
+      if (req.query[key] !== undefined) {
+        whereClause[key] = req.query[key];
       }
     }
 
+    logger.debug('Getting tasks with where clause:', whereClause);
     const items = await Task.findAll({
       where: whereClause,
+      order: [['createdAt', 'DESC']]
     });
 
     res.json(items);
   } catch (error) {
-    res.status(500).json({
-      error: `Failed to fetch ${Task.name}s`,
-      message: error.message,
-      stack: error.stack,
-    });
+    logger.error('Error in getAllItems:', error);
+    res.status(500).json({ error: "Failed to get tasks", message: error.message });
   }
 };
 
 // Get an item by its Name
 exports.getItemByName = async (req, res) => {
-  const itemName = req.params.name;
-
-  console.log(`Fetching ${Task.name} with name: ${itemName}`);
-
-  // ! Ensure that the task is only being pulled if its from the current user
   try {
-    const item = await Task.findOne({ where: { name: itemName } });
-    if (!item) {
-      return res.status(404).json({ error: `${Task.name} not found` });
+    if (!req.user || !req.user.id) {
+      logger.error('User not authenticated in getItemByName');
+      return res.status(401).json({ error: "User not authenticated" });
     }
+
+    const item = await Task.findOne({
+      where: {
+        name: req.params.name,
+        userId: req.user.id
+      }
+    });
+
+    if (!item) {
+      return res.status(404).json({ error: "Task not found" });
+    }
+
     res.json(item);
   } catch (error) {
-    res.status(500).json({ error: `Failed to fetch ${Task.name}`, message: error.message });
+    logger.error('Error in getItemByName:', error);
+    res.status(500).json({ error: "Failed to get task", message: error.message });
   }
 };
 
@@ -87,23 +80,47 @@ exports.getItemByName = async (req, res) => {
 
 // Create a new item
 exports.createItem = async (req, res) => {
-  const itemData = req.body;
   try {
-    const newItem = await Task.create(itemData);
-    res.status(201).json(newItem); // 201 Created
+    if (!req.user || !req.user.id) {
+      logger.error('User not authenticated in createItem');
+      return res.status(401).json({ error: "User not authenticated" });
+    }
+
+    const task = await Task.create({
+      ...req.body,
+      userId: req.user.id
+    });
+
+    res.status(201).json(task);
   } catch (error) {
-    res.status(500).json({ error: `Failed to create ${Task.name}`, message: error.message });
+    logger.error('Error in createItem:', error);
+    res.status(500).json({ error: "Failed to create task", message: error.message });
   }
 };
 
 // Update an item by ID
 exports.updateItem = async (req, res) => {
-  const itemId = req.params.id;
-  const itemData = req.body;
   try {
-    const updatedItem = await Task.update(itemId, itemData);
-    res.json(updatedItem);
+    if (!req.user || !req.user.id) {
+      logger.error('User not authenticated in updateItem');
+      return res.status(401).json({ error: "User not authenticated" });
+    }
+
+    const task = await Task.findOne({
+      where: {
+        id: req.params.id,
+        userId: req.user.id
+      }
+    });
+
+    if (!task) {
+      return res.status(404).json({ error: "Task not found" });
+    }
+
+    await task.update(req.body);
+    res.json(task);
   } catch (error) {
-    res.status(500).json({ error: `Failed to update ${Task.name}`, message: error.message });
+    logger.error('Error in updateItem:', error);
+    res.status(500).json({ error: "Failed to update task", message: error.message });
   }
 };

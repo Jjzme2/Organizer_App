@@ -12,6 +12,7 @@
 
 const { DataTypes } = require("sequelize");
 const sequelize = require("../config/db"); // Or your database config file
+const logger = require("../utils/logger");
 
 const ModelTemplate = sequelize.define(
   "YourModelName",

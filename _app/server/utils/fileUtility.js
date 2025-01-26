@@ -1,7 +1,6 @@
-// utils/fileUtility.js
-
 const fs = require("fs");
 const util = require("util");
+const logger = require("../utils/logger");
 
 // Promisify fs methods for easier async/await usage
 const readFile = util.promisify(fs.readFile);
@@ -19,7 +18,7 @@ const fileUtility = {
       const data = await readFile(filePath, encoding);
       return data;
     } catch (error) {
-      console.error(`Error reading file ${filePath}:`, error);
+      logger.error(`Error reading file ${filePath}:`, error);
       throw error; // Re-throw the error for handling by the caller
     }
   },
@@ -35,7 +34,7 @@ const fileUtility = {
     try {
       await writeFile(filePath, data, encoding);
     } catch (error) {
-      console.error(`Error writing to file ${filePath}:`, error);
+      logger.error(`Error writing to file ${filePath}:`, error);
       throw error;
     }
   },
@@ -44,7 +43,7 @@ const fileUtility = {
     try {
       await fs.promises.appendFile(filePath, data, encoding);
     } catch (error) {
-      console.error(`Error appending to file ${filePath}:`, error);
+      logger.error(`Error appending to file ${filePath}:`, error);
       throw error;
     }
   },
@@ -54,7 +53,7 @@ const fileUtility = {
       await fs.promises.unlink(filePath);
     }
     catch (error) {
-      console.error(`Error deleting file ${filePath}:`, error);
+      logger.error(`Error deleting file ${filePath}:`, error);
       throw error;
     }
   },
@@ -72,7 +71,7 @@ const fileUtility = {
     try {
       await fs.promises.mkdir(dirPath, { recursive: true });
     } catch (error) {
-      console.error(`Error creating directory ${dirPath}:`, error);
+      logger.error(`Error creating directory ${dirPath}:`, error);
       throw error;
     }
   },
@@ -82,7 +81,7 @@ const fileUtility = {
       await fs.promises.rmdir(dirPath, { recursive: true });
     }
     catch (error) {
-      console.error(`Error deleting directory ${dirPath}:`, error);
+      logger.error(`Error deleting directory ${dirPath}:`, error);
       throw error;
     }
   },

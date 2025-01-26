@@ -1,5 +1,6 @@
 const { DataTypes } = require("sequelize");
 const sequelize = require("../config/db"); // Or your database config file
+const logger = require("../utils/logger");
 
 const User = sequelize.define(
   "User",
@@ -20,6 +21,7 @@ const User = sequelize.define(
     email: {
       type: DataTypes.STRING,
       allowNull: false,
+      unique: true,
     },
     isActive: {
       type: DataTypes.BOOLEAN,
@@ -47,26 +49,33 @@ User.prototype.setActive = function (isActive) {
   return this.save();
 };
 
-// Class Methods
+// Static methods
+User.createUser = async function (userData) {
+  try {
+    const newUser = await this.create(userData);
+    return newUser;
+  } catch (error) {
+    logger.error("Error creating user:", error);
+    throw error;
+  }
+};
+
 User.list = async function () {
   try {
     const items = await User.findAll();
     return items;
   } catch (error) {
-    console.error(`Error fetching ${this.name}s:`, error);
+    logger.error(`Error fetching ${this.name}s:`, error);
     throw error;
   }
 };
 
-User.get = async function (itemId) {
+User.get = async function (id) {
   try {
-    const item = await User.findByPk(itemId);
-    if (!item) {
-      throw new Error(`${this.name} not found`);
-    }
-    return item;
+    const user = await this.findByPk(id);
+    return user;
   } catch (error) {
-    console.error(`Error fetching ${this.name}:`, error);
+    logger.error("Error finding user by id:", error);
     throw error;
   }
 };
@@ -79,20 +88,17 @@ User.getByUsername = async function (username) {
     }
     return item;
   } catch (error) {
-    console.error(`Error fetching ${this.name}:`, error);
+    logger.error(`Error fetching ${this.name}:`, error);
     throw error;
   }
 }
 
 User.getByEmail = async function (email) {
   try {
-    const item = await User.findOne({ where: { email } });
-    if (!item) {
-      throw new Error(`${this.name} not found`);
-    }
-    return item;
+    const user = await this.findOne({ where: { email } });
+    return user;
   } catch (error) {
-    console.error(`Error fetching ${this.name}:`, error);
+    logger.error("Error finding user by email:", error);
     throw error;
   }
 }
@@ -102,20 +108,10 @@ User.listByActivity = async function (isActive) {
     const items = await User.findAll({ where: { isActive } });
     return items;
   } catch (error) {
-    console.error(`Error fetching ${this.name}s by activity:`, error);
+    logger.error(`Error fetching ${this.name}s by activity:`, error);
     throw error;
   }
 }
-
-User.create = async function (itemData) {
-  try {
-    const newItem = await User.create(itemData);
-    return newItem;
-  } catch (error) {
-    console.error(`Error creating ${this.name}:`, error);
-    throw error;
-  }
-};
 
 User.update = async function (itemId, itemData) {
   try {
@@ -126,7 +122,7 @@ User.update = async function (itemId, itemData) {
     await item.update(itemData);
     return item;
   } catch (error) {
-    console.error(`Error updating ${this.name}:`, error);
+    logger.error(`Error updating ${this.name}:`, error);
     throw error;
   }
 };

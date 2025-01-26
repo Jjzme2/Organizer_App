@@ -1,5 +1,7 @@
 const { DataTypes } = require("sequelize");
 const sequelize = require("../config/db");
+const logger = require("../utils/logger");
+const User = require("./User");
 
 const Task = sequelize.define("Task", {
   id: {
@@ -13,6 +15,7 @@ const Task = sequelize.define("Task", {
   },
   description: {
     type: DataTypes.TEXT,
+    allowNull: true,
   },
   isComplete: {
     type: DataTypes.BOOLEAN,
@@ -20,18 +23,29 @@ const Task = sequelize.define("Task", {
   },
   dueDate: {
     type: DataTypes.DATE,
+    allowNull: true,
   },
   notes: {
-    type: DataTypes.ARRAY(DataTypes.TEXT),
-    defaultValue: "",
+    type: DataTypes.TEXT,
+    allowNull: true,
+    get() {
+      const rawValue = this.getDataValue('notes');
+      return rawValue ? JSON.parse(rawValue) : [];
+    },
+    set(value) {
+      this.setDataValue('notes', JSON.stringify(value || []));
+    }
   },
   isActive: {
     type: DataTypes.BOOLEAN,
     defaultValue: true,
   },
-  userId : {
+  userId: {
     type: DataTypes.UUID,
-    allowNull: false,
+    references: {
+      model: User,
+      key: 'id'
+    }
   },
   createdAt: {
     type: DataTypes.DATE,
@@ -41,66 +55,60 @@ const Task = sequelize.define("Task", {
     type: DataTypes.DATE,
     defaultValue: DataTypes.NOW,
   }
-  },
-
-  {
-    validate: {
-      validateName() {
-        if (this.name.length < 3 || this.name.length > 255)
-          throw new Error("Name must be between 3 and 255 characters long");
-        
-        let regex = /[!@#$%^&*(),.?":{}|<>]/g;
-        if (this.name.contains(regex)) 
-          throw new Error("Name must not contain special characters");
-      },
-
-      validateDescription() {
-        if (this.description.length < 10 || this.description.length > 1000)
-          throw new Error(
-            "Description must be between 10 and 1000 characters long"
-          );
-      },
-
-      validateDueDate() {
-        if (this.dueDate < new Date())
-          throw new Error("Due date must be in the future");
-      },
+}, {
+  validate: {
+    validateName() {
+      if (this.name && (this.name.length < 3 || this.name.length > 255)) {
+        throw new Error("Name must be between 3 and 255 characters long");
+      }
     },
+    validateDueDate() {
+      if (this.dueDate && new Date(this.dueDate) < new Date()) {
+        throw new Error("Due date cannot be in the past");
+      }
+    }
   }
-);
+});
 
-// Instance Method
-Task.prototype.setActive = function (isActive) {
+// Associations
+Task.belongsTo(User, { foreignKey: 'userId' });
+
+// Instance Methods
+Task.prototype.setActive = function(isActive) {
   this.isActive = isActive;
   return this.save();
 };
 
-Task.prototype.setComplete = function (isComplete) {
+Task.prototype.setComplete = function(isComplete) {
   this.isComplete = isComplete;
   return this.save();
 };
 
-Task.prototype.addNote = function (note) {
-  this.notes.push(note);
+Task.prototype.addNote = function(note) {
+  const notes = this.notes || [];
+  notes.push(note);
+  this.notes = notes;
   return this.save();
-}
+};
 
-Task.prototype.removeNote = function (note) {
-  this.notes = this.notes.filter(n => n !== note);
-  return this.save();
-}
+Task.prototype.removeNote = function(noteIndex) {
+  const notes = this.notes || [];
+  if (noteIndex >= 0 && noteIndex < notes.length) {
+    notes.splice(noteIndex, 1);
+    this.notes = notes;
+    return this.save();
+  }
+  throw new Error("Invalid note index");
+};
 
-Task.prototype.updateNote = function (oldNote, newNote) {
-  this.notes = this.notes.map(n => n === oldNote ? newNote : n);
-  return this.save();
-}
-
-Task.prototype.update = function (data) {
-  Object.keys(data).forEach(key => {
-    this[key] = data[key];
-  });
-  return this.save();
-}
-
+Task.prototype.updateNote = function(noteIndex, newNote) {
+  const notes = this.notes || [];
+  if (noteIndex >= 0 && noteIndex < notes.length) {
+    notes[noteIndex] = newNote;
+    this.notes = notes;
+    return this.save();
+  }
+  throw new Error("Invalid note index");
+};
 
 module.exports = Task;

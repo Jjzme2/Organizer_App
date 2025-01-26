@@ -2,7 +2,9 @@ require("dotenv").config(); // Load environment variables from .env
 
 const express = require("express");
 const morgan = require("morgan"); // For HTTP request logging
-const winston = require("winston"); // For more advanced logging (if needed)
+const cors = require("cors");
+const logger = require("./utils/logger"); // For more advanced logging (if needed)
+const path = require('path');
 
 const middleware = require("./middleware"); // Import middleware
 
@@ -10,7 +12,9 @@ const app = express();
 const port = process.env.PORT || 3000;
 
 // Middleware
+app.use(cors());
 app.use(express.json()); // For parsing JSON request bodies
+app.use(express.urlencoded({ extended: true }));
 app.use(morgan("dev")); // Use Morgan for request logging (in 'dev' format)
 
 // Custom middleware
@@ -20,14 +24,26 @@ app.use(middleware.apiMiddleware); // Use your custom API middleware
 const apiRoutes = require('./.routes/api'); 
 app.use('/api', apiRoutes); // Mount all API routes under '/api'
 
+// Serve static files from the client build directory
+app.use(express.static(path.join(__dirname, '../client/dist')));
 
-// Error handling middleware (example)
+// Handle SPA routing - send all non-API requests to index.html
+app.get('*', (req, res) => {
+  if (!req.path.startsWith('/api')) {
+    res.sendFile(path.join(__dirname, '../client/dist/index.html'));
+  }
+});
+
+// Error handling middleware
 app.use((err, req, res, next) => {
-  logger.error(err.stack); // Log the error using Winston
-  res.status(500).send("Something went wrong!");
+    logger.error(err.stack); // Log the error using Winston
+    res.status(500).json({
+        error: "Something went wrong!",
+        message: err.message
+    });
 });
 
 // Start the server
 app.listen(port, () => {
-  console.log(`Server listening on port ${port}`);
+    logger.info(`Server is running on port ${port}`);
 });

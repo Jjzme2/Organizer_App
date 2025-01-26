@@ -2,15 +2,31 @@ const express = require("express");
 const router = express.Router();
 
 const testRoutes = require("./test");
-router.use("/test", testRoutes); // Mount common routes
-
 const taskRoutes = require("./tasks");
-router.use("/tasks", taskRoutes); // Mount task routes
-
+const authRoutes = require("./auth");
 const userRoutes = require("./user");
-router.use("/users", userRoutes); // Mount user routes
 
-// Import and mount other API route files
+const routes = [
+    {
+        path: "/test",
+        routes: testRoutes
+    },
+    {
+        path: "/tasks",
+        routes: taskRoutes
+    },
+    {
+        path: "/auth",
+        routes: authRoutes
+    },
+    {
+        path: "/users",
+        routes: userRoutes
+    }
+];
 
+routes.forEach((route) => {
+    router.use(route.path, route.routes);
+});
 
 module.exports = router;
