@@ -138,6 +138,38 @@ exports.login = async (req, res) => {
     }
 };
 
+exports.updatePassword = async (req, res) => {
+    const { currentPassword, newPassword } = req.body;
+  
+    try {
+      // Find the user by their email
+      const user = await User.findOne({ where: { email: req.user.email } });
+  
+      if (!user) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+  
+      // Compare the provided password with the hashed password stored in the database
+      const validPassword = await bcrypt.compare(currentPassword, user.password);
+  
+      if (!validPassword) {
+        return res.status(401).json({ error: 'Invalid password' });
+      }
+  
+      // Hash the new password
+      const salt = await bcrypt.genSalt(10);
+      const hashedPassword = await bcrypt.hash(newPassword, salt);
+  
+      // Update the user's password
+      await user.update({ password: hashedPassword });
+  
+      res.json({ message: 'Password updated successfully' });
+    } catch (error) {
+      logger.error('Error updating password:', error);
+      res.status(500).json({ error: 'Failed to update password' });
+    }
+  };
+
 exports.refreshToken = async (req, res) => {
     const { refreshToken } = req.body;
 

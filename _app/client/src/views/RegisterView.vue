@@ -259,6 +259,7 @@ button:disabled {
   padding: 10px;
   background-color: #ffebee;
   border-radius: 4px;
+  z-index: 1000;
 }
 
 .error-text {

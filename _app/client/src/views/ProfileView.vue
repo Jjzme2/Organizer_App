@@ -476,6 +476,7 @@ button {
   color: white;
   border-radius: 4px;
   animation: slideIn 0.3s ease-out;
+  z-index: 1000;
 }
 
 .error-message {
@@ -487,6 +488,7 @@ button {
   color: white;
   border-radius: 4px;
   animation: slideIn 0.3s ease-out;
+  z-index: 1000;
 }
 
 .password-strength {

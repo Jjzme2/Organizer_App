@@ -104,7 +104,7 @@ onUnmounted(() => {
   border-bottom: 1px solid var(--color-border);
   z-index: 100;
   backdrop-filter: blur(8px);
-  background-color: rgba(30, 41, 59, 0.8);
+  background-color: rgba(30, 41, 59, 0.115);
 }
 
 .navbar-content {
