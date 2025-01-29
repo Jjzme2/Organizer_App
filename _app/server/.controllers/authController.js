@@ -42,12 +42,14 @@ const removeRefreshToken = (userId, token) => {
 };
 
 exports.register = async (req, res) => {
-    const { name, email, password } = req.body;
+    const { fName, lName, username, email, password } = req.body;
+
+	logger.debug('Registering user:', req.body);
 
     try {
         // Input validation
-        if (!email || !password || !name) {
-            return res.status(400).json({ error: "All fields are required" });
+        if (!email || !password || !username || !fName || !lName) {
+            return res.status(400).json({ error: "All fields are required", email: email, password: password, username: username, fname: fName, lname: lName });
         }
 
         if (password.length < 8) {
@@ -66,32 +68,41 @@ exports.register = async (req, res) => {
 
         // Create new user
         const user = await User.createUser({
-            name,
+			firstName: fName,
+			lastName: lName,
+            username,
             email,
-            password: hashedPassword,
+			lastLogin: new Date(),
+            passwordHash: hashedPassword,
             tokenVersion: 0
         });
+
+		console.log('User created:', user);
 
         // Generate tokens
         const accessToken = authUtility.generateToken(user);
         const refreshToken = authUtility.generateRefreshToken(user);
-        
+
         // Store refresh token
         addRefreshToken(user.id, refreshToken);
+
 
         res.status(201).json({
             message: "User registered successfully",
             user: {
                 id: user.id,
-                name: user.name,
-                email: user.email
+				firstName: user.firstName,
+				lastName: user.lastName,
+                username: user.username,
+                email: user.email,
+				lastLogin: user.lastLogin
             },
             accessToken,
             refreshToken
         });
     } catch (error) {
         logger.error('Registration error:', error);
-        res.status(500).json({ error: "Failed to register user" });
+        res.status(500).json({ error: "Failed to register user", message: error.message });
     }
 };
 
@@ -107,13 +118,13 @@ exports.login = async (req, res) => {
         // Find user
         const user = await User.getByEmail(email);
         if (!user) {
-            return res.status(401).json({ error: "Invalid credentials" });
+            return res.status(401).json({ error: "Invalid credentials: email" });
         }
 
         // Verify password
-        const validPassword = await bcrypt.compare(password, user.password);
+        const validPassword = await bcrypt.compare(password, user.passwordHash);
         if (!validPassword) {
-            return res.status(401).json({ error: "Invalid credentials" });
+            return res.status(401).json({ error: "Invalid credentials: password" });
         }
 
         // Generate tokens
@@ -123,46 +134,52 @@ exports.login = async (req, res) => {
         // Store refresh token
         addRefreshToken(user.id, refreshToken);
 
+		// Update last login date
+		await user.update({ lastLogin: new Date() });
+
         res.json({
             user: {
                 id: user.id,
-                name: user.name,
-                email: user.email
+				firstName: user.firstName,
+				lastName: user.lastName,
+                username: user.username,
+                email: user.email,
+				lastLogin: user.lastLogin
             },
             accessToken,
             refreshToken
         });
     } catch (error) {
         logger.error('Login error:', error);
-        res.status(500).json({ error: "Failed to login" });
+        res.status(500).json({ error: "Failed to login", message: error.message });
     }
 };
 
 exports.updatePassword = async (req, res) => {
     const { currentPassword, newPassword } = req.body;
-  
+
     try {
       // Find the user by their email
       const user = await User.findOne({ where: { email: req.user.email } });
-  
+
       if (!user) {
         return res.status(404).json({ error: 'User not found' });
       }
-  
+
       // Compare the provided password with the hashed password stored in the database
       const validPassword = await bcrypt.compare(currentPassword, user.password);
-  
+
       if (!validPassword) {
         return res.status(401).json({ error: 'Invalid password' });
       }
-  
+
       // Hash the new password
       const salt = await bcrypt.genSalt(10);
       const hashedPassword = await bcrypt.hash(newPassword, salt);
-  
+
       // Update the user's password
       await user.update({ password: hashedPassword });
-  
+
       res.json({ message: 'Password updated successfully' });
     } catch (error) {
       logger.error('Error updating password:', error);

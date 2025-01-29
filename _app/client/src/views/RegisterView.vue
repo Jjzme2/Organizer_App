@@ -3,18 +3,42 @@
     <h1>Create Account</h1>
     <form @submit.prevent="handleSubmit" class="register-form">
       <div class="form-group">
-        <label for="name">Full Name</label>
+        <label for="fName">First Name</label>
         <input
-          id="name"
-          v-model="form.name"
+          id="fName"
+          v-model="form.fName"
           type="text"
           required
-          placeholder="Enter your full name"
-          @blur="validateName"
+          placeholder="Enter your first name"
+          @blur="validateFirstName"
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="lName">Last Name</label>
+        <input
+          id="lName"
+          v-model="form.lName"
+          type="text"
+          required
+          placeholder="Enter your last name"
+          @blur="validateLastName"
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="name">Username</label>
+        <input
+          id="username"
+          v-model="form.username"
+          type="text"
+          required
+          placeholder="Enter your desired username"
+          @blur="validateUsername"
         />
         <span v-if="errors.name" class="error-text">{{ errors.name }}</span>
       </div>
-      
+
       <div class="form-group">
         <label for="email">Email</label>
         <input
@@ -27,7 +51,7 @@
         />
         <span v-if="errors.email" class="error-text">{{ errors.email }}</span>
       </div>
-      
+
       <div class="form-group">
         <label for="password">Password</label>
         <input
@@ -67,7 +91,7 @@
       </button>
 
       <div class="login-link">
-        Already have an account? 
+        Already have an account?
         <router-link to="/login">Login here</router-link>
       </div>
     </form>
@@ -83,14 +107,18 @@ const router = useRouter()
 const authStore = useAuthStore()
 
 const form = ref({
-  name: '',
+  fName: '',
+  lName: '',
+  username: '',
   email: '',
   password: '',
   confirmPassword: ''
 })
 
 const errors = ref({
-  name: '',
+  fName: '',
+  lName: '',
+  username: '',
   email: '',
   password: '',
   confirmPassword: ''
@@ -102,22 +130,22 @@ const loading = ref(false)
 // Password strength computation
 const passwordStrength = computed(() => {
   if (!form.value.password) return ''
-  
+
   let strength = 0
   const password = form.value.password
-  
+
   // Length check
   if (password.length >= 8) strength++
-  
+
   // Contains number
   if (/\d/.test(password)) strength++
-  
+
   // Contains lowercase and uppercase
   if (/[a-z]/.test(password) && /[A-Z]/.test(password)) strength++
-  
+
   // Contains special characters
   if (/[!@#$%^&*(),.?":{}|<>]/.test(password)) strength++
-  
+
   return {
     0: 'weak',
     1: 'weak',
@@ -142,11 +170,27 @@ const isFormValid = computed(() => {
          passwordStrength.value !== 'weak'
 })
 
-function validateName() {
-  if (form.value.name.length < 2) {
-    errors.value.name = 'Name must be at least 2 characters long'
+function validateFirstName() {
+  if (form.value.fName.length < 2) {
+    errors.value.fName = 'First name must be at least 2 characters long'
   } else {
-    errors.value.name = ''
+    errors.value.fName = ''
+  }
+}
+
+function validateLastName() {
+  if (form.value.lName.length < 2) {
+    errors.value.lName = 'Last name must be at least 2 characters long'
+  } else {
+    errors.value.lName = ''
+  }
+}
+
+function validateUsername() {
+  if (form.value.username.length < 2) {
+    errors.value.username = 'Name must be at least 2 characters long'
+  } else {
+    errors.value.username = ''
   }
 }
 
@@ -184,7 +228,9 @@ async function handleSubmit() {
 
   try {
     await authStore.register({
-      name: form.value.name,
+      fName: form.value.fName,
+      lName: form.value.lName,
+      username: form.value.username,
       email: form.value.email,
       password: form.value.password
     })

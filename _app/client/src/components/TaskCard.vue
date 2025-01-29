@@ -1,25 +1,21 @@
 <template>
-  <div 
+  <div
     class="task-card"
-    :class="{ 
+    :class="{
       'completed-task': task.isComplete,
       'task-completing': task.isCompleting,
       'task-uncompleting': task.isUncompleting
     }"
   >
     <div class="task-card-header">
-      <label class="checkbox-container">
+      <label class="checkbox-wrapper">
         <input
           type="checkbox"
           :checked="task.isComplete"
           @change="$emit('toggle', task.id)"
           :disabled="task.isCompleting || task.isUncompleting"
-        />
-        <span class="checkmark">
-          <svg class="checkmark-icon" viewBox="0 0 24 24">
-            <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z" />
-          </svg>
-        </span>
+        >
+        <span class="checkbox-custom"></span>
       </label>
       <h3 :class="{ 'completed': task.isComplete }">{{ task.name }}</h3>
     </div>
@@ -30,13 +26,9 @@
 
     <div v-if="task.notes" class="task-card-notes" :class="{ 'expanded': isNotesExpanded }" @click="isNotesExpanded = !isNotesExpanded">
       <div class="notes-header">
-        <svg class="icon" viewBox="0 0 24 24">
-          <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
-        </svg>
+        📝
         <span>Notes</span>
-        <svg class="icon expand-icon" viewBox="0 0 24 24">
-          <path d="M16.59 8.59L12 13.17 7.41 8.59 6 10l6 6 6-6z"/>
-        </svg>
+        <span class="expand-icon">▼</span>
       </div>
       <p class="notes-content">{{ task.notes }}</p>
     </div>
@@ -44,10 +36,7 @@
     <div class="task-card-footer">
       <div class="task-meta">
         <span v-if="task.dueDate" class="due-date" :class="{ 'overdue': isOverdue }">
-          <svg class="icon" viewBox="0 0 24 24">
-            <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm0 18c-4.4 0-8-3.6-8-8s3.6-8 8-8 8 3.6 8 8-3.6 8-8 8zm.5-13H11v6l5.2 3.2.8-1.3-4.5-2.7V7z"/>
-          </svg>
-          {{ formatDueDate }}
+          ⏰ {{ formatDueDate }}
         </span>
         <span v-if="task.tags && task.tags.length" class="tags">
           <span v-for="tag in task.tags" :key="tag" class="tag">
@@ -56,15 +45,11 @@
         </span>
       </div>
       <div class="task-actions" v-if="!task.isComplete">
-        <button @click="$emit('edit', task)" class="btn edit-btn">
-          <svg class="icon" viewBox="0 0 24 24">
-            <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
-          </svg>
+        <button @click="$emit('edit', task)" class="btn edit-btn" aria-label="Edit task">
+          ✎
         </button>
-        <button @click="$emit('delete', task.id)" class="btn delete-btn">
-          <svg class="icon" viewBox="0 0 24 24">
-            <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
-          </svg>
+        <button @click="$emit('delete', task.id)" class="btn delete-btn" aria-label="Delete task">
+          🗑
         </button>
       </div>
     </div>
@@ -144,7 +129,7 @@ const formatDueDate = computed(() => {
   margin-bottom: var(--spacing-md);
 }
 
-.checkbox-container {
+.checkbox-wrapper {
   padding-top: 4px;
 }
 
@@ -269,8 +254,8 @@ const formatDueDate = computed(() => {
   height: 2rem;
   border-radius: 0.5rem;
   border: none;
-  background: transparent;
-  color: var(--color-text-light);
+  background: var(--color-surface);
+  color: var(--color-text) !important;
   cursor: pointer;
   transition: all 0.2s ease;
 }
@@ -291,24 +276,29 @@ const formatDueDate = computed(() => {
 .icon {
   width: 1.25rem;
   height: 1.25rem;
-  fill: currentColor;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  display: block;
 }
 
 /* Checkbox styling */
-.checkbox-container {
+.checkbox-wrapper {
   position: relative;
   width: 1.5rem;
   height: 1.5rem;
   cursor: pointer;
 }
 
-.checkbox-container input {
+.checkbox-wrapper input {
   position: absolute;
   opacity: 0;
   cursor: pointer;
 }
 
-.checkmark {
+.checkbox-custom {
   position: absolute;
   top: 0;
   left: 0;
@@ -320,11 +310,11 @@ const formatDueDate = computed(() => {
   transition: all 0.2s ease;
 }
 
-.checkbox-container:hover .checkmark {
+.checkbox-wrapper:hover .checkbox-custom {
   border-color: var(--color-primary);
 }
 
-.checkbox-container input:checked ~ .checkmark {
+.checkbox-wrapper input:checked ~ .checkbox-custom {
   background: var(--color-primary);
   border-color: var(--color-primary);
 }
@@ -341,7 +331,7 @@ const formatDueDate = computed(() => {
   transition: opacity 0.2s ease;
 }
 
-.checkbox-container input:checked ~ .checkmark .checkmark-icon {
+.checkbox-wrapper input:checked ~ .checkbox-custom .checkmark-icon {
   opacity: 1;
 }
 

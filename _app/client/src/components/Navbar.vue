@@ -55,12 +55,16 @@ const showDropdown = ref(false)
 const userMenu = ref(null)
 
 const userInitials = computed(() => {
-  if (!user.value?.name) return '?'
-  return user.value.name
-    .split(' ')
-    .map(n => n[0])
-    .join('')
-    .toUpperCase()
+  // if (!user.value?.name) return '?'
+  // return user.value.name
+  //   .split(' ')
+  //   .map(n => n[0])
+  //   .join('')
+  //   .toUpperCase()
+  console.log(user.value)
+  let firstInitial = user.value?.firstName ? user.value.firstName[0] : '?'
+  let lastInitial = user.value?.lastName ? user.value.lastName[0] : '?'
+  return `${firstInitial}${lastInitial}`.toUpperCase()
 })
 
 function navTo(path) {

@@ -1,17 +1,19 @@
 const User = require('./User');
 const Task = require('./Task');
+const Category = require('./Category');
+const TaskReminder = require('./TaskReminder');
 
 // Define associations
-User.hasMany(Task, { 
+User.hasMany(Task, {
     foreignKey: {
         name: 'userId',
         type: 'UUID',
         allowNull: false
     },
-    onDelete: 'CASCADE' 
+    onDelete: 'CASCADE'
 });
 
-Task.belongsTo(User, { 
+Task.belongsTo(User, {
     foreignKey: {
         name: 'userId',
         type: 'UUID',
@@ -19,7 +21,26 @@ Task.belongsTo(User, {
     }
 });
 
+Task.belongsTo(Category, {
+    foreignKey: 'categoryId'
+});
+
+Category.hasMany(Task, {
+    foreignKey: 'categoryId',
+    onDelete: 'CASCADE'
+});
+
+Task.hasMany(TaskReminder, {
+    foreignKey: 'taskId',
+    onDelete: 'CASCADE'
+});
+TaskReminder.belongsTo(Task, {
+    foreignKey: 'taskId'
+});
+
 module.exports = {
     User,
-    Task
+    Task,
+    Category,
+    TaskReminder
 };

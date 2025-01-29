@@ -39,6 +39,7 @@ export const useTaskStore = defineStore('tasks', () => {
         throw new Error('Not authenticated')
       }
       const response = await api.get('/tasks')
+      console.log("Data: ", response.data);
       tasks.value = response.data
     } catch (err) {
       error.value = err.message || 'Error fetching tasks'
@@ -58,7 +59,9 @@ export const useTaskStore = defineStore('tasks', () => {
         description: taskData.description,
         dueDate: taskData.dueDate,
         notes: taskData.notes,
-        isComplete: false
+        isComplete: false,
+        priority: taskData.priority || 'low',
+        status: taskData.status || 'pending',
       })
       tasks.value.push(response.data)
       return response.data
@@ -81,7 +84,9 @@ export const useTaskStore = defineStore('tasks', () => {
         description: taskData.description,
         dueDate: taskData.dueDate,
         notes: taskData.notes,
-        isComplete: taskData.isComplete
+        isComplete: taskData.isComplete,
+        priority: taskData.priority || 'low',
+        status: taskData.status || 'pending',
       })
       const index = tasks.value.findIndex(t => t.id === taskId)
       if (index !== -1) {

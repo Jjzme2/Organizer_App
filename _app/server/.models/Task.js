@@ -2,6 +2,7 @@ const { DataTypes } = require("sequelize");
 const sequelize = require("../config/db");
 const logger = require("../utils/logger");
 const User = require("./User");
+const Category = require("./Category");
 
 const Task = sequelize.define("Task", {
   id: {
@@ -40,6 +41,18 @@ const Task = sequelize.define("Task", {
     type: DataTypes.BOOLEAN,
     defaultValue: true,
   },
+  priority: {
+    type: DataTypes.ENUM('low', 'medium', 'high'),
+    defaultValue: 'medium',
+  },
+  status: {
+    type: DataTypes.ENUM('pending', 'in_progress', 'completed', 'archived'),
+    defaultValue: 'pending',
+  },
+  completedAt: {
+    type: DataTypes.DATE,
+    allowNull: true,
+  },
   userId: {
     type: DataTypes.UUID,
     references: {
@@ -54,8 +67,30 @@ const Task = sequelize.define("Task", {
   updatedAt: {
     type: DataTypes.DATE,
     defaultValue: DataTypes.NOW,
+  },
+  categoryId: {
+    type: DataTypes.UUID,
+    references: {
+      model: Category,
+      key: 'id'
+    }
   }
 }, {
+  tableName: 'tasks',
+  indexes: [
+    {
+      name: 'idx_user_tasks',
+      fields: ['userId']
+    },
+    {
+      name: 'idx_task_status',
+      fields: ['status']
+    },
+    {
+      name: 'idx_task_due_date',
+      fields: ['dueDate']
+    }
+  ],
   validate: {
     validateName() {
       if (this.name && (this.name.length < 3 || this.name.length > 255)) {
@@ -81,6 +116,11 @@ Task.prototype.setActive = function(isActive) {
 
 Task.prototype.setComplete = function(isComplete) {
   this.isComplete = isComplete;
+  if (isComplete) {
+    this.completedAt = new Date();
+  } else {
+    this.completedAt = null;
+  }
   return this.save();
 };
 

@@ -1,16 +1,6 @@
 <template>
   <div class="tasks-view">
-    <header class="tasks-header">
-      <div class="header-content">
-        <h1>My Tasks</h1>
-        <button @click="showNewTaskForm = true" class="btn btn-primary">
-          <svg class="icon" viewBox="0 0 24 24">
-            <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
-          </svg>
-          Add Task
-        </button>
-      </div>
-    </header>
+    <TaskHeader @add-task="showNewTaskForm = true" />
 
     <MessageBox
       v-if="error"
@@ -26,6 +16,7 @@
         <div class="loading-spinner">Loading tasks...</div>
       </div>
 
+      <!-- To Do Tasks -->
       <div class="tasks-grid">
         <TaskList
           title="To Do"
@@ -45,6 +36,7 @@
           </template>
         </TaskList>
 
+        <!-- Completed Tasks -->
         <TaskList
           title="Completed"
           :tasks="completedTasks"
@@ -77,73 +69,26 @@
             </button>
           </div>
 
-          <form @submit.prevent="handleSubmit" class="task-form">
-            <div class="form-group">
-              <label for="taskName">Task Name</label>
-              <input
-                id="taskName"
-                v-model="taskForm.name"
-                type="text"
-                required
-                placeholder="What needs to be done?"
-                :disabled="submitting"
-              />
-            </div>
-
-            <div class="form-group">
-              <label for="taskDescription">Description (Optional)</label>
-              <textarea
-                id="taskDescription"
-                v-model="taskForm.description"
-                rows="3"
-                placeholder="Add more details about this task..."
-                :disabled="submitting"
-              ></textarea>
-            </div>
-
-            <div class="form-group">
-              <label for="taskDueDate">Due Date (Optional)</label>
-              <input
-                id="taskDueDate"
-                v-model="taskForm.dueDate"
-                type="datetime-local"
-                :disabled="submitting"
-              />
-            </div>
-
-            <div class="form-group">
-              <label for="taskNotes">Notes</label>
-              <textarea
-                id="taskNotes"
-                v-model="taskForm.notes"
-                rows="4"
-                placeholder="Add any additional notes or details..."
-                :disabled="submitting"
-                class="notes-input"
-              ></textarea>
-            </div>
-
-            <div class="form-actions">
-              <button type="button" class="btn" @click="closeModal" :disabled="submitting">
-                Cancel
-              </button>
-              <button type="submit" class="btn btn-primary" :disabled="submitting">
-                <span v-if="submitting" class="loading-spinner"></span>
-                {{ editingTask ? 'Save Changes' : 'Create Task' }}
-              </button>
-            </div>
-          </form>
+          <TaskForm
+            :task="editingTask"
+            :submitting="submitting"
+            :is-editing="!!editingTask"
+            @submit="handleSubmit"
+            @cancel="closeModal"
+          />
         </div>
       </div>
     </Teleport>
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useTaskStore } from '../stores/tasks'
 import { storeToRefs } from 'pinia'
 import TaskList from '../components/TaskList.vue'
+import TaskForm from '../components/TaskForm.vue'
+import TaskHeader from '../components/TaskHeader.vue'
 import MessageBox from '../components/MessageBox.vue'
 
 const taskStore = useTaskStore()
@@ -154,13 +99,6 @@ const submitting = ref(false)
 const editingTask = ref(null)
 const showError = ref(true)
 
-const taskForm = ref({
-  name: '',
-  description: '',
-  dueDate: '',
-  notes: ''
-})
-
 onMounted(() => {
   taskStore.fetchTasks()
 })
@@ -168,34 +106,20 @@ onMounted(() => {
 function closeModal() {
   showNewTaskForm.value = false
   editingTask.value = null
-  taskForm.value = {
-    name: '',
-    description: '',
-    dueDate: '',
-    notes: ''
-  }
 }
 
 function editTask(task) {
   editingTask.value = task
-  taskForm.value = {
-    name: task.name,
-    description: task.description,
-    dueDate: task.dueDate,
-    notes: task.notes || ''
-  }
   showNewTaskForm.value = true
 }
 
-async function handleSubmit() {
-  if (!taskForm.value.name.trim()) return
-
+async function handleSubmit(formData) {
   submitting.value = true
   try {
     if (editingTask.value) {
-      await taskStore.updateTask(editingTask.value.id, taskForm.value)
+      await taskStore.updateTask(editingTask.value.id, formData)
     } else {
-      await taskStore.createTask(taskForm.value)
+      await taskStore.createTask(formData)
     }
     closeModal()
   } catch (err) {
@@ -209,7 +133,6 @@ async function toggleTaskComplete(taskId) {
   const task = [...incompleteTasks.value, ...completedTasks.value].find(t => t.id === taskId)
   if (!task) return
 
-  // Add transition state
   if (task.isComplete) {
     task.isUncompleting = true
   } else {
@@ -221,7 +144,6 @@ async function toggleTaskComplete(taskId) {
   } catch (err) {
     console.error('Error toggling task:', err)
   } finally {
-    // Remove transition state after a delay
     setTimeout(() => {
       task.isCompleting = false
       task.isUncompleting = false
@@ -245,21 +167,6 @@ async function deleteTask(taskId) {
   min-height: 100%;
   display: flex;
   flex-direction: column;
-}
-
-.tasks-header {
-  background: var(--color-surface);
-  padding: var(--spacing-lg);
-  border-bottom: 1px solid var(--color-border);
-  margin-bottom: var(--spacing-lg);
-}
-
-.header-content {
-  max-width: var(--container-max-width);
-  margin: 0 auto;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
 }
 
 .tasks-content {
@@ -354,27 +261,10 @@ async function deleteTask(taskId) {
   color: var(--color-text);
 }
 
-.task-form {
-  padding: var(--spacing-lg);
-}
-
-.form-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: var(--spacing-sm);
-  margin-top: var(--spacing-lg);
-}
-
 .icon {
   width: 1.5rem;
   height: 1.5rem;
   fill: currentColor;
-}
-
-.notes-input {
-  font-family: inherit;
-  resize: vertical;
-  min-height: 100px;
 }
 
 @media (max-width: 768px) {

@@ -1,4 +1,5 @@
 import axios from 'axios'
+import { navigate } from '../utils/navigation'
 
 // Create API instance
 const api = axios.create({
@@ -46,6 +47,13 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config
 
+    // Check for redirect header
+    const redirectUrl = error.response?.headers?.['x-redirect']
+    if (redirectUrl) {
+      navigate(redirectUrl)
+      return Promise.reject(error)
+    }
+
     // If error is 401 and we haven't tried to refresh yet
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true
@@ -59,13 +67,13 @@ api.interceptors.response.use(
         const response = await axios.post('http://localhost:3000/api/auth/refresh', {
           refreshToken,
         })
-        
+
         const { accessToken: newToken, refreshToken: newRefreshToken } = response.data
-        
+
         // Update tokens
         setToken(newToken)
         localStorage.setItem('refreshToken', newRefreshToken)
-        
+
         // Update the failed request's token and retry
         originalRequest.headers.Authorization = `Bearer ${newToken}`
         return api(originalRequest)

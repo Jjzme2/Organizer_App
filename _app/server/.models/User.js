@@ -10,11 +10,7 @@ const User = sequelize.define(
       defaultValue: DataTypes.UUIDV4,
       primaryKey: true,
     },
-    name: {
-      type: DataTypes.STRING,
-      allowNull: false,
-    },
-    password: {
+    username: {
       type: DataTypes.STRING,
       allowNull: false,
     },
@@ -23,9 +19,17 @@ const User = sequelize.define(
       allowNull: false,
       unique: true,
     },
-    isActive: {
-      type: DataTypes.BOOLEAN,
-      defaultValue: true,
+    passwordHash: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    firstName: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    lastName: {
+      type: DataTypes.STRING,
+      allowNull: true,
     },
     createdAt: {
       type: DataTypes.DATE,
@@ -35,6 +39,25 @@ const User = sequelize.define(
       type: DataTypes.DATE,
       defaultValue: DataTypes.NOW,
     },
+    lastLogin: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
+    isActive: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: true,
+    },
+    roleId: {
+      type: DataTypes.UUID,
+      references: {
+        model: 'Roles',
+        key: 'id'
+      }
+    },
+    preferences: {
+      type: DataTypes.JSON,
+      allowNull: true,
+    }
   },
   {
     validate: {

@@ -13,11 +13,11 @@ export const useAuthStore = defineStore('auth', () => {
     try {
       const response = await api.post('/auth/login', { email, password })
       const { user: userData, accessToken, refreshToken: newRefreshToken } = response.data
-      
+
       user.value = userData
       token.value = accessToken
       refreshToken.value = newRefreshToken
-      
+
       setToken(accessToken)
       return userData
     } catch (error) {
@@ -28,16 +28,17 @@ export const useAuthStore = defineStore('auth', () => {
   async function register(userData) {
     try {
       const response = await api.post('/auth/register', userData)
+
       const { user: newUser, accessToken, refreshToken: newRefreshToken } = response.data
-      
+
       user.value = newUser
       token.value = accessToken
       refreshToken.value = newRefreshToken
-      
+
       setToken(accessToken)
       // localStorage.setItem('token', accessToken) // Save token to local storage
       localStorage.setItem('refreshToken', newRefreshToken)
-      
+
       return newUser
     } catch (error) {
       throw new Error(error.response?.data?.message || 'Registration failed')
