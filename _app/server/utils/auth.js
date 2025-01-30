@@ -20,7 +20,7 @@ const authUtility = {
             id: user.id,
             username: user.name,
             email: user.email,
-            tokenVersion: user.tokenVersion || 0, // For token revocation
+            tokenVersion: process.env.TOKEN_VERSION || '1', // Add token version to payload
             type: 'access'
         };
 

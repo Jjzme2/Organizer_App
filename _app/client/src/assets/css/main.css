@@ -18,4 +18,7 @@
 @import './layout/grid.css';
 @import './layout/task-layout.css';
 @import './layout/layout.css';
+@import './layout/home.css';
+@import './components/feature-card.css';
+@import './utilities/text.css';
 

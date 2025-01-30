@@ -55,6 +55,16 @@ const router = createRouter({
       // which is lazy-loaded when the route is visited.
       component: () => import('../views/AboutView.vue'),
     },
+    {
+      path: '/tasks/completed',
+      name: 'CompletedTasks',
+      component: () => import('../views/CompletedTasksView.vue')
+    },
+    {
+      path: '/tasks/incomplete',
+      name: 'IncompleteTasks',
+      component: () => import('../views/IncompleteTasksView.vue')
+    },
   ],
 })
 

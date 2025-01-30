@@ -5,26 +5,29 @@ const authenticateToken = (req, res, next) => {
   const authHeader = req.headers.authorization;
   const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN format
 
-
-  console.log("Token: ", token);
   if (!token) {
-    handleUnauthorized(req, res, next);
+    return handleUnauthorized(req, res);
   }
 
-  const decoded = authUtility.verifyToken(token);
-  if (decoded) {
+  try {
+    const decoded = authUtility.verifyToken(token);
+
+    // Check token version/timestamp against server's current version
+    if (decoded.tokenVersion !== process.env.TOKEN_VERSION) {
+      return handleUnauthorized(req, res);
+    }
+
     req.user = decoded;
     next();
-  } else {
-    handleUnauthorized(req, res, next);
+  } catch (error) {
+    return handleUnauthorized(req, res);
   }
 };
 
-const handleUnauthorized = (req, res, next) => {
+const handleUnauthorized = (req, res) => {
   res.setHeader("X-Redirect", "/login");
   logger.error("Authentication failed: Invalid token");
-  res.status(401).json({ error: "Unauthorized" });
-  next();
+  return res.status(401).json({ error: "Unauthorized" });
 };
 
 module.exports = { authenticateToken };

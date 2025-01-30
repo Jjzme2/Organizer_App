@@ -9,6 +9,20 @@ export const useAuthStore = defineStore('auth', () => {
 
   const isAuthenticated = computed(() => !!token.value)
 
+  async function fetchCurrentUser() {
+    try {
+      if (!token.value) return null
+
+      const response = await api.get('/auth/me')
+      user.value = response.data.user
+      return user.value
+    } catch (error) {
+      console.error('Error fetching user:', error)
+      logout()
+      return null
+    }
+  }
+
   async function login(email, password) {
     try {
       const response = await api.post('/auth/login', { email, password })
@@ -19,6 +33,9 @@ export const useAuthStore = defineStore('auth', () => {
       refreshToken.value = newRefreshToken
 
       setToken(accessToken)
+      localStorage.setItem('token', accessToken)
+      localStorage.setItem('refreshToken', newRefreshToken)
+
       return userData
     } catch (error) {
       throw new Error(error.response?.data?.message || 'Login failed')
@@ -52,7 +69,6 @@ export const useAuthStore = defineStore('auth', () => {
     clearToken()
     localStorage.removeItem('token')
     localStorage.removeItem('refreshToken')
-    localStorage.removeItem('userToken'); // Clear token from local storage
   }
 
   async function updatePassword(data) {
@@ -64,6 +80,21 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
+  // Initialize auth state
+  async function initializeAuth() {
+    const storedToken = localStorage.getItem('token')
+    if (storedToken) {
+      token.value = storedToken
+      setToken(storedToken)
+      try {
+        await fetchCurrentUser()
+      } catch (error) {
+        console.error('Failed to initialize auth:', error)
+        logout()
+      }
+    }
+  }
+
   return {
     user,
     token,
@@ -72,6 +103,8 @@ export const useAuthStore = defineStore('auth', () => {
     login,
     register,
     logout,
-    updatePassword
+    updatePassword,
+    fetchCurrentUser,
+    initializeAuth
   }
 })

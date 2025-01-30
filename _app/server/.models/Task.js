@@ -26,6 +26,14 @@ const Task = sequelize.define("Task", {
     type: DataTypes.DATE,
     allowNull: true,
   },
+  expectedDifficulty: {
+    type: DataTypes.ENUM('1', '2', '3', '4', '5', '6', '7', '8', '9', '10'),
+    defaultValue: '5',
+    allowNull: false,
+    validate: {
+      isIn: [['1', '2', '3', '4', '5', '6', '7', '8', '9', '10']]
+    }
+  },
   notes: {
     type: DataTypes.TEXT,
     allowNull: true,

@@ -58,60 +58,50 @@
     </main>
 
     <!-- Date Details Modal -->
-    <Teleport to="body">
-      <div v-if="selectedDate" class="modal-overlay" @click="closeModal">
-        <div class="modal-content" @click.stop>
-          <div class="modal-header">
-            <h2>{{ formatSelectedDate }}</h2>
-            <button class="btn close-btn" @click="closeModal">
-              <svg class="icon" viewBox="0 0 24 24">
-                <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"/>
-              </svg>
-            </button>
-          </div>
-
-          <div class="modal-body">
-            <div v-if="selectedDateTasks.length" class="date-tasks">
-              <div
-                v-for="task in selectedDateTasks"
-                :key="task.id"
-                class="task-item"
-                :class="{ 'completed': task.isComplete }"
-              >
-                <label class="checkbox-container">
-                  <input
-                    type="checkbox"
-                    :checked="task.isComplete"
-                    @change="toggleTaskComplete(task)"
-                  />
-                  <span class="checkmark"></span>
-                </label>
-                <div class="task-details">
-                  <h3>{{ task.name }}</h3>
-                  <p v-if="task.description" class="task-description">{{ task.description }}</p>
-                  <div v-if="task.notes" class="task-notes" :class="{ 'expanded': expandedNotes[task.id] }" @click="toggleNotes(task.id)">
-                    <div class="notes-header">
-                      <svg class="icon" viewBox="0 0 24 24">
-                        <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
-                      </svg>
-                      <span>Notes</span>
-                      <svg class="icon expand-icon" viewBox="0 0 24 24">
-                        <path d="M16.59 8.59L12 13.17 7.41 8.59 6 10l6 6 6-6z"/>
-                      </svg>
-                    </div>
-                    <p class="notes-content">{{ task.notes }}</p>
-                  </div>
+    <BaseModal
+      v-model:show="showModal"
+      :title="formatSelectedDate"
+    >
+      <div class="modal-body">
+        <div v-if="selectedDateTasks.length" class="date-tasks">
+          <div
+            v-for="task in selectedDateTasks"
+            :key="task.id"
+            class="task-item"
+            :class="{ 'completed': task.isComplete }"
+          >
+            <label class="checkbox-container">
+              <input
+                type="checkbox"
+                :checked="task.isComplete"
+                @change="toggleTaskComplete(task)"
+              />
+              <span class="checkmark"></span>
+            </label>
+            <div class="task-details">
+              <h3>{{ task.name }}</h3>
+              <p v-if="task.description" class="task-description">{{ task.description }}</p>
+              <div v-if="task.notes" class="task-notes" :class="{ 'expanded': expandedNotes[task.id] }" @click="toggleNotes(task.id)">
+                <div class="notes-header">
+                  <svg class="icon" viewBox="0 0 24 24">
+                    <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
+                  </svg>
+                  <span>Notes</span>
+                  <svg class="icon expand-icon" viewBox="0 0 24 24">
+                    <path d="M16.59 8.59L12 13.17 7.41 8.59 6 10l6 6 6-6z"/>
+                  </svg>
                 </div>
+                <p class="notes-content">{{ task.notes }}</p>
               </div>
-            </div>
-            <div v-else class="empty-state">
-              <p>No tasks scheduled for this date</p>
-              <button class="btn btn-primary" @click="addTask">Add Task</button>
             </div>
           </div>
         </div>
+        <div v-else class="empty-state">
+          <p>No tasks scheduled for this date</p>
+          <button class="btn btn-primary" @click="addTask">Add Task</button>
+        </div>
       </div>
-    </Teleport>
+    </BaseModal>
   </div>
 </template>
 
@@ -119,6 +109,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useTaskStore } from '../stores/tasks'
 import { storeToRefs } from 'pinia'
+import BaseModal from '../components/ui/BaseModal.vue'
 
 const taskStore = useTaskStore()
 const { tasks } = storeToRefs(taskStore)
@@ -149,19 +140,18 @@ const formatSelectedDate = computed(() => {
 const calendarDays = computed(() => {
   const year = currentDate.value.getFullYear()
   const month = currentDate.value.getMonth()
-  
+
   const firstDay = new Date(year, month, 1)
   const lastDay = new Date(year, month + 1, 0)
-  
+
   const daysInMonth = lastDay.getDate()
   const startOffset = firstDay.getDay()
-  
+
   // Get days from previous month
-  const previousMonth = new Date(year, month - 1, 1)
   const daysInPreviousMonth = new Date(year, month, 0).getDate()
-  
+
   const days = []
-  
+
   // Add days from previous month
   for (let i = startOffset - 1; i >= 0; i--) {
     const date = new Date(year, month - 1, daysInPreviousMonth - i)
@@ -172,7 +162,7 @@ const calendarDays = computed(() => {
       tasks: getTasksForDate(date)
     })
   }
-  
+
   // Add days from current month
   for (let i = 1; i <= daysInMonth; i++) {
     const date = new Date(year, month, i)
@@ -183,7 +173,7 @@ const calendarDays = computed(() => {
       tasks: getTasksForDate(date)
     })
   }
-  
+
   // Add days from next month
   const remainingDays = 42 - days.length // 6 rows * 7 days
   for (let i = 1; i <= remainingDays; i++) {
@@ -195,8 +185,14 @@ const calendarDays = computed(() => {
       tasks: getTasksForDate(date)
     })
   }
-  
-  return days
+
+  return days.map(day => ({
+    ...day,
+    reminders: tasks.value
+      .filter(task => task.reminders?.some(reminder =>
+        isSameDay(new Date(reminder.reminderTime), day.date)
+      ))
+  }))
 })
 
 const selectedDateTasks = computed(() => {
@@ -254,6 +250,16 @@ function toggleNotes(taskId) {
   expandedNotes.value[taskId] = !expandedNotes.value[taskId]
 }
 
+// Add computed property for modal visibility
+const showModal = computed({
+  get: () => !!selectedDate.value,
+  set: (value) => {
+    if (!value) {
+      selectedDate.value = null
+    }
+  }
+})
+
 onMounted(() => {
   taskStore.fetchTasks()
 })
@@ -301,67 +307,55 @@ onMounted(() => {
   grid-template-columns: repeat(7, 1fr);
   gap: 1px;
   background: var(--color-border);
-  border: 1px solid var(--color-border);
-  border-radius: var(--border-radius-lg);
-  overflow: hidden;
+  aspect-ratio: 7/6;
+  width: 100%;
 }
 
 .calendar-cell {
+  position: relative;
   background: var(--color-surface);
-  aspect-ratio: 1;
-  padding: var(--spacing-sm);
-  cursor: pointer;
-  transition: all 0.2s ease;
+  width: 100%;
+  transition: background-color 0.2s ease;
 }
 
-.calendar-cell:hover:not(.header) {
-  background: var(--color-surface-hover);
-}
-
-.calendar-cell.header {
-  background: var(--color-surface-dark);
-  padding: var(--spacing-md);
-  font-weight: 500;
-  text-align: center;
-  cursor: default;
+.calendar-cell:not(.header)::before {
+  content: '';
+  display: block;
+  padding-bottom: 100%;
 }
 
 .date-content {
-  height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 8%;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
+  gap: 4%;
+}
+
+.calendar-cell.header {
+  padding: 8%;
+  text-align: center;
+  font-weight: 600;
+  aspect-ratio: auto;
 }
 
 .date-number {
-  font-weight: 500;
-}
-
-.other-month {
-  opacity: 0.5;
-}
-
-.today .date-number {
-  background: var(--color-primary);
-  color: white;
-  width: 24px;
-  height: 24px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
+  font-size: clamp(0.875rem, 1.5vw, 1.25rem);
 }
 
 .task-indicators {
   display: flex;
-  gap: 2px;
-  align-items: center;
-  margin-top: var(--spacing-xs);
+  flex-wrap: wrap;
+  gap: 4%;
 }
 
 .task-dot {
-  width: 6px;
-  height: 6px;
+  width: clamp(4px, 0.8vw, 8px);
+  height: clamp(4px, 0.8vw, 8px);
   border-radius: 50%;
   background: var(--color-primary);
 }
@@ -371,9 +365,8 @@ onMounted(() => {
 }
 
 .more-tasks {
-  font-size: 0.75rem;
+  font-size: clamp(0.625rem, 1vw, 0.75rem);
   color: var(--color-text-light);
-  margin-left: 2px;
 }
 
 .modal-overlay {
@@ -577,11 +570,11 @@ onMounted(() => {
   }
 
   .calendar-content {
-    padding: 0 var(--spacing-md);
+    padding: 0 var(--spacing-sm);
   }
 
-  .calendar-cell {
-    padding: var(--spacing-xs);
+  .calendar-grid {
+    gap: 1px;
   }
 
   .date-number {
@@ -592,5 +585,40 @@ onMounted(() => {
     width: 4px;
     height: 4px;
   }
+
+  .more-tasks {
+    font-size: clamp(0.625rem, 1vw, 0.75rem);
+  }
+}
+
+.weekday-full {
+  display: block;
+}
+
+.weekday-short {
+  display: none;
+}
+
+.calendar-cell {
+  min-height: 80px;
+  padding: var(--spacing-sm);
+  background: var(--color-surface);
+  border-radius: var(--border-radius-sm);
+  transition: background-color 0.2s ease;
+}
+
+.calendar-cell.header {
+  min-height: auto;
+  padding: var(--spacing-sm);
+  font-weight: 600;
+  text-align: center;
+  background: transparent;
+}
+
+.date-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+  height: 100%;
 }
 </style>

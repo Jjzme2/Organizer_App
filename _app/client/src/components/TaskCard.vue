@@ -4,7 +4,8 @@
     :class="{
       'completed-task': task.isComplete,
       'task-completing': task.isCompleting,
-      'task-uncompleting': task.isUncompleting
+      'task-uncompleting': task.isUncompleting,
+      [`priority-${task.priority}`]: true
     }"
   >
     <div class="task-card-header">
@@ -35,7 +36,10 @@
 
     <div class="task-card-footer">
       <div class="task-meta">
-        <span v-if="task.dueDate" class="due-date" :class="{ 'overdue': isOverdue }">
+        <span v-if="task.isComplete && task.completedAt" class="completion-date">
+          ✅ Completed {{ formatCompletionInfo }}
+        </span>
+        <span v-else-if="task.dueDate" class="due-date" :class="{ 'overdue': isOverdue }">
           ⏰ {{ formatDueDate }}
         </span>
         <span v-if="task.tags && task.tags.length" class="tags">
@@ -93,6 +97,27 @@ const formatDueDate = computed(() => {
     })
   }
 })
+
+const formatCompletionInfo = computed(() => {
+  if (!props.task.completedAt || !props.task.dueDate) {
+    return new Date(props.task.completedAt).toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric'
+    })
+  }
+
+  const completedDate = new Date(props.task.completedAt)
+  const dueDate = new Date(props.task.dueDate)
+  const diffDays = Math.round((dueDate - completedDate) / (1000 * 60 * 60 * 24))
+
+  if (diffDays === 0) {
+    return 'on time'
+  } else if (diffDays > 0) {
+    return `${diffDays} day${diffDays > 1 ? 's' : ''} early`
+  } else {
+    return `${Math.abs(diffDays)} day${Math.abs(diffDays) > 1 ? 's' : ''} late`
+  }
+})
 </script>
 
 <style scoped>
@@ -104,6 +129,108 @@ const formatDueDate = computed(() => {
   transition: all 0.3s ease;
   opacity: 0.85;
   transform: translateY(0);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Priority indicator bar */
+.task-card::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  opacity: 0.8;
+  transition: width 0.3s ease;
+}
+
+/* Priority colors with patterns for better distinction */
+.task-card.priority-low::before {
+  background: repeating-linear-gradient(
+    45deg,
+    #4CAF50,
+    #4CAF50 10px,
+    #45a049 10px,
+    #45a049 20px
+  );
+}
+
+.task-card.priority-medium::before {
+  background: repeating-linear-gradient(
+    45deg,
+    #FFA726,
+    #FFA726 10px,
+    #fb8c00 10px,
+    #fb8c00 20px
+  );
+}
+
+.task-card.priority-high::before {
+  background: repeating-linear-gradient(
+    45deg,
+    #f44336,
+    #f44336 10px,
+    #d32f2f 10px,
+    #d32f2f 20px
+  );
+}
+
+/* Hover effect for priority indicator */
+.task-card:hover::before {
+  width: 8px;
+}
+
+/* Shine animation */
+.task-card::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(
+    to right,
+    transparent 0%,
+    rgba(255, 255, 255, 0.1) 50%,
+    transparent 100%
+  );
+  transform: skewX(-25deg);
+  animation: shine 3s infinite;
+}
+
+/* Gold styling for completed tasks */
+.task-card.completed-task::before {
+  background: linear-gradient(
+    to bottom,
+    #FFD700,  /* Pure gold */
+    #DAA520,  /* Golden rod */
+    #B8860B   /* Dark golden rod */
+  );
+  width: 4px;
+  opacity: 1;
+}
+
+.task-card.completed-task:hover::before {
+  width: 6px;
+}
+
+@keyframes shine {
+  0% {
+    left: -100%;
+  }
+  20% {
+    left: 100%;
+  }
+  100% {
+    left: 100%;
+  }
+}
+
+/* Ensure content stays above effects */
+.task-card > * {
+  position: relative;
+  z-index: 1;
 }
 
 .task-card:hover {
@@ -214,6 +341,14 @@ const formatDueDate = computed(() => {
   align-items: center;
   gap: 1rem;
   font-size: 0.875rem;
+}
+
+.completion-date {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  color: var(--color-success);
+  font-weight: 500;
 }
 
 .due-date {

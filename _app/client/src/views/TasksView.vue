@@ -16,11 +16,11 @@
         <div class="loading-spinner">Loading tasks...</div>
       </div>
 
-      <!-- To Do Tasks -->
       <div class="tasks-grid">
-        <TaskList
+        <PaginatedTaskList
           title="To Do"
           :tasks="incompleteTasks"
+          type="incomplete"
           @toggle="toggleTaskComplete"
           @edit="editTask"
           @delete="deleteTask"
@@ -34,12 +34,12 @@
               <button @click="showNewTaskForm = true" class="btn btn-primary">Add Your First Task</button>
             </div>
           </template>
-        </TaskList>
+        </PaginatedTaskList>
 
-        <!-- Completed Tasks -->
-        <TaskList
+        <PaginatedTaskList
           title="Completed"
           :tasks="completedTasks"
+          type="completed"
           @toggle="toggleTaskComplete"
           @edit="editTask"
           @delete="deleteTask"
@@ -52,33 +52,23 @@
               <p>No completed tasks yet</p>
             </div>
           </template>
-        </TaskList>
+        </PaginatedTaskList>
       </div>
     </main>
 
     <!-- Task Form Modal -->
-    <Teleport to="body">
-      <div v-if="showNewTaskForm" class="modal-overlay" @click="closeModal">
-        <div class="modal-content" @click.stop>
-          <div class="modal-header">
-            <h2>{{ editingTask ? 'Edit Task' : 'New Task' }}</h2>
-            <button class="btn close-btn" @click="closeModal">
-              <svg class="icon" viewBox="0 0 24 24">
-                <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"/>
-              </svg>
-            </button>
-          </div>
-
-          <TaskForm
-            :task="editingTask"
-            :submitting="submitting"
-            :is-editing="!!editingTask"
-            @submit="handleSubmit"
-            @cancel="closeModal"
-          />
-        </div>
-      </div>
-    </Teleport>
+    <BaseModal
+      v-model:show="showNewTaskForm"
+      :title="editingTask ? 'Edit Task' : 'New Task'"
+    >
+      <TaskForm
+        :task="editingTask"
+        :submitting="submitting"
+        :is-editing="!!editingTask"
+        @submit="handleSubmit"
+        @cancel="closeModal"
+      />
+    </BaseModal>
   </div>
 </template>
 
@@ -86,10 +76,11 @@
 import { ref, onMounted } from 'vue'
 import { useTaskStore } from '../stores/tasks'
 import { storeToRefs } from 'pinia'
-import TaskList from '../components/TaskList.vue'
+import PaginatedTaskList from '../components/PaginatedTaskList.vue'
 import TaskForm from '../components/TaskForm.vue'
 import TaskHeader from '../components/TaskHeader.vue'
 import MessageBox from '../components/MessageBox.vue'
+import BaseModal from '../components/ui/BaseModal.vue'
 
 const taskStore = useTaskStore()
 const { loading, error, incompleteTasks, completedTasks } = storeToRefs(taskStore)

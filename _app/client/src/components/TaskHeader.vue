@@ -21,6 +21,7 @@ defineEmits(['add-task'])
   background: var(--color-surface);
   padding: var(--spacing-lg);
   border-bottom: 1px solid var(--color-border);
+  margin-top: var(--spacing-md);
   margin-bottom: var(--spacing-lg);
 }
 
@@ -37,4 +38,4 @@ defineEmits(['add-task'])
   height: 1.5rem;
   fill: currentColor;
 }
-</style> 
+</style>

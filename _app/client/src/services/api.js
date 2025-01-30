@@ -1,5 +1,6 @@
 import axios from 'axios'
 import { navigate } from '../utils/navigation'
+import { useAuthStore } from '../stores/auth'
 
 // Create API instance
 const api = axios.create({
@@ -50,6 +51,11 @@ api.interceptors.response.use(
     // Check for redirect header
     const redirectUrl = error.response?.headers?.['x-redirect']
     if (redirectUrl) {
+      // Clear auth state when redirecting to login
+      if (redirectUrl === '/login') {
+        const authStore = useAuthStore()
+        authStore.logout()
+      }
       navigate(redirectUrl)
       return Promise.reject(error)
     }
@@ -72,15 +78,21 @@ api.interceptors.response.use(
 
         // Update tokens
         setToken(newToken)
+        localStorage.setItem('token', newToken)
         localStorage.setItem('refreshToken', newRefreshToken)
+
+        // Fetch updated user data
+        const authStore = useAuthStore()
+        await authStore.fetchCurrentUser()
 
         // Update the failed request's token and retry
         originalRequest.headers.Authorization = `Bearer ${newToken}`
         return api(originalRequest)
       } catch (refreshError) {
-        // If refresh fails, clear tokens
-        clearToken()
-        localStorage.removeItem('refreshToken')
+        // If refresh fails, clear tokens and redirect to login
+        const authStore = useAuthStore()
+        authStore.logout()
+        navigate('/login')
         return Promise.reject(refreshError)
       }
     }

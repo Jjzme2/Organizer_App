@@ -268,8 +268,11 @@ exports.getCurrentUser = async (req, res) => {
         res.json({
             user: {
                 id: user.id,
-                name: user.name,
-                email: user.email
+                firstName: user.firstName,
+                lastName: user.lastName,
+                username: user.username,
+                email: user.email,
+                lastLogin: user.lastLogin
             }
         });
     } catch (error) {
