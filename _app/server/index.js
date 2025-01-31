@@ -6,6 +6,12 @@ const cors = require("cors");
 const logger = require("./utils/logger"); // For more advanced logging (if needed)
 const path = require('path');
 
+// Services
+const emailService = require('./services/emailService');
+const logEmailService = require('./services/logEmailService');
+const taskReminderService = require('./services/taskReminderService');
+
+
 const middleware = require("./middleware"); // Import middleware
 
 const app = express();
@@ -20,8 +26,18 @@ app.use(morgan("dev")); // Use Morgan for request logging (in 'dev' format)
 // Custom middleware
 app.use(middleware.apiMiddleware); // Use your custom API middleware
 
+// Initialize email service
+(async () => {
+  try {
+    await emailService.initialize();
+    logger.info('Email services initialized successfully');
+  } catch (error) {
+    logger.error('Failed to initialize email services:', error);
+  }
+})();
+
 // Routes
-const apiRoutes = require('./.routes/api'); 
+const apiRoutes = require('./.routes/api');
 app.use('/api', apiRoutes); // Mount all API routes under '/api'
 
 // Serve static files from the client build directory

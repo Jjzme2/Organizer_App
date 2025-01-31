@@ -1,7 +1,9 @@
 {
   "scripts": {
     "start": "node index.js",
-    "dev": "nodemon index.js"
+    "dev": "nodemon index.js",
+    "get:refresh-token": "node scripts/getRefreshToken.js",
+    "test:email": "node tests/emailTest.js"
   },
   "dependencies": {
     "bcrypt": "^5.1.1",
