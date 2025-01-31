@@ -2,8 +2,6 @@
   "scripts": {
     "start": "node index.js",
     "dev": "nodemon index.js",
-	"buildClient": "npm run build --prefix _app/client",
-	"runServer": "npm run start --prefix _app/server",
     "get:refresh-token": "node scripts/getRefreshToken.js",
     "test:email": "node tests/emailTest.js"
   },
