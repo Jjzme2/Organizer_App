@@ -1,4 +1,11 @@
 {
+  "scripts": {
+	"buildServer": "npm run build --prefix _app/server",
+	"buildClient": "npm run build --prefix _app/client",
+	"devServer": "npm run dev --prefix _app/server",
+	"devClient": "npm run dev --prefix _app/client",
+	"dev": "npm run devServer & npm run devClient"
+  },
   "dependencies": {
     "@google-cloud/local-auth": "^3.0.1",
     "googleapis": "^144.0.0",
