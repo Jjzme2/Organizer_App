@@ -6,8 +6,8 @@
     "devServer": "cd _app/server && npm run dev",
     "devClient": "cd _app/client && npm run dev",
     "dev": "concurrently \"npm run devServer\" \"npm run devClient\"",
-    "start": "cd _app/server && npm start",
-    "heroku-postbuild": "npm run build",
+    "start": "cd _app/server && node index.js",
+    "heroku-postbuild": "cd _app/client && npm install && npm run build",
     "heroku:log": "heroku logs --tail --app ilytat-organizer"
   },
   "dependencies": {
