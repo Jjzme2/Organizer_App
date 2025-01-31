@@ -4,7 +4,8 @@
 	"buildClient": "npm run build --prefix _app/client",
 	"devServer": "npm run dev --prefix _app/server",
 	"devClient": "npm run dev --prefix _app/client",
-	"dev": "npm run devServer & npm run devClient"
+	"dev": "npm run devServer & npm run devClient",
+	"start": "npm run start --prefix _app/server"
   },
   "dependencies": {
     "@google-cloud/local-auth": "^3.0.1",
