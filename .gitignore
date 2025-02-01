@@ -1,2 +1,4 @@
 # Ignore personal notes
 _dev/Info/notes/personal/
+
+node_modules/
