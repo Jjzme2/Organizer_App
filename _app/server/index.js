@@ -41,12 +41,12 @@ const apiRoutes = require('./.routes/api');
 app.use('/api', apiRoutes); // Mount all API routes under '/api'
 
 // Serve static files from the client build directory
-app.use(express.static(path.join(__dirname, '../client/dist')));
+app.use(express.static(path.join(__dirname, '../../client/dist')));
 
 // Handle SPA routing - send all non-API requests to index.html
 app.get('*', (req, res) => {
   if (!req.path.startsWith('/api')) {
-    res.sendFile(path.join(__dirname, '../client/dist/index.html'));
+    res.sendFile(path.join(__dirname, '../../client/dist/index.html'));
   }
 });
 
