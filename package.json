@@ -1,12 +1,9 @@
 {
   "scripts": {
-    "buildServer": "cd _app/server && npm run build",
-    "buildClient": "cd _app/client && npm run build",
-    "build": "npm run buildClient",
+    "build": "cd _app/client && npm run build",
     "devServer": "cd _app/server && npm run dev",
     "devClient": "cd _app/client && npm run dev",
-    "dev": "concurrently \"npm run devServer\" \"npm run devClient\"",
-    "start": "cd _app/server && node index.js",
+    "start": "npm run build && cd _app/server && node index.js",
     "heroku-postbuild": "cd _app/client && npm install && npm run build && cd ../server && npm install",
     "heroku:log": "heroku logs --tail --app ilytat-organizer"
   },
