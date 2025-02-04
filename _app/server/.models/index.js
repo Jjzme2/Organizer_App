@@ -4,48 +4,52 @@ const Category = require('./Category');
 const TaskReminder = require('./TaskReminder');
 const Role = require('./Role');
 
-// Define associations
+// User and Role association
 User.belongsTo(Role, {
-    foreignKey: 'roleId'
-});
-
-Role.hasMany(User, {
-    foreignKey: 'roleId'
-});
-
-User.hasMany(Task, {
     foreignKey: {
-        name: 'userId',
-        type: 'UUID',
-        allowNull: false
-    },
-    onDelete: 'CASCADE'
-});
-
-Task.belongsTo(User, {
-    foreignKey: {
-        name: 'userId',
-        type: 'UUID',
-        allowNull: false
+        name: 'fk_user_role',
+        field: 'roleId'
     }
 });
 
+Role.hasMany(User);
+
+// User and Task association
+Task.belongsTo(User, {
+    foreignKey: {
+        name: 'fk_task_user',
+        field: 'userId',
+        type: 'UUID',
+        allowNull: false
+    },
+});
+
+User.hasMany(Task, {
+    onDelete: 'CASCADE'
+});
+
+// Category and Task association
 Task.belongsTo(Category, {
-    foreignKey: 'categoryId'
+    foreignKey: {
+        name: 'fk_task_category',
+        field: 'categoryId'
+    }
 });
 
 Category.hasMany(Task, {
-    foreignKey: 'categoryId',
     onDelete: 'CASCADE'
+});
+
+// Task and TaskReminder association
+TaskReminder.belongsTo(Task, {
+    foreignKey: {
+        name: 'fk_reminder_task',
+        field: 'taskId'
+    }
 });
 
 Task.hasMany(TaskReminder, {
-    foreignKey: 'taskId',
     onDelete: 'CASCADE'
-});
-
-TaskReminder.belongsTo(Task, {
-    foreignKey: 'taskId'
 });
 
 module.exports = {
