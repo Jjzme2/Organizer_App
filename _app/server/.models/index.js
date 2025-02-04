@@ -6,13 +6,12 @@ const Role = require('./Role');
 
 // User and Role association
 User.belongsTo(Role, {
-    foreignKey: {
-        name: 'fk_user_role',
-        field: 'roleId'
-    }
+    foreignKey: 'role_id'
 });
 
-Role.hasMany(User);
+Role.hasMany(User, {
+    foreignKey: 'role_id'
+});
 
 // User and Task association
 Task.belongsTo(User, {

@@ -49,8 +49,9 @@ const User = sequelize.define(
     },
     roleId: {
       type: DataTypes.UUID,
+      field: 'role_id',
       references: {
-        model: 'Roles',
+        model: 'roles',
         key: 'id'
       }
     },
