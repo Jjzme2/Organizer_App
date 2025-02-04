@@ -23,6 +23,11 @@ const Role = sequelize.define(
       type: DataTypes.DATE,
       defaultValue: DataTypes.NOW,
     }
+  },
+  {
+    tableName: 'roles',
+    freezeTableName: true,
+    timestamps: true
   }
 );
 

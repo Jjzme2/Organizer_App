@@ -24,6 +24,10 @@ const Category = sequelize.define("Category", {
     type: DataTypes.DATE,
     defaultValue: DataTypes.NOW,
   }
+}, {
+  tableName: 'categories',
+  freezeTableName: true,
+  timestamps: true
 });
 
 module.exports = Category;
