@@ -3,7 +3,7 @@ const config = {
     apiUrl: 'http://localhost:3000'
   },
   production: {
-    apiUrl: 'https://www.ilytat.com/'
+    apiUrl: 'https://www.ilytat.com'
   }
 };
 
