@@ -1,10 +1,11 @@
 import axios from 'axios'
 import { navigate } from '../utils/navigation'
 import { useAuthStore } from '../stores/auth'
+import apiConfig from '../config/apiOptions'
 
 // Create API instance
 const api = axios.create({
-  baseURL: 'http://localhost:3000/api',
+  baseURL: `${apiConfig.apiUrl}/api`,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -70,7 +71,7 @@ api.interceptors.response.use(
           throw new Error('No refresh token available')
         }
 
-        const response = await axios.post('http://localhost:3000/api/auth/refresh', {
+        const response = await axios.post(`${apiConfig.apiUrl}/api/auth/refresh`, {
           refreshToken,
         })
 
