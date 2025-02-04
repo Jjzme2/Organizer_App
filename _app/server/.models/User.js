@@ -73,6 +73,8 @@ const User = sequelize.define(
 // Instance Method
 User.prototype.setActive = function (isActive) {
   this.isActive = isActive;
+  this.lastLogin = new Date();
+  logger.info(`User (${this.id}) ${this.username} set to ${isActive}`);
   return this.save();
 };
 

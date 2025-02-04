@@ -10,8 +10,18 @@ const apiMiddleware = (req, res, next) => {
   // 2. (Optional) Add headers to the response (e.g., CORS headers)
   res.header("Access-Control-Allow-Origin", "*"); // Allow requests from any origin
   // Add other headers as needed
+  res.header("Content-Type", "application/json");
+  res.header("Accept", "application/json");
+  res.header("X-Powered-By", "ILYTAT Organizer");
 
   // 3. (Optional) Perform any necessary pre-processing or validation
+  if (req.method === 'POST' || req.method === 'PUT') {
+    const body = req.body;
+    if (!body) {
+      return res.status(400).json({ error: 'Request body is required' });
+    }
+  }
+
 
   // 4. Call next() to continue to the next middleware or route handler
   next();
