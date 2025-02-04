@@ -10,6 +10,7 @@ const TaskReminder = sequelize.define("TaskReminder", {
   },
   taskId: {
     type: DataTypes.UUID,
+    field: 'taskId',
     references: {
       model: 'tasks',
       key: 'id'
@@ -34,7 +35,8 @@ const TaskReminder = sequelize.define("TaskReminder", {
 }, {
   tableName: 'reminders',
   freezeTableName: true,
-  timestamps: true
+  timestamps: true,
+  modelName: 'TaskReminder'
 });
 
 module.exports = TaskReminder;

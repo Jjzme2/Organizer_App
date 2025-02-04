@@ -37,13 +37,12 @@ Category.hasMany(Task, {
 
 // Task and TaskReminder association
 TaskReminder.belongsTo(Task, {
-    foreignKey: {
-        name: 'fk_reminder_task',
-        field: 'taskId'
-    }
+    foreignKey: 'taskId',
+    onDelete: 'CASCADE'
 });
 
 Task.hasMany(TaskReminder, {
+    foreignKey: 'taskId',
     onDelete: 'CASCADE'
 });
 
