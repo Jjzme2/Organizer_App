@@ -15,15 +15,12 @@ Role.hasMany(User, {
 
 // User and Task association
 Task.belongsTo(User, {
-    foreignKey: {
-        name: 'fk_task_user',
-        field: 'userId',
-        type: 'UUID',
-        allowNull: false
-    },
+    foreignKey: 'userId',
+    onDelete: 'CASCADE'
 });
 
 User.hasMany(Task, {
+    foreignKey: 'userId',
     onDelete: 'CASCADE'
 });
 

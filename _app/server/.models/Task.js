@@ -63,6 +63,7 @@ const Task = sequelize.define("Task", {
   },
   userId: {
     type: DataTypes.UUID,
+    field: 'userId',
     references: {
       model: 'users',
       key: 'id'
