@@ -22,20 +22,14 @@ const Role = sequelize.define(
     updatedAt: {
       type: DataTypes.DATE,
       defaultValue: DataTypes.NOW,
-    },
-    roleId: {
-      type: DataTypes.UUID,
-      field: 'roleId',
-      references: {
-        model: 'roles',
-        key: 'id'
-      }
     }
   },
   {
     tableName: 'roles',
     freezeTableName: true,
-    timestamps: true
+    timestamps: true,
+    underscored: true,
+    modelName: 'Role'
   }
 );
 
