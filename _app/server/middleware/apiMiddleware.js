@@ -12,7 +12,7 @@ const apiMiddleware = (req, res, next) => {
   // 2. (Optional) Add headers to the response (e.g., CORS headers)
   res.header("Access-Control-Allow-Origin", "*"); // Allow requests from any origin
   // Add other headers as needed
-  res.header("X-Powered-By", "ILYTAT Organizer");
+  res.header("X-Powered-By", "ILYTAT");
 
   // 3. (Optional) Perform any necessary pre-processing or validation
   if (req.method === 'POST' || req.method === 'PUT') {

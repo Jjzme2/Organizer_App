@@ -6,7 +6,12 @@ const cors = require("cors");
 const logger = require("./utils/logger"); // For more advanced logging (if needed)
 const path = require('path');
 
-const allowedOrigins = ['http://localhost:5173', 'https://www.ilytat.com'];
+const allowedOrigins = [
+	'http://localhost:5173',
+	'http://www.ilytat.com',
+	'https://www.ilytat.com',
+	'http://localhost:3000'
+	];
 
 // Services
 const emailService = require('./services/emailService');
