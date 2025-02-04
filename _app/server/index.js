@@ -6,6 +6,8 @@ const cors = require("cors");
 const logger = require("./utils/logger"); // For more advanced logging (if needed)
 const path = require('path');
 
+const allowedOrigins = ['http://localhost:5173', 'https://www.ilytat.com'];
+
 // Services
 const emailService = require('./services/emailService');
 const logEmailService = require('./services/logEmailService');
@@ -18,7 +20,18 @@ const app = express();
 const port = process.env.PORT || 3000;
 
 // Middleware
-app.use(cors());
+app.use(cors({
+	origin: function (origin, callback) {
+		if(!origin || allowedOrigins.includes(origin)) {
+			callback(null, true);
+		} else {
+			callback(new Error('Not allowed by CORS'));
+		}
+	},
+	credentials: true,
+	methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+	allowedHeaders: ['Content-Type', 'Authorization']
+}));
 app.use(express.json()); // For parsing JSON request bodies
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan("dev")); // Use Morgan for request logging (in 'dev' format)
