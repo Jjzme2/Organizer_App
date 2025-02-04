@@ -11,8 +11,8 @@ const TaskReminder = sequelize.define("TaskReminder", {
   taskId: {
     type: DataTypes.UUID,
     references: {
-      model: Task,
-      key: "id"
+      model: 'tasks',
+      key: 'id'
     }
   },
   reminderTime: {
