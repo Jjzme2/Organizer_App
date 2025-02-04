@@ -12,13 +12,15 @@ const initDatabase = async () => {
     try {
         await sequelize.authenticate();
         logger.info("Database connection established successfully.");
-        
+
         // Import models with associations
         require('../.models/index');
-        
-        // Sync all models
-        await sequelize.sync({ alter: true });
-        logger.info("Database models synchronized successfully.");
+
+        // Only sync in development
+        if (process.env.NODE_ENV === 'development') {
+            await sequelize.sync();
+            logger.info("Database models synchronized (development only).");
+        }
     } catch (error) {
         logger.error("Database initialization failed:", error);
         process.exit(1);
