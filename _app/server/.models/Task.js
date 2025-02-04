@@ -79,6 +79,7 @@ const Task = sequelize.define("Task", {
   },
   categoryId: {
     type: DataTypes.UUID,
+    field: 'categoryId',
     references: {
       model: 'categories',
       key: 'id'

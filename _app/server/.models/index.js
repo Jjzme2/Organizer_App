@@ -26,13 +26,12 @@ User.hasMany(Task, {
 
 // Category and Task association
 Task.belongsTo(Category, {
-    foreignKey: {
-        name: 'fk_task_category',
-        field: 'categoryId'
-    }
+    foreignKey: 'categoryId',
+    onDelete: 'CASCADE'
 });
 
 Category.hasMany(Task, {
+    foreignKey: 'categoryId',
     onDelete: 'CASCADE'
 });
 
