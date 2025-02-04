@@ -49,19 +49,19 @@ const User = sequelize.define(
     },
     roleId: {
       type: DataTypes.UUID,
-      field: 'role_id',
+      field: "roleId",
       references: {
-        model: 'roles',
-        key: 'id'
-      }
+        model: "roles",
+        key: "id",
+      },
     },
     preferences: {
       type: DataTypes.JSON,
       allowNull: true,
-    }
+    },
   },
   {
-    tableName: 'users',
+    tableName: "users",
     freezeTableName: true,
     timestamps: true,
     validate: {

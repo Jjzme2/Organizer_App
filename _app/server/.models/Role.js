@@ -28,7 +28,7 @@ const Role = sequelize.define(
     tableName: 'roles',
     freezeTableName: true,
     timestamps: true,
-    underscored: true,
+    underscored: false,
     modelName: 'Role'
   }
 );
