@@ -32,7 +32,9 @@ const TaskReminder = sequelize.define("TaskReminder", {
     defaultValue: DataTypes.NOW,
   }
 }, {
-  tableName: 'reminders'
+  tableName: 'reminders',
+  freezeTableName: true,
+  timestamps: true
 });
 
 module.exports = TaskReminder;

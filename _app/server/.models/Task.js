@@ -85,6 +85,8 @@ const Task = sequelize.define("Task", {
   }
 }, {
   tableName: 'tasks',
+  freezeTableName: true,
+  timestamps: true,
   indexes: [
     {
       name: 'idx_user_tasks',

@@ -60,6 +60,9 @@ const User = sequelize.define(
     }
   },
   {
+    tableName: 'users',
+    freezeTableName: true,
+    timestamps: true,
     validate: {
       // Add validation rules for your model as needed
     },
