@@ -6,12 +6,12 @@ const apiMiddleware = (req, res, next) => {
   // 1. Log the request (including method, URL, and optionally headers or body)
   logger.info(`API request: ${req.method} ${req.originalUrl}`);
   logger.debug(`Request headers: ${JSON.stringify(req.headers)}`);
+  logger.info(`Root URL: ${req.protocol}://${req.get('host')}`);
+
 
   // 2. (Optional) Add headers to the response (e.g., CORS headers)
   res.header("Access-Control-Allow-Origin", "*"); // Allow requests from any origin
   // Add other headers as needed
-  res.header("Content-Type", "application/json");
-  res.header("Accept", "application/json");
   res.header("X-Powered-By", "ILYTAT Organizer");
 
   // 3. (Optional) Perform any necessary pre-processing or validation
