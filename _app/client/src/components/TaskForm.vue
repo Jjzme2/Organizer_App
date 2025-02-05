@@ -80,14 +80,30 @@
 
     <div class="form-group">
       <label for="taskNotes">Notes</label>
-      <textarea
-        id="taskNotes"
-        v-model="form.notes"
-        rows="4"
-        placeholder="Add any additional notes or details..."
-        :disabled="submitting"
-        class="notes-input"
-      ></textarea>
+      <div class="notes-list">
+        <div v-for="(note, index) in formattedNotes" :key="index" class="note-item">
+          <template v-for="(segment, sIndex) in note.split('|')" :key="`${index}-${sIndex}`">
+            <span class="note-segment" :class="{ 'primary': sIndex === 0 }">
+              {{ segment.trim() }}
+            </span>
+          </template>
+        </div>
+
+        <input
+          v-model="newNote"
+          type="text"
+          placeholder="Add note (use | to separate segments)..."
+          @keyup.enter="handleAddNote"
+        >
+        <button
+          type="button"
+          class="btn btn-secondary"
+          @click="handleAddNote"
+          :disabled="!newNote.trim()"
+        >
+          Add Note
+        </button>
+      </div>
     </div>
 
     <div class="form-group">
@@ -180,7 +196,7 @@ const form = ref<TaskFormData>(props.task ? {
   name: props.task.name,
   description: props.task.description,
   dueDate: formatDateForInput(props.task.dueDate),
-  notes: props.task.notes,
+  notes: Array.isArray(props.task.notes) ? props.task.notes.join('\n') : '',
   priority: props.task.priority,
   status: props.task.status,
   expectedDifficulty: props.task.expectedDifficulty,
@@ -207,11 +223,31 @@ const minDateTime = computed(() => {
   return now.toISOString().slice(0, 16)
 })
 
-function handleSubmit() {
+const newNote = ref('')
+const formattedNotes = computed(() => {
+  if (!form.value.notes) return [];
+  return form.value.notes.split('\n').filter(note => note.trim());
+})
+
+function handleAddNote() {
+  if (!newNote.value.trim()) return;
+  const notes = formattedNotes.value;
+  notes.push(newNote.value);
+  form.value.notes = notes.join('\n');
+  newNote.value = '';
+}
+
+async function handleSubmit() {
   if (!form.value.name.trim()) return
-  emit('submit', form.value)
-  if (form.value.reminderTime) {
-    reminderService.createReminder(props.task.id, form.value.reminderTime)
+
+  try {
+    const task = await emit('submit', form.value)
+
+    if (form.value.reminderTime && task?.id) {
+      await reminderService.createReminder(task.id, form.value.reminderTime)
+    }
+  } catch (error) {
+    console.error('Error handling task submission:', error)
   }
 }
 
@@ -232,9 +268,38 @@ function clearReminder() {
   margin-top: var(--spacing-lg);
 }
 
+.notes-list {
+  margin-bottom: var(--spacing-md);
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.note-item {
+  background: var(--color-surface-dark);
+  padding: var(--spacing-sm);
+  border-radius: var(--border-radius);
+  margin-bottom: var(--spacing-xs);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-xs);
+}
+
+.note-segment {
+  background: var(--color-surface);
+  padding: 0.25rem 0.75rem;
+  border-radius: var(--border-radius-full);
+  font-size: 0.75rem;
+  white-space: nowrap;
+  border: 1px solid var(--color-border);
+}
+
+.note-segment.primary {
+  background: var(--color-primary);
+  color: white;
+  border-color: var(--color-primary-dark);
+}
+
 .notes-input {
-  font-family: inherit;
-  resize: vertical;
-  min-height: 100px;
+  margin-bottom: var(--spacing-sm);
 }
 </style>

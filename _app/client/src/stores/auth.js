@@ -95,6 +95,45 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
+  async function requestPasswordReset(email) {
+    try {
+      const response = await api.post('/auth/request-reset', { email })
+      return response.data
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Error requesting password reset')
+    }
+  }
+
+  async function resetPassword(token, newPassword) {
+    try {
+      const response = await api.post('/auth/reset-password', {
+        token,
+        newPassword
+      })
+      return response.data
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Error resetting password')
+    }
+  }
+
+  async function verifyEmail(token) {
+    try {
+      const response = await api.post(`/auth/verify-email/${token}`)
+      return response.data
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Error verifying email')
+    }
+  }
+
+  async function resendVerification() {
+    try {
+      const response = await api.post('/auth/resend-verification')
+      return response.data
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Error resending verification email')
+    }
+  }
+
   return {
     user,
     token,
@@ -105,6 +144,10 @@ export const useAuthStore = defineStore('auth', () => {
     logout,
     updatePassword,
     fetchCurrentUser,
-    initializeAuth
+    initializeAuth,
+    requestPasswordReset,
+    resetPassword,
+    verifyEmail,
+    resendVerification
   }
 })

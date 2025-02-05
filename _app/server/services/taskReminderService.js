@@ -1,4 +1,4 @@
- const schedule = require('node-schedule');
+const schedule = require('node-schedule');
 const { Op } = require('sequelize');
 const TaskReminder = require('../.models/TaskReminder');
 const Task = require('../.models/Task');
@@ -9,6 +9,7 @@ const logger = require('../utils/logger');
 class TaskReminderService {
   constructor() {
     this.checkReminders();
+    logger.info('Task reminder service initialized');
   }
 
   async checkReminders() {
@@ -19,7 +20,8 @@ class TaskReminderService {
         const reminders = await TaskReminder.findAll({
           where: {
             reminderTime: {
-              [Op.lte]: now
+              [Op.lte]: now,
+              [Op.gte]: new Date(now.getTime() - 5 * 60 * 1000) // Only get reminders from last 5 minutes
             },
             isSent: false
           },
@@ -29,9 +31,16 @@ class TaskReminderService {
           }]
         });
 
+        logger.info(`Found ${reminders.length} pending reminders`);
+
         for (const reminder of reminders) {
-          await this.sendReminderEmail(reminder);
-          await reminder.update({ isSent: true });
+          try {
+            await this.sendReminderEmail(reminder);
+            await reminder.update({ isSent: true });
+            logger.info(`Sent reminder for task: ${reminder.Task.name}`);
+          } catch (error) {
+            logger.error(`Error processing reminder ${reminder.id}:`, error);
+          }
         }
       } catch (error) {
         logger.error('Error checking reminders:', error);
@@ -52,14 +61,19 @@ class TaskReminderService {
         <li><strong>Priority:</strong> ${task.priority}</li>
         <li><strong>Status:</strong> ${task.status}</li>
       </ul>
-      <p>Click <a href="${process.env.CLIENT_URL}/tasks">here</a> to view your task.</p>
+      <p>Click <a href="${process.env.CLIENT_URL}/tasks/${task.id}">here</a> to view your task.</p>
     `;
 
-    await emailService.sendEmail(
-      user.email,
-      `Reminder: ${task.name}`,
-      html
-    );
+    try {
+      await emailService.sendEmail(
+        user.email,
+        `Reminder: ${task.name}`,
+        html
+      );
+    } catch (error) {
+      logger.error(`Failed to send reminder email for task ${task.id}:`, error);
+      throw error;
+    }
   }
 }
 

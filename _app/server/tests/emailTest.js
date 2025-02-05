@@ -1,19 +1,22 @@
 const emailService = require('../services/emailService');
 const logger = require('../utils/logger');
+const dotenv = require('dotenv');
+
+dotenv.config();
 
 async function testEmail() {
   try {
-    await emailService.initialize();
-
     const html = `
       <h2>Test Email</h2>
       <p>This is a test email from your application.</p>
-      <p>If you're receiving this, the email service is working correctly!</p>
+      <p>If you're receiving this, SendGrid email service is working correctly!</p>
+      <hr>
+      <small>Sent at: ${new Date().toLocaleString()}</small>
     `;
 
     await emailService.sendEmail(
       process.env.ADMIN_EMAIL,
-      'Test Email from Application',
+      'SendGrid Test Email',
       html
     );
 

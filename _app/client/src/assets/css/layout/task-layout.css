@@ -1,25 +1,50 @@
 .task-container {
   display: grid;
-  gap: var(--spacing-lg);
-  padding: var(--spacing-md);
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: var(--spacing-md);
+  padding: var(--spacing-sm);
+  grid-template-columns: 1fr;
   align-items: start;
+}
+
+@media (min-width: 640px) {
+  .task-container {
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--spacing-lg);
+    padding: var(--spacing-md);
+  }
+}
+
+@media (min-width: 1024px) {
+  .task-container {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (min-width: 1280px) {
+  .task-container {
+    grid-template-columns: repeat(4, 1fr);
+  }
 }
 
 .task-section {
   background: var(--color-surface-dark);
   border-radius: var(--border-radius-lg);
-  padding: var(--spacing-lg);
-  height: min(100vh - 200px, 800px);
+  padding: var(--spacing-md);
+  height: auto;
+  min-height: 300px;
+  max-height: calc(100vh - 200px);
   display: flex;
   flex-direction: column;
   box-shadow: var(--shadow);
-  transition: transform var(--transition-normal);
+  transition: all var(--transition-normal);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .task-section:hover {
   transform: translateY(-2px);
   box-shadow: var(--shadow-lg);
+  border-color: var(--color-primary-light);
 }
 
 .task-scroll-area {

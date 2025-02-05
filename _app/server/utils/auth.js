@@ -89,7 +89,15 @@ const authUtility = {
             logger.error('Refresh token verification failed:', error.message);
             return null;
         }
-    }
+    },
+
+	generateResetToken(user) {
+		return jwt.sign({ id: user.id }, process.env.RESET_TOKEN_SECRET, { expiresIn: '1h' });
+	},
+
+	verifyResetToken(token) {
+		return jwt.verify(token, process.env.RESET_TOKEN_SECRET);
+	},
 };
 
 module.exports = authUtility;

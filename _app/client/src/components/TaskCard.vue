@@ -53,8 +53,12 @@
           <span class="expand-icon" :class="{ 'expanded': isNotesExpanded }">▼</span>
         </div>
         <div class="notes-list" v-if="isNotesExpanded">
-          <div v-for="(note, index) in task.notes" :key="index" class="note-item">
-            {{ note }}
+          <div v-for="(note, index) in formattedNotes" :key="index" class="note-item">
+            <template v-for="(segment, sIndex) in note.split('|')" :key="`${index}-${sIndex}`">
+              <span class="note-segment" :class="{ 'primary': sIndex === 0 }">
+                {{ segment.trim() }}
+              </span>
+            </template>
           </div>
         </div>
       </div>
@@ -64,7 +68,7 @@
           <input
             v-model="newNote"
             type="text"
-            placeholder="Add a note..."
+            placeholder="Add note (use | to separate segments)..."
             @keyup.enter="handleAddNote"
           >
           <button
@@ -134,11 +138,15 @@ const handlePriorityChange = () => {
   emit('updatePriority', { id: props.task.id, priority: currentPriority.value })
 }
 
+const formattedNotes = computed(() => {
+  return props.task.notes.map(note => note.replace(/\n/g, '|'));
+});
+
 const handleAddNote = () => {
-  if (newNote.value.trim()) {
-    emit('addNote', { id: props.task.id, note: newNote.value.trim() })
-    newNote.value = ''
-  }
+  if (!newNote.value.trim()) return;
+
+  emit('addNote', { id: props.task.id, note: newNote.value.trim() })
+  newNote.value = ''
 }
 
 const isOverdue = computed(() => {
@@ -189,43 +197,49 @@ const formatCompletionInfo = computed(() => {
 
 <style scoped>
 .task-card {
-  background: var(--color-surface-hover);
-  border: 1px solid var(--color-border);
+  background: var(--color-surface);
   border-radius: var(--border-radius);
   padding: var(--spacing-md);
-  transition: all 0.3s ease;
-  opacity: 0.85;
-  transform: translateY(0);
+  margin-bottom: var(--spacing-sm);
+  transition: all var(--transition-normal);
+  border: 1px solid var(--color-border);
   position: relative;
   overflow: hidden;
 }
 
-/* Priority indicator bar */
+@media (max-width: 640px) {
+  .task-card {
+    padding: var(--spacing-sm);
+  }
+
+  .task-actions {
+    flex-direction: column;
+    gap: var(--spacing-xs);
+  }
+
+  .control-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .control-row label {
+    margin-bottom: var(--spacing-xs);
+  }
+}
+
 .task-card::before {
   content: '';
   position: absolute;
-  left: 0;
   top: 0;
-  bottom: 0;
+  left: 0;
   width: 4px;
-  opacity: 0.8;
-  transition: width 0.3s ease;
-}
-
-.task-card.priority-low::before {
-  background: #4CAF50;
-}
-
-.task-card.priority-medium::before {
-  background: #FFA726;
-}
-
-.task-card.priority-high::before {
-  background: #f44336;
+  height: 100%;
+  background: var(--color-primary);
+  opacity: 0;
+  transition: opacity var(--transition-normal);
 }
 
 .task-card:hover::before {
-  width: 6px;
   opacity: 1;
 }
 
@@ -306,16 +320,35 @@ const formatCompletionInfo = computed(() => {
 }
 
 .notes-list {
-  margin-top: var(--spacing-sm);
+  margin: var(--spacing-sm) 0;
+  max-height: 200px;
+  overflow-y: auto;
+  padding-right: var(--spacing-xs);
 }
 
 .note-item {
-  background: var(--color-surface);
+  background: var(--color-surface-dark);
   padding: var(--spacing-sm);
   border-radius: var(--border-radius);
   margin-bottom: var(--spacing-xs);
-  font-size: 0.875rem;
-  color: var(--color-text-light);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-xs);
+}
+
+.note-segment {
+  background: var(--color-surface);
+  padding: 0.25rem 0.75rem;
+  border-radius: var(--border-radius-full);
+  font-size: 0.75rem;
+  white-space: nowrap;
+  border: 1px solid var(--color-border);
+}
+
+.note-segment.primary {
+  background: var(--color-primary);
+  color: white;
+  border-color: var(--color-primary-dark);
 }
 
 .add-note {

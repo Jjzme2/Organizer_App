@@ -30,6 +30,10 @@
         Don't have an account?
         <router-link to="/register">Register here</router-link>
       </div>
+
+      <div class="forgot-password-link">
+  <router-link to="/forgot-password">Forgot Password?</router-link>
+</div>
     </form>
   </div>
 </template>

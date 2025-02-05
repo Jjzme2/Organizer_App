@@ -2,7 +2,7 @@
   <div class="home">
     <HeroImage
       background-image="/src/assets/images/hero-bg.jpg"
-      height="100vh"
+      height="60vh"
       class="home-hero"
     >
       <div class="hero-content container text-center slide-up">

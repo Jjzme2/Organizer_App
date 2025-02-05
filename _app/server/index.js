@@ -50,7 +50,6 @@ app.use(middleware.apiMiddleware); // Use your custom API middleware
 // Initialize email service
 (async () => {
   try {
-    await emailService.initialize();
     logger.info('Email services initialized successfully');
   } catch (error) {
     logger.error('Failed to initialize email services:', error);

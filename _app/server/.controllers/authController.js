@@ -2,6 +2,7 @@ const User = require("../.models/User");
 const authUtility = require("../utils/auth");
 const bcrypt = require("bcryptjs");
 const logger = require("../utils/logger");
+const emailService = require("../services/emailService");
 
 // In production, use Redis or a database table for refresh tokens
 const refreshTokens = new Map(); // Store user ID -> Set of refresh tokens
@@ -279,4 +280,64 @@ exports.getCurrentUser = async (req, res) => {
         logger.error('Get current user error:', error);
         res.status(500).json({ error: "Failed to get user information" });
     }
+};
+
+exports.requestPasswordReset = async (req, res) => {
+  const { email } = req.body;
+
+  try {
+    const user = await User.getByEmail(email);
+    if (!user) {
+      // Return success even if user not found (security best practice)
+      return res.json({ message: 'If your email is registered, you will receive reset instructions' });
+    }
+
+    // Generate reset token
+    const resetToken = authUtility.generateResetToken(user);
+
+    // Create reset URL
+    const resetUrl = `${process.env.CLIENT_URL}/reset-password/${resetToken}`;
+
+    // Send email
+    const html = `
+      <h2>Password Reset Request</h2>
+      <p>You requested to reset your password. Click the link below to reset it:</p>
+      <a href="${resetUrl}">Reset Password</a>
+      <p>This link will expire in 1 hour.</p>
+      <p>If you didn't request this, please ignore this email.</p>
+    `;
+
+    await emailService.sendEmail(
+      user.email,
+      'Password Reset Request',
+      html
+    );
+
+    res.json({ message: 'Reset instructions sent successfully' });
+  } catch (error) {
+    logger.error('Password reset request error:', error);
+    res.status(500).json({ error: 'Failed to process reset request' });
+  }
+};
+
+exports.verifyEmail = async (req, res) => {
+  const { token } = req.params;
+
+  try {
+    const decoded = authUtility.verifyEmailToken(token);
+    if (!decoded) {
+      return res.status(400).json({ error: 'Invalid or expired verification token' });
+    }
+
+    const user = await User.findByPk(decoded.id);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    await user.update({ emailVerified: true });
+    res.json({ message: 'Email verified successfully' });
+  } catch (error) {
+    logger.error('Email verification error:', error);
+    res.status(500).json({ error: 'Failed to verify email' });
+  }
 };

@@ -146,14 +146,16 @@ function editTask(task) {
 async function handleSubmit(formData) {
   submitting.value = true
   try {
+    let task
     if (editingTask.value) {
-      await taskStore.updateTask(editingTask.value.id, formData)
+      task = await taskStore.updateTask(editingTask.value.id, formData)
     } else {
-      await taskStore.createTask(formData)
+      task = await taskStore.createTask(formData)
     }
     closeModal()
-  } catch {
-    // Error is already handled by the store
+    return task
+  } catch (err) {
+    console.error('Error submitting task:', err)
   } finally {
     submitting.value = false
   }

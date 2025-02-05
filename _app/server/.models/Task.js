@@ -36,10 +36,17 @@ const Task = sequelize.define("Task", {
     allowNull: true,
     get() {
       const rawValue = this.getDataValue('notes');
-      return rawValue ? JSON.parse(rawValue) : [];
+      if (!rawValue) return [];
+      return rawValue.split('|').map(note => note.trim());
     },
     set(value) {
-      this.setDataValue('notes', JSON.stringify(value || []));
+      if (Array.isArray(value)) {
+        this.setDataValue('notes', value.join('|'));
+      } else if (typeof value === 'string') {
+        this.setDataValue('notes', value);
+      } else {
+        this.setDataValue('notes', '');
+      }
     }
   },
   isActive: {
