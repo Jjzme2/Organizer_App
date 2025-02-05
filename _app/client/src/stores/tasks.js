@@ -8,7 +8,7 @@ export const useTaskStore = defineStore('tasks', () => {
   // State
   const tasks = ref([])
   const loading = ref(false)
-  const error = ref(null)
+  const error = ref(null) // Will now contain { message, code, errors? }
   const authStore = useAuthStore()
   const taskReminders = ref([])
 
@@ -33,9 +33,22 @@ export const useTaskStore = defineStore('tasks', () => {
     }
   }
 
-  const handleError = (err, customMessage) => {
-    error.value = err.message || customMessage
-    console.error(customMessage, err)
+  const handleError = (err, defaultMessage) => {
+    if (err.response?.data) {
+      const { message, code, errors } = err.response.data
+      error.value = {
+        message: message || defaultMessage,
+        code,
+        errors
+      }
+      console.error('Task operation failed:', error.value)
+    } else {
+      error.value = {
+        message: err.message || defaultMessage,
+        code: 'UNKNOWN_ERROR'
+      }
+      console.error(defaultMessage, err)
+    }
     throw err
   }
 
@@ -75,15 +88,7 @@ export const useTaskStore = defineStore('tasks', () => {
   async function updateTask(taskId, taskData) {
     try {
       checkAuth()
-
-      // Log the data being sent
-      console.log('Updating task with data:', taskData)
-
       const response = await api.put(`/tasks/${taskId}`, taskData)
-
-      // Log the response
-      console.log('Server response:', response.data)
-
       const index = tasks.value.findIndex(t => t.id === taskId)
       if (index !== -1) {
         tasks.value[index] = response.data
@@ -137,6 +142,31 @@ export const useTaskStore = defineStore('tasks', () => {
     taskReminders.value = reminders
   }
 
+  async function updateTaskStatus({ id, status }) {
+    const task = tasks.value.find(t => t.id === id)
+    if (task) {
+      return updateTask(id, { ...task, status })
+    }
+  }
+
+  async function updateTaskPriority({ id, priority }) {
+    const task = tasks.value.find(t => t.id === id)
+    if (task) {
+      return updateTask(id, { ...task, priority })
+    }
+  }
+
+  async function addTaskNote({ id, note }) {
+    const task = tasks.value.find(t => t.id === id)
+    if (task) {
+      const notes = task.notes || []
+      return updateTask(id, {
+        ...task,
+        notes: [...notes, note]
+      })
+    }
+  }
+
   return {
     // State
     tasks,
@@ -154,6 +184,9 @@ export const useTaskStore = defineStore('tasks', () => {
     deleteTask,
     toggleTaskComplete,
     createTaskWithReminder,
-    fetchTaskReminders
+    fetchTaskReminders,
+    updateTaskStatus,
+    updateTaskPriority,
+    addTaskNote
   }
 })

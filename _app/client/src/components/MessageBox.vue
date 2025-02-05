@@ -1,5 +1,5 @@
 <template>
-  <div 
+  <div
     v-if="show"
     class="message-box"
     :class="[`message-box--${type}`, { 'message-box--dismissible': dismissible }]"
@@ -24,15 +24,22 @@
           <path d="M12 22C6.477 22 2 17.523 2 12S6.477 2 12 2s10 4.477 10 10-4.477 10-10 10zm-1-7v2h2v-2h-2zm0-8v6h2V7h-2z"/>
         </svg>
       </div>
-      
+
       <div class="message-box__text">
         <div v-if="title" class="message-box__title">{{ title }}</div>
-        <div class="message-box__message">
+        <div v-if="isStructuredError" class="message-box__structured-error">
+          <div class="message-box__message">{{ structuredMessage }}</div>
+          <div v-if="errorCode" class="message-box__code">Error Code: {{ errorCode }}</div>
+          <ul v-if="errorDetails" class="message-box__details">
+            <li v-for="(error, index) in errorDetails" :key="index">{{ error }}</li>
+          </ul>
+        </div>
+        <div v-else class="message-box__message">
           <slot>{{ message }}</slot>
         </div>
       </div>
 
-      <button 
+      <button
         v-if="dismissible"
         class="message-box__close"
         @click="dismiss"
@@ -47,7 +54,7 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue'
+import { watch, computed } from 'vue'
 
 const props = defineProps({
   type: {
@@ -56,7 +63,7 @@ const props = defineProps({
     validator: (value) => ['error', 'success', 'info', 'warning'].includes(value)
   },
   message: {
-    type: String,
+    type: [String, Object],
     default: ''
   },
   title: {
@@ -82,6 +89,33 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['dismiss', 'update:show'])
+
+const isStructuredError = computed(() => {
+  return typeof props.message === 'object' && props.message !== null
+})
+
+const structuredMessage = computed(() => {
+  if (isStructuredError.value) {
+    return props.message.message
+  }
+  return props.message
+})
+
+const errorCode = computed(() => {
+  if (isStructuredError.value) {
+    return props.message.code
+  }
+  return null
+})
+
+const errorDetails = computed(() => {
+  if (isStructuredError.value && props.message.errors) {
+    return Array.isArray(props.message.errors)
+      ? props.message.errors
+      : [props.message.errors]
+  }
+  return null
+})
 
 const dismiss = () => {
   emit('dismiss')
@@ -123,6 +157,28 @@ watch(() => props.show, (newValue) => {
 .message-box__title {
   font-weight: var(--font-weight-bold);
   margin-bottom: var(--spacing-xs);
+}
+
+.message-box__structured-error {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.message-box__code {
+  font-family: monospace;
+  opacity: 0.8;
+  font-size: 0.9em;
+}
+
+.message-box__details {
+  margin: var(--spacing-xs) 0 0 var(--spacing-md);
+  padding: 0;
+}
+
+.message-box__details li {
+  margin-bottom: var(--spacing-xs);
+  opacity: 0.9;
 }
 
 .message-box__close {
@@ -186,7 +242,7 @@ watch(() => props.show, (newValue) => {
   .message-box__content {
     padding: var(--spacing-sm) var(--spacing-md);
   }
-  
+
   .icon {
     width: 20px;
     height: 20px;

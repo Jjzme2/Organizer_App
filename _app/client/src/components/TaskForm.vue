@@ -24,6 +24,25 @@
     </div>
 
     <div class="form-group">
+      <label for="taskCategory">Category</label>
+      <select
+        id="taskCategory"
+        v-model="form.categoryId"
+        :disabled="submitting"
+      >
+        <option value="">No Category</option>
+        <option
+          v-for="category in categoryStore.categories"
+          :key="category.id"
+          :value="category.id"
+          :style="{ color: category.color }"
+        >
+          {{ category.name }}
+        </option>
+      </select>
+    </div>
+
+    <div class="form-group">
       <label for="taskPriority">Priority</label>
       <select
         id="taskPriority"
@@ -117,36 +136,38 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import BaseSlider from './ui/BaseSlider.vue'
 import { reminderService } from '../services/reminderService'
+import { useCategoryStore } from '../stores/categories'
+import type { Task, TaskFormData } from '../types/task'
 
-const props = defineProps({
-  task: {
-    type: Object,
-    default: null
-  },
-  submitting: {
-    type: Boolean,
-    required: true
-  },
-  isEditing: {
-    type: Boolean,
-    required: true
+const props = defineProps<{
+  task: Task | null
+  submitting: boolean
+  isEditing: boolean
+}>()
+
+const categoryStore = useCategoryStore()
+
+onMounted(async () => {
+  if (categoryStore.categories.length === 0) {
+    await categoryStore.fetchCategories()
   }
 })
 
 const emit = defineEmits(['submit', 'cancel'])
 
-const getDefaultForm = () => ({
+const getDefaultForm = (): TaskFormData => ({
   name: '',
   description: '',
   dueDate: new Date(new Date(new Date().setDate(new Date().getDate() + 3)).setHours(0, 0, 0, 0)).toISOString().slice(0, 16),
   notes: '',
-  priority: 'medium',
-  status: 'pending',
+  priority: 'medium' as const,
+  status: 'pending' as const,
   expectedDifficulty: 5,
-  reminderTime: ''
+  reminderTime: '',
+  categoryId: ''
 })
 
 const formatDateForInput = (dateString) => {
@@ -155,9 +176,16 @@ const formatDateForInput = (dateString) => {
   return date.toISOString().slice(0, 16) // Format as YYYY-MM-DDTHH:mm
 }
 
-const form = ref(props.task ? {
-  ...props.task,
-  dueDate: formatDateForInput(props.task.dueDate)
+const form = ref<TaskFormData>(props.task ? {
+  name: props.task.name,
+  description: props.task.description,
+  dueDate: formatDateForInput(props.task.dueDate),
+  notes: props.task.notes,
+  priority: props.task.priority,
+  status: props.task.status,
+  expectedDifficulty: props.task.expectedDifficulty,
+  reminderTime: '',
+  categoryId: props.task.categoryId || ''
 } : getDefaultForm())
 
 const difficultyLabels = {

@@ -1,9 +1,6 @@
-const { DataTypes } = require("sequelize");
+const { DataTypes, Model } = require("sequelize");
 const sequelize = require("../config/db");
 const logger = require("../utils/logger");
-const User = require("./User");
-const Category = require("./Category");
-
 const Task = sequelize.define("Task", {
   id: {
     type: DataTypes.UUID,
@@ -109,16 +106,15 @@ const Task = sequelize.define("Task", {
         throw new Error("Name must be between 3 and 255 characters long");
       }
     },
-    validateDueDate() {
-      if (this.dueDate && new Date(this.dueDate) < new Date()) {
-        throw new Error("Due date cannot be in the past");
-      }
-    }
+	// ! Due Dates should be able to be modified if the task is past due.
+	// * Commented out 2/5/25
+    // validateDueDate() {
+    //   if (this.dueDate && new Date(this.dueDate) < new Date()) {
+    //     throw new Error("Due date cannot be in the past");
+    //   }
+    // }
   }
 });
-
-// Associations
-Task.belongsTo(User, { foreignKey: 'userId' });
 
 // Instance Methods
 Task.prototype.setActive = function(isActive) {

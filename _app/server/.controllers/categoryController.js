@@ -1,118 +1,90 @@
-const { Op } = require("sequelize");
 const Category = require("../.models/Category");
 const logger = require("../utils/logger");
+const { AuthenticationError, NotFoundError, AppError } = require("../utils/errorUtils");
 
-exports.getAllItems = async (req, res) => {
+// Get all categories
+exports.getAllCategories = async (req, res) => {
   try {
     if (!req.user || !req.user.id) {
-      logger.error('User not authenticated in getAllItems');
-      return res.status(401).json({ error: "User not authenticated" });
+      throw new AuthenticationError();
     }
 
     const categories = await Category.findAll({
-      where: { userId: req.user.id },
       order: [['name', 'ASC']]
     });
 
     res.json(categories);
   } catch (error) {
-    logger.error('Error in getAllItems:', error);
-    res.status(500).json({ error: "Failed to get categories", message: error.message });
+    logger.error('Error in getAllCategories:', error);
+    throw new AppError("Failed to get categories", 500, "CATEGORY_FETCH_ERROR");
   }
 };
 
-exports.getItemById = async (req, res) => {
+// Create a new category
+exports.createCategory = async (req, res) => {
   try {
     if (!req.user || !req.user.id) {
-      logger.error('User not authenticated in getItemById');
-      return res.status(401).json({ error: "User not authenticated" });
+      throw new AuthenticationError();
     }
 
-    const category = await Category.findOne({
-      where: {
-        id: req.params.id,
-        userId: req.user.id
-      }
-    });
+    const { name, color } = req.body;
 
-    if (!category) {
-      return res.status(404).json({ error: "Category not found" });
-    }
-
-    res.json(category);
-  } catch (error) {
-    logger.error('Error in getItemById:', error);
-    res.status(500).json({ error: "Failed to get category", message: error.message });
-  }
-};
-
-exports.createItem = async (req, res) => {
-  try {
-    if (!req.user || !req.user.id) {
-      logger.error('User not authenticated in createItem');
-      return res.status(401).json({ error: "User not authenticated" });
+    if (!name) {
+      throw new AppError("Category name is required", 400, "VALIDATION_ERROR");
     }
 
     const category = await Category.create({
-      ...req.body,
-      userId: req.user.id
+      name,
+      color: color || '#808080'
     });
 
     res.status(201).json(category);
   } catch (error) {
-    logger.error('Error in createItem:', error);
-    res.status(500).json({ error: "Failed to create category", message: error.message });
+    logger.error('Error in createCategory:', error);
+    throw new AppError("Failed to create category", 500, "CATEGORY_CREATE_ERROR");
   }
 };
 
-exports.updateItem = async (req, res) => {
+// Update a category
+exports.updateCategory = async (req, res) => {
   try {
     if (!req.user || !req.user.id) {
-      logger.error('User not authenticated in updateItem');
-      return res.status(401).json({ error: "User not authenticated" });
+      throw new AuthenticationError();
     }
 
-    const category = await Category.findOne({
-      where: {
-        id: req.params.id,
-        userId: req.user.id
-      }
-    });
+    const category = await Category.findByPk(req.params.id);
 
     if (!category) {
-      return res.status(404).json({ error: "Category not found" });
+      throw new NotFoundError("Category not found");
     }
 
-    await category.update(req.body);
+    const { name, color } = req.body;
+    await category.update({ name, color });
+
     res.json(category);
   } catch (error) {
-    logger.error('Error in updateItem:', error);
-    res.status(500).json({ error: "Failed to update category", message: error.message });
+    logger.error('Error in updateCategory:', error);
+    throw new AppError("Failed to update category", 500, "CATEGORY_UPDATE_ERROR");
   }
 };
 
-exports.deleteItem = async (req, res) => {
+// Delete a category
+exports.deleteCategory = async (req, res) => {
   try {
     if (!req.user || !req.user.id) {
-      logger.error('User not authenticated in deleteItem');
-      return res.status(401).json({ error: "User not authenticated" });
+      throw new AuthenticationError();
     }
 
-    const category = await Category.findOne({
-      where: {
-        id: req.params.id,
-        userId: req.user.id
-      }
-    });
+    const category = await Category.findByPk(req.params.id);
 
     if (!category) {
-      return res.status(404).json({ error: "Category not found" });
+      throw new NotFoundError("Category not found");
     }
 
     await category.destroy();
-    res.json({ message: "Category deleted successfully" });
+    res.status(204).send();
   } catch (error) {
-    logger.error('Error in deleteItem:', error);
-    res.status(500).json({ error: "Failed to delete category", message: error.message });
+    logger.error('Error in deleteCategory:', error);
+    throw new AppError("Failed to delete category", 500, "CATEGORY_DELETE_ERROR");
   }
 };

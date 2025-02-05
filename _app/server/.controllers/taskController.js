@@ -1,6 +1,9 @@
 const { Op } = require("sequelize");
 const Task = require("../.models/Task");
+const Category = require("../.models/Category");
+const TaskReminder = require("../.models/TaskReminder");
 const logger = require("../utils/logger");
+const { AuthenticationError, NotFoundError, AppError } = require("../utils/errorUtils");
 
 /*
  ---------------------------------------------------------------
@@ -13,8 +16,7 @@ exports.getAllItems = async (req, res) => {
   try {
     // Ensure user is authenticated
     if (!req.user || !req.user.id) {
-      logger.error('User not authenticated in getAllItems');
-      return res.status(401).json({ error: "User not authenticated" });
+      throw new AuthenticationError();
     }
 
     const whereClause = {
@@ -36,13 +38,17 @@ exports.getAllItems = async (req, res) => {
     logger.debug('Getting tasks with where clause:', whereClause);
     const items = await Task.findAll({
       where: whereClause,
-      order: [['createdAt', 'DESC']]
+      order: [['createdAt', 'DESC']],
+      include: [{
+        model: Category,
+        attributes: ['id', 'name', 'color']
+      }]
     });
 
     res.json(items);
   } catch (error) {
     logger.error('Error in getAllItems:', error);
-    res.status(500).json({ error: "Failed to get tasks", message: error.message });
+    throw new AppError("Failed to get tasks", 500, "TASK_FETCH_ERROR");
   }
 };
 
@@ -50,29 +56,32 @@ exports.getAllItems = async (req, res) => {
 exports.getItemByName = async (req, res) => {
   try {
     if (!req.user || !req.user.id) {
-      logger.error('User not authenticated in getItemByName');
-      return res.status(401).json({ error: "User not authenticated" });
+      throw new AuthenticationError();
     }
 
     const item = await Task.findOne({
       where: {
         name: req.params.name,
         userId: req.user.id
-      }
+      },
+      include: [{
+        model: Category,
+        attributes: ['id', 'name', 'color']
+      }]
     });
 
     if (!item) {
-      return res.status(404).json({ error: "Task not found" });
+      throw new NotFoundError("Task not found");
     }
 
     res.json(item);
   } catch (error) {
     logger.error('Error in getItemByName:', error);
-    res.status(500).json({ error: "Failed to get task", message: error.message });
+    throw new AppError("Failed to get task", 500, "TASK_FETCH_ERROR");
   }
 };
 
-/* 
+/*
  ---------------------------------------------------------------
  | SETTERS |
  ---------------------------------------------------------------
@@ -82,19 +91,36 @@ exports.getItemByName = async (req, res) => {
 exports.createItem = async (req, res) => {
   try {
     if (!req.user || !req.user.id) {
-      logger.error('User not authenticated in createItem');
-      return res.status(401).json({ error: "User not authenticated" });
+      throw new AuthenticationError();
     }
 
+    // Start a transaction since we may need to create a reminder
     const task = await Task.create({
       ...req.body,
       userId: req.user.id
     });
 
-    res.status(201).json(task);
+    // Create reminder if reminderTime is provided
+    if (req.body.reminderTime) {
+      await TaskReminder.create({
+        taskId: task.id,
+        reminderTime: new Date(req.body.reminderTime),
+        isSent: false
+      });
+    }
+
+    // Fetch the task with category data
+    const taskWithCategory = await Task.findByPk(task.id, {
+      include: [{
+        model: Category,
+        attributes: ['id', 'name', 'color']
+      }]
+    });
+
+    res.status(201).json(taskWithCategory);
   } catch (error) {
     logger.error('Error in createItem:', error);
-    res.status(500).json({ error: "Failed to create task", message: error.message });
+    throw new AppError("Failed to create task", 500, "TASK_CREATE_ERROR");
   }
 };
 
@@ -102,8 +128,7 @@ exports.createItem = async (req, res) => {
 exports.updateItem = async (req, res) => {
   try {
     if (!req.user || !req.user.id) {
-      logger.error('User not authenticated in updateItem');
-      return res.status(401).json({ error: "User not authenticated" });
+      throw new AuthenticationError();
     }
 
     const task = await Task.findOne({
@@ -114,13 +139,44 @@ exports.updateItem = async (req, res) => {
     });
 
     if (!task) {
-      return res.status(404).json({ error: "Task not found" });
+      throw new NotFoundError("Task not found");
     }
 
+    // Start transaction for update with potential reminder changes
     await task.update(req.body);
-    res.json(task);
+
+    // Handle reminder updates
+    if (req.body.reminderTime) {
+      // Update or create reminder
+      await TaskReminder.upsert({
+        taskId: task.id,
+        reminderTime: new Date(req.body.reminderTime),
+        isSent: false
+      }, {
+        where: { taskId: task.id }
+      });
+    } else if (req.body.reminderTime === null) {
+      // Remove reminder if explicitly set to null
+      await TaskReminder.destroy({
+        where: { taskId: task.id }
+      });
+    }
+
+    // Fetch updated task with category data
+    const updatedTask = await Task.findOne({
+      where: {
+        id: req.params.id,
+        userId: req.user.id
+      },
+      include: [{
+        model: Category,
+        attributes: ['id', 'name', 'color']
+      }]
+    });
+
+    res.json(updatedTask);
   } catch (error) {
     logger.error('Error in updateItem:', error);
-    res.status(500).json({ error: "Failed to update task", message: error.message });
+    throw new AppError("Failed to update task", 500, "TASK_UPDATE_ERROR");
   }
 };

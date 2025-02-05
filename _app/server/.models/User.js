@@ -1,5 +1,5 @@
 const { DataTypes } = require("sequelize");
-const sequelize = require("../config/db"); // Or your database config file
+const sequelize = require("../config/db");
 const logger = require("../utils/logger");
 
 const User = sequelize.define(

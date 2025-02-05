@@ -1,12 +1,15 @@
 <template>
   <div class="tasks-view">
-    <TaskHeader @add-task="showNewTaskForm = true" />
+    <TaskHeader
+      @add-task="showNewTaskForm = true"
+      @manage-categories="showCategoryModal = true"
+    />
 
     <MessageBox
       v-if="error"
       type="error"
       :message="error"
-      title="Error Loading Tasks"
+      :title="getErrorTitle(error)"
       dismissible
       v-model:show="showError"
     />
@@ -24,6 +27,9 @@
           @toggle="toggleTaskComplete"
           @edit="editTask"
           @delete="deleteTask"
+          @updateStatus="handleStatusUpdate"
+          @updatePriority="handlePriorityUpdate"
+          @addNote="handleAddNote"
         >
           <template #empty>
             <div class="tasks-empty">
@@ -43,6 +49,9 @@
           @toggle="toggleTaskComplete"
           @edit="editTask"
           @delete="deleteTask"
+          @updateStatus="handleStatusUpdate"
+          @updatePriority="handlePriorityUpdate"
+          @addNote="handleAddNote"
         >
           <template #empty>
             <div class="tasks-empty">
@@ -69,6 +78,14 @@
         @cancel="closeModal"
       />
     </BaseModal>
+
+    <!-- Category Management Modal -->
+    <BaseModal
+      v-model:show="showCategoryModal"
+      title="Manage Categories"
+    >
+      <CategoryManagement />
+    </BaseModal>
   </div>
 </template>
 
@@ -81,14 +98,36 @@ import TaskForm from '../components/TaskForm.vue'
 import TaskHeader from '../components/TaskHeader.vue'
 import MessageBox from '../components/MessageBox.vue'
 import BaseModal from '../components/ui/BaseModal.vue'
+import CategoryManagement from '../components/CategoryManagement.vue'
 
 const taskStore = useTaskStore()
 const { loading, error, incompleteTasks, completedTasks } = storeToRefs(taskStore)
 
 const showNewTaskForm = ref(false)
+const showCategoryModal = ref(false)
 const submitting = ref(false)
 const editingTask = ref(null)
 const showError = ref(true)
+
+const getErrorTitle = (err) => {
+  if (typeof err === 'object' && err !== null) {
+    switch (err.code) {
+      case 'AUTHENTICATION_ERROR':
+        return 'Authentication Error'
+      case 'VALIDATION_ERROR':
+        return 'Validation Error'
+      case 'TASK_FETCH_ERROR':
+        return 'Error Loading Tasks'
+      case 'TASK_CREATE_ERROR':
+        return 'Error Creating Task'
+      case 'TASK_UPDATE_ERROR':
+        return 'Error Updating Task'
+      default:
+        return 'Operation Failed'
+    }
+  }
+  return 'Error'
+}
 
 onMounted(() => {
   taskStore.fetchTasks()
@@ -113,8 +152,8 @@ async function handleSubmit(formData) {
       await taskStore.createTask(formData)
     }
     closeModal()
-  } catch (err) {
-    console.error('Error submitting task:', err)
+  } catch {
+    // Error is already handled by the store
   } finally {
     submitting.value = false
   }
@@ -132,8 +171,8 @@ async function toggleTaskComplete(taskId) {
 
   try {
     await taskStore.toggleTaskComplete(taskId)
-  } catch (err) {
-    console.error('Error toggling task:', err)
+  } catch {
+    // Error is already handled by the store
   } finally {
     setTimeout(() => {
       task.isCompleting = false
@@ -147,8 +186,32 @@ async function deleteTask(taskId) {
 
   try {
     await taskStore.deleteTask(taskId)
-  } catch (err) {
-    console.error('Error deleting task:', err)
+  } catch {
+    // Error is already handled by the store
+  }
+}
+
+async function handleStatusUpdate(data) {
+  try {
+    await taskStore.updateTaskStatus(data)
+  } catch {
+    // Error is already handled by the store
+  }
+}
+
+async function handlePriorityUpdate(data) {
+  try {
+    await taskStore.updateTaskPriority(data)
+  } catch {
+    // Error is already handled by the store
+  }
+}
+
+async function handleAddNote(data) {
+  try {
+    await taskStore.addTaskNote(data)
+  } catch {
+    // Error is already handled by the store
   }
 }
 </script>
@@ -208,48 +271,6 @@ async function deleteTask(taskId) {
   height: 48px;
   fill: currentColor;
   margin-bottom: var(--spacing-md);
-}
-
-.modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(15, 23, 42, 0.8);
-  backdrop-filter: blur(4px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: var(--spacing-md);
-  z-index: 50;
-}
-
-.modal-content {
-  background: var(--color-surface);
-  border-radius: var(--border-radius-lg);
-  width: 100%;
-  max-width: 500px;
-  box-shadow: var(--shadow-lg);
-  animation: slideUp 0.3s ease;
-}
-
-.modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: var(--spacing-lg);
-  border-bottom: 1px solid var(--color-border);
-}
-
-.modal-header h2 {
-  margin: 0;
-}
-
-.close-btn {
-  padding: var(--spacing-xs);
-  color: var(--color-text-light);
-}
-
-.close-btn:hover {
-  color: var(--color-text);
 }
 
 .icon {

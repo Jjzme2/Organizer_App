@@ -29,6 +29,9 @@
         @toggle="$emit('toggle', $event)"
         @edit="$emit('edit', $event)"
         @delete="$emit('delete', $event)"
+        @updateStatus="$emit('updateStatus', $event)"
+        @updatePriority="$emit('updatePriority', $event)"
+        @addNote="$emit('addNote', $event)"
       />
     </TransitionGroup>
 
@@ -67,7 +70,7 @@ const props = defineProps({
   }
 })
 
-defineEmits(['toggle', 'edit', 'delete'])
+defineEmits(['toggle', 'edit', 'delete', 'updateStatus', 'updatePriority', 'addNote'])
 
 const showAll = ref(false)
 

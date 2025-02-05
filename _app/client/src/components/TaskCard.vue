@@ -25,27 +25,69 @@
       {{ task.description }}
     </p>
 
-    <div v-if="task.notes" class="task-card-notes" :class="{ 'expanded': isNotesExpanded }" @click="isNotesExpanded = !isNotesExpanded">
-      <div class="notes-header">
-        📝
-        <span>Notes</span>
-        <span class="expand-icon">▼</span>
+    <div class="task-controls" v-if="!task.isComplete">
+      <div class="control-group">
+        <div class="control-row">
+          <label>Status:</label>
+          <select v-model="currentStatus" @change="handleStatusChange">
+            <option value="pending">Pending</option>
+            <option value="in_progress">In Progress</option>
+            <option value="completed">Completed</option>
+          </select>
+        </div>
+        <div class="control-row">
+          <label>Priority:</label>
+          <select v-model="currentPriority" @change="handlePriorityChange">
+            <option value="low">Low</option>
+            <option value="medium">Medium</option>
+            <option value="high">High</option>
+          </select>
+        </div>
       </div>
-      <p class="notes-content">{{ task.notes }}</p>
+    </div>
+
+    <div class="task-notes-section">
+      <div v-if="task.notes && task.notes.length > 0" class="task-notes">
+        <div class="notes-header" @click="isNotesExpanded = !isNotesExpanded">
+          <span class="notes-title">📝 Notes ({{ task.notes.length }})</span>
+          <span class="expand-icon" :class="{ 'expanded': isNotesExpanded }">▼</span>
+        </div>
+        <div class="notes-list" v-if="isNotesExpanded">
+          <div v-for="(note, index) in task.notes" :key="index" class="note-item">
+            {{ note }}
+          </div>
+        </div>
+      </div>
+
+      <div v-if="!task.isComplete" class="add-note">
+        <div class="note-input-wrapper">
+          <input
+            v-model="newNote"
+            type="text"
+            placeholder="Add a note..."
+            @keyup.enter="handleAddNote"
+          >
+          <button
+            class="btn add-btn"
+            :disabled="!newNote.trim()"
+            @click="handleAddNote"
+          >
+            Add
+          </button>
+        </div>
+      </div>
     </div>
 
     <div class="task-card-footer">
       <div class="task-meta">
         <span v-if="task.isComplete && task.completedAt" class="completion-date">
-          ✅ Completed {{ formatCompletionInfo }}
+          ✅ Marked Completed {{ formatCompletionInfo }}
         </span>
         <span v-else-if="task.dueDate" class="due-date" :class="{ 'overdue': isOverdue }">
           ⏰ {{ formatDueDate }}
         </span>
-        <span v-if="task.tags && task.tags.length" class="tags">
-          <span v-for="tag in task.tags" :key="tag" class="tag">
-            {{ tag }}
-          </span>
+        <span v-if="task.categoryId && category" class="category-badge" :style="{ backgroundColor: category.color + '20', color: category.color, borderColor: category.color }">
+          {{ category.name }}
         </span>
       </div>
       <div class="task-actions" v-if="!task.isComplete">
@@ -62,6 +104,7 @@
 
 <script setup>
 import { computed, ref } from 'vue'
+import { useCategoryStore } from '../stores/categories'
 
 const props = defineProps({
   task: {
@@ -70,9 +113,33 @@ const props = defineProps({
   }
 })
 
-const isNotesExpanded = ref(false)
+const emit = defineEmits(['toggle', 'edit', 'delete', 'updateStatus', 'updatePriority', 'addNote'])
 
-defineEmits(['toggle', 'edit', 'delete'])
+const categoryStore = useCategoryStore()
+const category = computed(() => {
+  if (!props.task.categoryId) return null
+  return categoryStore.categories.find(c => c.id === props.task.categoryId)
+})
+
+const currentStatus = ref(props.task.status)
+const currentPriority = ref(props.task.priority)
+const isNotesExpanded = ref(false)
+const newNote = ref('')
+
+const handleStatusChange = () => {
+  emit('updateStatus', { id: props.task.id, status: currentStatus.value })
+}
+
+const handlePriorityChange = () => {
+  emit('updatePriority', { id: props.task.id, priority: currentPriority.value })
+}
+
+const handleAddNote = () => {
+  if (newNote.value.trim()) {
+    emit('addNote', { id: props.task.id, note: newNote.value.trim() })
+    newNote.value = ''
+  }
+}
 
 const isOverdue = computed(() => {
   if (!props.task.dueDate) return false
@@ -145,108 +212,21 @@ const formatCompletionInfo = computed(() => {
   transition: width 0.3s ease;
 }
 
-/* Priority colors with patterns for better distinction */
 .task-card.priority-low::before {
-  background: repeating-linear-gradient(
-    45deg,
-    #4CAF50,
-    #4CAF50 10px,
-    #45a049 10px,
-    #45a049 20px
-  );
+  background: #4CAF50;
 }
 
 .task-card.priority-medium::before {
-  background: repeating-linear-gradient(
-    45deg,
-    #FFA726,
-    #FFA726 10px,
-    #fb8c00 10px,
-    #fb8c00 20px
-  );
+  background: #FFA726;
 }
 
 .task-card.priority-high::before {
-  background: repeating-linear-gradient(
-    45deg,
-    #f44336,
-    #f44336 10px,
-    #d32f2f 10px,
-    #d32f2f 20px
-  );
+  background: #f44336;
 }
 
-/* Hover effect for priority indicator */
 .task-card:hover::before {
-  width: 8px;
-}
-
-/* Shine animation */
-.task-card::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 50%;
-  height: 100%;
-  background: linear-gradient(
-    to right,
-    transparent 0%,
-    rgba(255, 255, 255, 0.1) 50%,
-    transparent 100%
-  );
-  transform: skewX(-25deg);
-  animation: shine 3s infinite;
-}
-
-/* Gold styling for completed tasks */
-.task-card.completed-task::before {
-  background: linear-gradient(
-    to bottom,
-    #FFD700,  /* Pure gold */
-    #DAA520,  /* Golden rod */
-    #B8860B   /* Dark golden rod */
-  );
-  width: 4px;
-  opacity: 1;
-}
-
-.task-card.completed-task:hover::before {
   width: 6px;
-}
-
-@keyframes shine {
-  0% {
-    left: -100%;
-  }
-  20% {
-    left: 100%;
-  }
-  100% {
-    left: 100%;
-  }
-}
-
-/* Ensure content stays above effects */
-.task-card > * {
-  position: relative;
-  z-index: 1;
-}
-
-.task-card:hover {
   opacity: 1;
-  transform: translateY(-2px);
-  border-color: var(--color-primary);
-  box-shadow: var(--shadow-lg);
-  background: var(--color-surface);
-}
-
-.task-card.completed {
-  opacity: 0.6;
-}
-
-.task-card.completed:hover {
-  opacity: 0.8;
 }
 
 .task-card-header {
@@ -256,81 +236,123 @@ const formatCompletionInfo = computed(() => {
   margin-bottom: var(--spacing-md);
 }
 
-.checkbox-wrapper {
-  padding-top: 4px;
+.task-controls {
+  background: var(--color-surface);
+  border-radius: var(--border-radius);
+  padding: var(--spacing-sm);
+  margin-bottom: var(--spacing-md);
 }
 
-.task-card-description {
+.control-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.control-row {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+}
+
+.control-row label {
+  min-width: 60px;
   color: var(--color-text-light);
   font-size: 0.875rem;
-  line-height: 1.5;
-  margin-bottom: 1rem;
 }
 
-.task-card-notes {
+.control-row select {
+  flex: 1;
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--border-radius);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-size: 0.875rem;
+}
+
+.task-notes-section {
+  border-top: 1px solid var(--color-border);
   margin-top: var(--spacing-md);
   padding-top: var(--spacing-md);
-  border-top: 1px solid var(--color-border);
-  cursor: pointer;
-  transition: all 0.3s ease;
-  opacity: 0.7;
 }
 
-.task-card-notes:hover,
-.task-card-notes.expanded {
-  opacity: 1;
-  background: var(--color-surface-hover);
-  margin-left: calc(var(--spacing-md) * -1);
-  margin-right: calc(var(--spacing-md) * -1);
-  padding-left: var(--spacing-md);
-  padding-right: var(--spacing-md);
+.task-notes {
+  margin-bottom: var(--spacing-md);
 }
 
 .notes-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  padding: var(--spacing-xs) 0;
+}
+
+.notes-title {
   display: flex;
   align-items: center;
   gap: var(--spacing-xs);
   color: var(--color-text-light);
   font-size: 0.875rem;
-  margin-bottom: var(--spacing-xs);
-}
-
-.notes-header .icon {
-  width: 1rem;
-  height: 1rem;
 }
 
 .expand-icon {
-  margin-left: auto;
   transition: transform 0.3s ease;
 }
 
-.expanded .expand-icon {
+.expand-icon.expanded {
   transform: rotate(180deg);
 }
 
-.notes-content {
-  color: var(--color-text-light);
+.notes-list {
+  margin-top: var(--spacing-sm);
+}
+
+.note-item {
+  background: var(--color-surface);
+  padding: var(--spacing-sm);
+  border-radius: var(--border-radius);
+  margin-bottom: var(--spacing-xs);
   font-size: 0.875rem;
-  line-height: 1.5;
-  white-space: pre-wrap;
-  margin: 0;
-  max-height: 0;
-  overflow: hidden;
-  transition: all 0.3s ease;
+  color: var(--color-text-light);
 }
 
-.expanded .notes-content {
-  max-height: 500px;
+.add-note {
   margin-top: var(--spacing-sm);
 }
 
-.task-card-notes:hover .notes-content {
-  max-height: 500px;
-  margin-top: var(--spacing-sm);
+.note-input-wrapper {
+  display: flex;
+  gap: var(--spacing-sm);
+}
+
+.note-input-wrapper input {
+  flex: 1;
+  padding: 0.5rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-size: 0.875rem;
+}
+
+.add-btn {
+  padding: 0.5rem 1rem !important;
+  background: var(--color-primary) !important;
+  color: white !important;
+  border-radius: var(--border-radius);
+  font-size: 0.875rem;
+  min-width: 60px;
+}
+
+.add-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .task-card-footer {
+  margin-top: var(--spacing-md);
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -344,36 +366,22 @@ const formatCompletionInfo = computed(() => {
 }
 
 .completion-date {
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
   color: var(--color-success);
-  font-weight: 500;
 }
 
 .due-date {
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
   color: var(--color-text-light);
 }
 
-.overdue {
+.due-date.overdue {
   color: var(--color-error);
 }
 
-.tags {
-  display: flex;
-  gap: 0.5rem;
-}
-
-.tag {
-  background: var(--color-primary-light);
-  color: var(--color-primary);
+.category-badge {
   padding: 0.25rem 0.75rem;
   border-radius: 9999px;
   font-size: 0.75rem;
-  font-weight: 500;
+  border: 1px solid;
 }
 
 .task-actions {
@@ -382,22 +390,22 @@ const formatCompletionInfo = computed(() => {
 }
 
 .btn {
+  padding: 0.25rem;
+  border: none;
+  background: var(--color-surface);
+  color: var(--color-text);
+  cursor: pointer;
+  border-radius: var(--border-radius);
+  transition: all 0.2s ease;
   display: flex;
   align-items: center;
   justify-content: center;
   width: 2rem;
   height: 2rem;
-  border-radius: 0.5rem;
-  border: none;
-  background: var(--color-surface);
-  color: var(--color-text) !important;
-  cursor: pointer;
-  transition: all 0.2s ease;
 }
 
 .btn:hover {
   background: var(--color-surface-hover);
-  color: var(--color-text);
 }
 
 .edit-btn:hover {
@@ -408,40 +416,27 @@ const formatCompletionInfo = computed(() => {
   color: var(--color-error);
 }
 
-.icon {
-  width: 1.25rem;
-  height: 1.25rem;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 2;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  display: block;
-}
-
-/* Checkbox styling */
 .checkbox-wrapper {
   position: relative;
   width: 1.5rem;
   height: 1.5rem;
-  cursor: pointer;
+  padding-top: 4px;
 }
 
 .checkbox-wrapper input {
   position: absolute;
   opacity: 0;
-  cursor: pointer;
 }
 
 .checkbox-custom {
   position: absolute;
   top: 0;
   left: 0;
-  width: 1.5rem;
   height: 1.5rem;
+  width: 1.5rem;
   background: var(--color-surface);
   border: 2px solid var(--color-border);
-  border-radius: 0.375rem;
+  border-radius: var(--border-radius);
   transition: all 0.2s ease;
 }
 
@@ -454,20 +449,9 @@ const formatCompletionInfo = computed(() => {
   border-color: var(--color-primary);
 }
 
-.checkmark-icon {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 1rem;
-  height: 1rem;
-  transform: translate(-50%, -50%);
-  fill: white;
-  opacity: 0;
-  transition: opacity 0.2s ease;
-}
-
-.checkbox-wrapper input:checked ~ .checkbox-custom .checkmark-icon {
-  opacity: 1;
+.completed {
+  text-decoration: line-through;
+  color: var(--color-text-light);
 }
 
 /* Task state transitions */
@@ -479,10 +463,5 @@ const formatCompletionInfo = computed(() => {
   background: var(--color-background);
   opacity: 0.5;
   backdrop-filter: blur(4px);
-}
-
-.completed h3 {
-  text-decoration: line-through;
-  color: var(--color-text-light);
 }
 </style>
