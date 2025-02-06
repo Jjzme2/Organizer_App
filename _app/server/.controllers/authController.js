@@ -296,7 +296,7 @@ exports.requestPasswordReset = async (req, res) => {
     const resetToken = authUtility.generateResetToken(user);
 
     // Create reset URL
-    const resetUrl = `${process.env.CLIENT_URL}/reset-password/${resetToken}`;
+    const resetUrl = `${process.env.CLIENT_URL}/update-password/${resetToken}`;
 
     // Send email
     const html = `

@@ -167,6 +167,23 @@ export const useTaskStore = defineStore('tasks', () => {
     }
   }
 
+  async function deactivateTask(taskId) {
+    try {
+      const response = await api.put(`/tasks/${taskId}/deactivate`)
+      const updatedTask = response.data
+
+      // Update task in state
+      const index = tasks.value.findIndex(t => t.id === taskId)
+      if (index !== -1) {
+        tasks.value[index] = { ...tasks.value[index], ...updatedTask }
+      }
+    } catch (err) {
+      handleError(err, 'Error deactivating task')
+    } finally {
+      loading.value = false
+    }
+  }
+
   return {
     // State
     tasks,
@@ -187,6 +204,7 @@ export const useTaskStore = defineStore('tasks', () => {
     fetchTaskReminders,
     updateTaskStatus,
     updateTaskPriority,
-    addTaskNote
+    addTaskNote,
+    deactivateTask
   }
 })

@@ -62,6 +62,24 @@
             </div>
           </template>
         </PaginatedTaskList>
+
+        <PaginatedTaskList
+          v-if="deactivatedTasks.length"
+          title="Archived Tasks"
+          :tasks="deactivatedTasks"
+          type="deactivated"
+          @reactivate="reactivateTask"
+          @delete="deleteTask"
+        >
+          <template #empty>
+            <div class="tasks-empty">
+              <svg class="empty-icon" viewBox="0 0 24 24">
+                <path d="M20.54 5.23l-1.39-1.68C18.88 3.21 18.47 3 18 3H6c-.47 0-.88.21-1.16.55L3.46 5.23C3.17 5.57 3 6.02 3 6.5V19c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6.5c0-.48-.17-.93-.46-1.27z"/>
+              </svg>
+              <p>No archived tasks</p>
+            </div>
+          </template>
+        </PaginatedTaskList>
       </div>
     </main>
 
@@ -90,7 +108,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useTaskStore } from '../stores/tasks'
 import { storeToRefs } from 'pinia'
 import PaginatedTaskList from '../components/PaginatedTaskList.vue'
@@ -108,6 +126,16 @@ const showCategoryModal = ref(false)
 const submitting = ref(false)
 const editingTask = ref(null)
 const showError = ref(true)
+
+const deactivatedTasks = computed(() => {
+  const oneWeekAgo = new Date()
+  oneWeekAgo.setDate(oneWeekAgo.getDate() - 7)
+
+  return completedTasks.value.filter(task => {
+    const completedDate = new Date(task.completedAt)
+    return completedDate < oneWeekAgo
+  })
+})
 
 const getErrorTitle = (err) => {
   if (typeof err === 'object' && err !== null) {
@@ -131,6 +159,7 @@ const getErrorTitle = (err) => {
 
 onMounted(() => {
   taskStore.fetchTasks()
+  checkAndDeactivateTasks()
 })
 
 function closeModal() {
@@ -214,6 +243,28 @@ async function handleAddNote(data) {
     await taskStore.addTaskNote(data)
   } catch {
     // Error is already handled by the store
+  }
+}
+
+async function reactivateTask(taskId) {
+  try {
+    await taskStore.reactivateTask(taskId)
+  } catch (err) {
+    console.error('Error reactivating task:', err)
+  }
+}
+
+async function checkAndDeactivateTasks() {
+  const oneWeekAgo = new Date()
+  oneWeekAgo.setDate(oneWeekAgo.getDate() - 7)
+
+  const tasksToDeactivate = completedTasks.value.filter(task => {
+    const completedDate = new Date(task.completedAt)
+    return completedDate < oneWeekAgo && !task.isDeactivated
+  })
+
+  for (const task of tasksToDeactivate) {
+    await taskStore.deactivateTask(task.id)
   }
 }
 </script>
