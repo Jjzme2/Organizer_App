@@ -92,11 +92,7 @@ const authUtility = {
     },
 
 	generateResetToken(userId) {
-		return jwt.sign(
-			{ userId, type: 'reset' },
-			process.env.JWT_RESET_SECRET,
-			{ expiresIn: '1h' }
-		);
+		return jwt.sign({ userId, type: "reset" }, process.env.RESET_TOKEN_SECRET, { expiresIn: "1h" });
 	},
 
 	verifyResetToken(token) {
