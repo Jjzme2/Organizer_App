@@ -160,31 +160,35 @@ exports.updatePassword = async (req, res) => {
     const { currentPassword, newPassword } = req.body;
 
     try {
-      // Find the user by their email
-      const user = await User.findOne({ where: { email: req.user.email } });
+      const user = await User.findByPk(req.user.id);
 
-      if (!user) {
-        return res.status(404).json({ error: 'User not found' });
-      }
-
-      // Compare the provided password with the hashed password stored in the database
-      const validPassword = await bcrypt.compare(currentPassword, user.password);
+      const validPassword = await bcrypt.compare(
+        currentPassword,
+        user.passwordHash
+      );
 
       if (!validPassword) {
-        return res.status(401).json({ error: 'Invalid password' });
+        return res.status(401).json({
+          error: 'Current password is incorrect'
+        });
       }
 
-      // Hash the new password
       const salt = await bcrypt.genSalt(10);
       const hashedPassword = await bcrypt.hash(newPassword, salt);
 
-      // Update the user's password
-      await user.update({ password: hashedPassword });
+      await user.update({
+        passwordHash: hashedPassword,
+        tokenVersion: user.tokenVersion + 1 // Invalidate old tokens
+      });
 
-      res.json({ message: 'Password updated successfully' });
+      res.json({
+        message: 'Password updated successfully'
+      });
     } catch (error) {
-      logger.error('Error updating password:', error);
-      res.status(500).json({ error: 'Failed to update password' });
+      logger.error('Password update error:', error);
+      res.status(500).json({
+        error: 'Failed to update password'
+      });
     }
   };
 
@@ -287,36 +291,73 @@ exports.requestPasswordReset = async (req, res) => {
 
   try {
     const user = await User.getByEmail(email);
+
     if (!user) {
-      // Return success even if user not found (security best practice)
-      return res.json({ message: 'If your email is registered, you will receive reset instructions' });
+      // Don't reveal if email exists
+      return res.json({
+        message: 'If an account exists with this email, you will receive reset instructions.'
+      });
     }
 
-    // Generate reset token
-    const resetToken = authUtility.generateResetToken(user);
-
-    // Create reset URL
+    const resetToken = authUtility.generateResetToken(user.id);
     const resetUrl = `${process.env.CLIENT_URL}/reset-password/${resetToken}`;
 
-    // Send email
-    const html = `
-      <h2>Password Reset Request</h2>
-      <p>You requested to reset your password. Click the link below to reset it:</p>
-      <a href="${resetUrl}">Reset Password</a>
-      <p>This link will expire in 1 hour.</p>
-      <p>If you didn't request this, please ignore this email.</p>
-    `;
+    await emailService.sendEmail({
+      to: user.email,
+      subject: 'Password Reset Request',
+      template: 'password-reset',
+      context: {
+        resetUrl,
+        username: user.username
+      }
+    });
 
-    await emailService.sendEmail(
-      user.email,
-      'Password Reset Request',
-      html
-    );
-
-    res.json({ message: 'Reset instructions sent successfully' });
+    res.json({
+      message: 'If an account exists with this email, you will receive reset instructions.'
+    });
   } catch (error) {
     logger.error('Password reset request error:', error);
-    res.status(500).json({ error: 'Failed to process reset request' });
+    res.status(500).json({
+      error: 'An error occurred while processing your request'
+    });
+  }
+};
+
+exports.resetPassword = async (req, res) => {
+  const { token } = req.params;
+  const { newPassword } = req.body;
+
+  try {
+    const decoded = authUtility.verifyResetToken(token);
+    if (!decoded) {
+      return res.status(400).json({
+        error: 'Invalid or expired reset token'
+      });
+    }
+
+    const user = await User.findByPk(decoded.userId);
+    if (!user) {
+      return res.status(404).json({
+        error: 'User not found'
+      });
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(newPassword, salt);
+
+    await user.update({
+      passwordHash: hashedPassword,
+      tokenVersion: user.tokenVersion + 1 // Invalidate old tokens
+    });
+
+    res.json({
+      message: 'Password has been reset successfully'
+    });
+  } catch (error) {
+    logger.error('Password reset error:', error);
+    res.status(500).json({
+      error: 'Failed to reset password'
+    });
   }
 };
 

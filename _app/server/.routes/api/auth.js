@@ -10,12 +10,14 @@ router.post('/register', authController.register);
 router.post('/login', authController.login);
 router.post('/refresh-token', authController.refreshToken);
 router.post('/logout', authController.logout);
-router.put('/update-password', authenticateToken, authController.updatePassword);
-router.post('/update-password', authController.resetPassword);
-router.post("/request-reset", authController.requestPasswordReset);
+
+// Password reset flow
+router.post('/forgot-password', authController.requestPasswordReset);
+router.post('/reset-password/:token', authController.resetPassword);
 
 // Protected routes
 router.get('/me', authenticateToken, authController.getCurrentUser);
+router.put('/update-password', authenticateToken, authController.updatePassword);
 
 // router.get('/google/callback', async (req, res) => {
 //   const oauth2Client = new google.auth.OAuth2(

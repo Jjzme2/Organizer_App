@@ -91,12 +91,20 @@ const authUtility = {
         }
     },
 
-	generateResetToken(user) {
-		return jwt.sign({ id: user.id }, process.env.RESET_TOKEN_SECRET, { expiresIn: '1h' });
+	generateResetToken(userId) {
+		return jwt.sign(
+			{ userId, type: 'reset' },
+			process.env.JWT_RESET_SECRET,
+			{ expiresIn: '1h' }
+		);
 	},
 
 	verifyResetToken(token) {
-		return jwt.verify(token, process.env.RESET_TOKEN_SECRET);
+		try {
+			return jwt.verify(token, process.env.JWT_RESET_SECRET);
+		} catch (error) {
+			return null;
+		}
 	},
 };
 
