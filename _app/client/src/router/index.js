@@ -4,6 +4,7 @@ import HomeView from '../views/HomeView.vue'
 import ForgotPassword from '../views/ForgotPassword.vue'
 import ResetPassword from '../views/ResetPassword.vue'
 import EmailVerification from '../views/EmailVerification.vue'
+import QuoteView from '../views/QuoteView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -82,6 +83,12 @@ const router = createRouter({
       path: '/verify-email/:token',
       name: 'EmailVerification',
       component: EmailVerification
+    },
+    {
+      path: '/quotes',
+      name: 'quotes',
+      component: QuoteView,
+      meta: { requiresAuth: true }
     }
   ],
 })

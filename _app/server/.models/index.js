@@ -3,6 +3,7 @@ const Task = require('./Task');
 const Category = require('./Category');
 const TaskReminder = require('./TaskReminder');
 const Role = require('./Role');
+const Quote = require('./Quote');
 
 // User and Role association
 User.belongsTo(Role, {
@@ -46,10 +47,22 @@ Task.hasMany(TaskReminder, {
     onDelete: 'CASCADE'
 });
 
+// Quote and User association
+Quote.belongsTo(User, {
+    foreignKey: 'userId',
+    onDelete: 'CASCADE'
+});
+
+User.hasMany(Quote, {
+    foreignKey: 'userId',
+    onDelete: 'CASCADE'
+});
+
 module.exports = {
     User,
     Task,
     Category,
     TaskReminder,
-    Role
+    Role,
+    Quote
 };

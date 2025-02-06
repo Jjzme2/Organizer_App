@@ -7,6 +7,7 @@ const authRoutes = require("./auth");
 const userRoutes = require("./user");
 const categoryRoutes = require("./categories");
 const taskReminderRoutes = require("./taskReminders");
+const quoteRoutes = require("./quotes");
 
 const routes = [
     {
@@ -32,6 +33,10 @@ const routes = [
     {
         path: "/task-reminders",
         routes: taskReminderRoutes
+    },
+    {
+        path: "/quotes",
+        routes: quoteRoutes
     }
 ];
 

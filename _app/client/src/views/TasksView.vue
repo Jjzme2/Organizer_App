@@ -100,6 +100,7 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
 import { useTaskStore } from '../stores/tasks'
+import { useQuoteStore } from '../stores/quote'
 import { storeToRefs } from 'pinia'
 import PaginatedTaskList from '../components/PaginatedTaskList.vue'
 import TaskForm from '../components/TaskForm.vue'
@@ -108,9 +109,12 @@ import MessageBox from '../components/MessageBox.vue'
 import BaseModal from '../components/ui/BaseModal.vue'
 import CategoryManagement from '../components/CategoryManagement.vue'
 import TaskList from '../components/TaskList.vue'
+import QuoteBanner from '../components/Quotes/QuoteBanner.vue'
 
 const taskStore = useTaskStore()
+const quoteStore = useQuoteStore()
 const { loading, error, incompleteTasks, recentlyCompletedTasks, completedTasks } = storeToRefs(taskStore)
+const { randomQuote } = storeToRefs(quoteStore)
 
 const showNewTaskForm = ref(false)
 const showCategoryModal = ref(false)
@@ -140,8 +144,11 @@ const getErrorTitle = (err) => {
   return 'Error'
 }
 
-onMounted(() => {
-  taskStore.fetchTasks()
+onMounted(async () => {
+  await Promise.all([
+    taskStore.fetchTasks(),
+    quoteStore.fetchRandomQuote()
+  ])
 })
 
 function closeModal() {
@@ -202,6 +209,10 @@ async function deleteTask(taskId) {
   } catch {
     // Error is already handled by the store
   }
+}
+
+const fetchNewRandomQuote = () => {
+  quoteStore.fetchRandomQuote()
 }
 </script>
 
@@ -283,5 +294,9 @@ async function deleteTask(taskId) {
   .view-content {
     padding: 0 var(--spacing-md);
   }
+}
+
+.quote-banner {
+  margin-bottom: var(--spacing-lg);
 }
 </style>
