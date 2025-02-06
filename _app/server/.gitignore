@@ -2,3 +2,5 @@
 .env
 
 _logs/
+
+config/config.js
