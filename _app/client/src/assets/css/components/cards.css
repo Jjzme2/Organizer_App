@@ -6,7 +6,40 @@
   transition: all var(--transition-normal);
   box-shadow: var(--shadow-sm);
   position: relative;
+  display: flex;
+  flex-direction: column;
+  min-height: 180px;
+  max-height: 320px;
+  height: auto;
+  width: 100%;
+}
+
+/* Add new styles for content wrapper */
+.task-card-content {
   overflow: hidden;
+  position: relative;
+  scroll-behavior: auto;
+}
+
+/* Add hover state for scrollable content */
+.task-card:hover .task-card-content {
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border) transparent;
+}
+
+/* Customize scrollbar for webkit browsers */
+.task-card:hover .task-card-content::-webkit-scrollbar {
+  width: 4px;
+}
+
+.task-card:hover .task-card-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.task-card:hover .task-card-content::-webkit-scrollbar-thumb {
+  background-color: var(--color-border);
+  border-radius: var(--border-radius-full);
 }
 
 .task-card:hover {

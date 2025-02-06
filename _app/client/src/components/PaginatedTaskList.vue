@@ -1,10 +1,7 @@
 <template>
   <section class="task-list-section">
     <div class="section-header">
-      <h2>
-        {{ title }}
-        <span class="task-count">({{ tasks.length }})</span>
-      </h2>
+      <h2>{{ title }}</h2>
       <div class="section-actions">
         <slot name="actions" />
         <button
@@ -12,7 +9,7 @@
           class="btn btn-text"
           @click="handleShowAll"
         >
-          {{ showAll ? 'Show Less' : `Show All (${tasks.length})` }}
+          {{ showAll ? 'Show Less' : 'Show All' }}
         </button>
       </div>
     </div>

@@ -25,4 +25,7 @@ router.post("/", authenticateToken, taskController.createItem);
 // Update a task
 router.put("/:id", authenticateToken, taskController.updateItem);
 
+// Deactivate a task
+router.put("/:id/deactivate", authenticateToken, taskController.deactivateItem);
+
 module.exports = router;

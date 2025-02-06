@@ -23,8 +23,24 @@ export const useTaskStore = defineStore('tasks', () => {
     })
   })
 
-  const incompleteTasks = computed(() => sortedTasks.value.filter(task => !task.isComplete))
-  const completedTasks = computed(() => sortedTasks.value.filter(task => task.isComplete))
+  const incompleteTasks = computed(() =>
+    sortedTasks.value.filter(task => !task.isComplete && task.isActive)
+  )
+
+  const completedTasks = computed(() =>
+    sortedTasks.value.filter(task => task.isComplete)
+  )
+
+  const recentlyCompletedTasks = computed(() =>
+    completedTasks.value
+      .slice()
+      .sort((a, b) => new Date(b.completedAt).getTime() - new Date(a.completedAt).getTime())
+      .slice(0, 3)
+  )
+
+  const archivedTasks = computed(() =>
+    sortedTasks.value.filter(task => !task.isActive)
+  )
 
   // Helper functions
   const checkAuth = () => {
@@ -194,6 +210,8 @@ export const useTaskStore = defineStore('tasks', () => {
     sortedTasks,
     incompleteTasks,
     completedTasks,
+    recentlyCompletedTasks,
+    archivedTasks,
     // Actions
     fetchTasks,
     createTask,

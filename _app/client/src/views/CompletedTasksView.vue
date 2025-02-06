@@ -12,12 +12,22 @@
           <h1>Completed Tasks</h1>
         </div>
         <div class="header-actions">
-          <select v-model="sortBy" class="sort-select">
-            <option value="completedAt-desc">Recently Completed</option>
-            <option value="completedAt-asc">Oldest Completed</option>
-            <option value="name-asc">Name (A-Z)</option>
-            <option value="name-desc">Name (Z-A)</option>
-          </select>
+          <div class="action-group">
+            <label class="toggle-label">
+              <input
+                type="checkbox"
+                v-model="showArchived"
+                class="toggle-input"
+              >
+              Show Archived
+            </label>
+            <select v-model="sortBy" class="sort-select">
+              <option value="completedAt-desc">Recently Completed</option>
+              <option value="completedAt-asc">Oldest Completed</option>
+              <option value="name-asc">Name (A-Z)</option>
+              <option value="name-desc">Name (Z-A)</option>
+            </select>
+          </div>
         </div>
       </div>
     </header>
@@ -59,12 +69,16 @@ import { storeToRefs } from 'pinia'
 import TaskCard from '../components/TaskCard.vue'
 
 const taskStore = useTaskStore()
-const { loading, completedTasks } = storeToRefs(taskStore)
+const { loading, completedTasks, deactivatedTasks } = storeToRefs(taskStore)
 
 const sortBy = ref('completedAt-desc')
+const showArchived = ref(false)
 
 const sortedTasks = computed(() => {
-  const tasks = [...completedTasks.value]
+  const tasks = showArchived.value
+    ? [...completedTasks.value, ...deactivatedTasks.value]
+    : completedTasks.value
+
   const [field, direction] = sortBy.value.split('-')
 
   return tasks.sort((a, b) => {
@@ -176,5 +190,23 @@ async function deleteTask(taskId) {
 
 .task-list-leave-active {
   position: absolute;
+}
+
+.action-group {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+}
+
+.toggle-label {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  color: var(--color-text);
+  cursor: pointer;
+}
+
+.toggle-input {
+  margin: 0;
 }
 </style>

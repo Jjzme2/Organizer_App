@@ -180,3 +180,88 @@ exports.updateItem = async (req, res) => {
     throw new AppError("Failed to update task", 500, "TASK_UPDATE_ERROR");
   }
 };
+
+// Deactivate an item by ID
+exports.deactivateItem = async (req, res) => {
+  try {
+    if (!req.user || !req.user.id) {
+      throw new AuthenticationError();
+    }
+
+    const task = await Task.findOne({
+      where: {
+        id: req.params.id,
+        userId: req.user.id
+      }
+    });
+
+    if (!task) {
+      throw new NotFoundError("Task not found");
+    }
+
+    if (!task.isComplete) {
+      throw new AppError("Only completed tasks can be deactivated", 400, "TASK_DEACTIVATE_ERROR");
+    }
+
+    const completedDate = new Date(task.completedAt);
+    const oneWeekAgo = new Date();
+    oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+
+    if (completedDate > oneWeekAgo) {
+      throw new AppError(
+        "Task must be completed for at least a week to be deactivated",
+        400,
+        "TASK_DEACTIVATE_ERROR"
+      );
+    }
+
+    await task.update({
+      isDeactivated: true,
+      deactivatedAt: new Date(),
+    });
+
+    res.json(task);
+  } catch (error) {
+    logger.error("Error deactivating task:", error);
+    if (error instanceof AppError || error instanceof AuthenticationError || error instanceof NotFoundError) {
+      throw error;
+    }
+    throw new AppError("Failed to deactivate task", 500, "TASK_DEACTIVATE_ERROR");
+  }
+};
+
+exports.reactivateItem = async (req, res) => {
+  try {
+    if (!req.user || !req.user.id) {
+      throw new AuthenticationError();
+    }
+
+    const task = await Task.findOne({
+      where: {
+        id: req.params.id,
+        userId: req.user.id
+      }
+    });
+
+    if (!task) {
+      throw new NotFoundError("Task not found");
+    }
+
+    if (!task.isDeactivated) {
+      throw new AppError("Task is not deactivated", 400, "TASK_REACTIVATE_ERROR");
+    }
+
+    await task.update({
+      isDeactivated: false,
+      deactivatedAt: null,
+    });
+
+    res.json(task);
+  } catch (error) {
+    logger.error("Error reactivating task:", error);
+    if (error instanceof AppError || error instanceof AuthenticationError || error instanceof NotFoundError) {
+      throw error;
+    }
+    throw new AppError("Failed to reactivate task", 500, "TASK_REACTIVATE_ERROR");
+  }
+};

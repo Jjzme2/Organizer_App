@@ -5,7 +5,8 @@
     "devClient": "cd _app/client && npm run dev",
     "start": "npm run build && cd _app/server && node index.js",
     "heroku-postbuild": "cd _app/client && npm install && npm run build && cd ../server && npm install",
-    "heroku:log": "heroku logs --tail --app ilytat-organizer"
+    "heroku:log": "heroku logs --tail --app ilytat-organizer",
+    "reset-admin": "node _app/server/scripts/resetAdminPassword.js"
   },
   "dependencies": {
     "node-schedule": "^2.1.1"

@@ -14,72 +14,62 @@
       v-model:show="showError"
     />
 
-    <main class="tasks-content" :class="{ 'is-loading': loading }">
-      <div v-if="loading" class="loading-overlay">
-        <div class="loading-spinner">Loading tasks...</div>
-      </div>
-
-      <div class="tasks-grid">
+    <main class="view-content">
+      <div class="tasks-content">
         <PaginatedTaskList
-          title="To Do"
-          :tasks="incompleteTasks"
+          :title="`Active Tasks (${incompleteTasks.length})`"
+          :tasks="activeTasks"
           type="incomplete"
+          :defaultLimit="5"
           @toggle="toggleTaskComplete"
           @edit="editTask"
           @delete="deleteTask"
-          @updateStatus="handleStatusUpdate"
-          @updatePriority="handlePriorityUpdate"
-          @addNote="handleAddNote"
         >
+          <template #actions>
+            <router-link to="/tasks/incomplete" class="btn btn-text">
+              Show All
+              <svg class="icon" viewBox="0 0 24 24">
+                <path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/>
+              </svg>
+            </router-link>
+          </template>
           <template #empty>
             <div class="tasks-empty">
               <svg class="empty-icon" viewBox="0 0 24 24">
-                <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V5h14v14zM17.99 9l-1.41-1.42-6.59 6.59-2.58-2.57-1.42 1.41 4 3.99z"/>
+                <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
               </svg>
-              <p>No tasks to do!</p>
-              <button @click="showNewTaskForm = true" class="btn btn-primary">Add Your First Task</button>
+              <p>No active tasks</p>
+              <button class="btn btn-primary" @click="showNewTaskForm = true">
+                Create Task
+              </button>
             </div>
           </template>
         </PaginatedTaskList>
 
-        <PaginatedTaskList
-          title="Completed"
-          :tasks="completedTasks"
-          type="completed"
+        <!-- Recently Completed Tasks -->
+        <TaskList
+          :title="`Recently Completed (${completedTasks.length})`"
+          :tasks="recentlyCompletedTasks"
           @toggle="toggleTaskComplete"
-          @edit="editTask"
           @delete="deleteTask"
-          @updateStatus="handleStatusUpdate"
-          @updatePriority="handlePriorityUpdate"
-          @addNote="handleAddNote"
         >
+          <template #actions>
+            <router-link to="/tasks/completed" class="btn btn-text">
+              Show All
+              <svg class="icon" viewBox="0 0 24 24">
+                <path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/>
+              </svg>
+            </router-link>
+          </template>
           <template #empty>
             <div class="tasks-empty">
               <svg class="empty-icon" viewBox="0 0 24 24">
                 <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/>
               </svg>
-              <p>No completed tasks yet</p>
+              <p>Let's get some tasks completed!</p>
             </div>
           </template>
-        </PaginatedTaskList>
-
-        <PaginatedTaskList
-          v-if="deactivatedTasks.length"
-          title="Archived Tasks"
-          :tasks="deactivatedTasks"
-          type="deactivated"
-          @reactivate="reactivateTask"
-          @delete="deleteTask"
-        >
-          <template #empty>
-            <div class="tasks-empty">
-              <svg class="empty-icon" viewBox="0 0 24 24">
-                <path d="M20.54 5.23l-1.39-1.68C18.88 3.21 18.47 3 18 3H6c-.47 0-.88.21-1.16.55L3.46 5.23C3.17 5.57 3 6.02 3 6.5V19c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6.5c0-.48-.17-.93-.46-1.27z"/>
-              </svg>
-              <p>No archived tasks</p>
-            </div>
-          </template>
-        </PaginatedTaskList>
+        </TaskList>
       </div>
     </main>
 
@@ -117,9 +107,10 @@ import TaskHeader from '../components/TaskHeader.vue'
 import MessageBox from '../components/MessageBox.vue'
 import BaseModal from '../components/ui/BaseModal.vue'
 import CategoryManagement from '../components/CategoryManagement.vue'
+import TaskList from '../components/TaskList.vue'
 
 const taskStore = useTaskStore()
-const { loading, error, incompleteTasks, completedTasks } = storeToRefs(taskStore)
+const { loading, error, incompleteTasks, recentlyCompletedTasks, completedTasks } = storeToRefs(taskStore)
 
 const showNewTaskForm = ref(false)
 const showCategoryModal = ref(false)
@@ -127,15 +118,7 @@ const submitting = ref(false)
 const editingTask = ref(null)
 const showError = ref(true)
 
-const deactivatedTasks = computed(() => {
-  const oneWeekAgo = new Date()
-  oneWeekAgo.setDate(oneWeekAgo.getDate() - 7)
-
-  return completedTasks.value.filter(task => {
-    const completedDate = new Date(task.completedAt)
-    return completedDate < oneWeekAgo
-  })
-})
+const activeTasks = computed(() => incompleteTasks.value)
 
 const getErrorTitle = (err) => {
   if (typeof err === 'object' && err !== null) {
@@ -159,7 +142,6 @@ const getErrorTitle = (err) => {
 
 onMounted(() => {
   taskStore.fetchTasks()
-  checkAndDeactivateTasks()
 })
 
 function closeModal() {
@@ -191,7 +173,7 @@ async function handleSubmit(formData) {
 }
 
 async function toggleTaskComplete(taskId) {
-  const task = [...incompleteTasks.value, ...completedTasks.value].find(t => t.id === taskId)
+  const task = incompleteTasks.value.find(t => t.id === taskId)
   if (!task) return
 
   if (task.isComplete) {
@@ -221,52 +203,6 @@ async function deleteTask(taskId) {
     // Error is already handled by the store
   }
 }
-
-async function handleStatusUpdate(data) {
-  try {
-    await taskStore.updateTaskStatus(data)
-  } catch {
-    // Error is already handled by the store
-  }
-}
-
-async function handlePriorityUpdate(data) {
-  try {
-    await taskStore.updateTaskPriority(data)
-  } catch {
-    // Error is already handled by the store
-  }
-}
-
-async function handleAddNote(data) {
-  try {
-    await taskStore.addTaskNote(data)
-  } catch {
-    // Error is already handled by the store
-  }
-}
-
-async function reactivateTask(taskId) {
-  try {
-    await taskStore.reactivateTask(taskId)
-  } catch (err) {
-    console.error('Error reactivating task:', err)
-  }
-}
-
-async function checkAndDeactivateTasks() {
-  const oneWeekAgo = new Date()
-  oneWeekAgo.setDate(oneWeekAgo.getDate() - 7)
-
-  const tasksToDeactivate = completedTasks.value.filter(task => {
-    const completedDate = new Date(task.completedAt)
-    return completedDate < oneWeekAgo && !task.isDeactivated
-  })
-
-  for (const task of tasksToDeactivate) {
-    await taskStore.deactivateTask(task.id)
-  }
-}
 </script>
 
 <style scoped>
@@ -276,7 +212,7 @@ async function checkAndDeactivateTasks() {
   flex-direction: column;
 }
 
-.tasks-content {
+.view-content {
   flex: 1;
   position: relative;
   padding: 0 var(--spacing-lg);
@@ -285,12 +221,10 @@ async function checkAndDeactivateTasks() {
   width: 100%;
 }
 
-.tasks-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: var(--spacing-lg);
-  padding: var(--spacing-md);
-  margin-bottom: var(--spacing-xl);
+.tasks-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xl);
 }
 
 .tasks-empty {
@@ -332,12 +266,21 @@ async function checkAndDeactivateTasks() {
   fill: currentColor;
 }
 
-@media (max-width: 768px) {
-  .tasks-grid {
-    grid-template-columns: 1fr;
-  }
+.btn-text {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  color: var(--color-primary);
+  text-decoration: none;
+  font-weight: 500;
+}
 
-  .tasks-content {
+.btn-text:hover {
+  color: var(--color-primary-dark);
+}
+
+@media (max-width: 768px) {
+  .view-content {
     padding: 0 var(--spacing-md);
   }
 }

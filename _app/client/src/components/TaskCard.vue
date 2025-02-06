@@ -7,77 +7,80 @@
       'task-uncompleting': task.isUncompleting,
       [`priority-${task.priority}`]: true
     }"
+    @mouseleave="handleMouseLeave"
   >
-    <div class="task-card-header">
-      <label class="checkbox-wrapper">
-        <input
-          type="checkbox"
-          :checked="task.isComplete"
-          @change="$emit('toggle', task.id)"
-          :disabled="task.isCompleting || task.isUncompleting"
-        >
-        <span class="checkbox-custom"></span>
-      </label>
-      <h3 :class="{ 'completed': task.isComplete }">{{ task.name }}</h3>
-    </div>
-
-    <p v-if="task.description" class="task-card-description">
-      {{ task.description }}
-    </p>
-
-    <div class="task-controls" v-if="!task.isComplete">
-      <div class="control-group">
-        <div class="control-row">
-          <label>Status:</label>
-          <select v-model="currentStatus" @change="handleStatusChange">
-            <option value="pending">Pending</option>
-            <option value="in_progress">In Progress</option>
-            <option value="completed">Completed</option>
-          </select>
-        </div>
-        <div class="control-row">
-          <label>Priority:</label>
-          <select v-model="currentPriority" @change="handlePriorityChange">
-            <option value="low">Low</option>
-            <option value="medium">Medium</option>
-            <option value="high">High</option>
-          </select>
-        </div>
+    <div class="task-card-content" ref="cardContent">
+      <div class="task-card-header">
+        <label class="checkbox-wrapper">
+          <input
+            type="checkbox"
+            :checked="task.isComplete"
+            @change="$emit('toggle', task.id)"
+            :disabled="task.isCompleting || task.isUncompleting"
+          >
+          <span class="checkbox-custom"></span>
+        </label>
+        <h3 :class="{ 'completed': task.isComplete }">{{ task.name }}</h3>
       </div>
-    </div>
 
-    <div class="task-notes-section">
-      <div v-if="task.notes && task.notes.length > 0" class="task-notes">
-        <div class="notes-header" @click="isNotesExpanded = !isNotesExpanded">
-          <span class="notes-title">📝 Notes ({{ task.notes.length }})</span>
-          <span class="expand-icon" :class="{ 'expanded': isNotesExpanded }">▼</span>
-        </div>
-        <div class="notes-list" v-if="isNotesExpanded">
-          <div v-for="(note, index) in formattedNotes" :key="index" class="note-item">
-            <template v-for="(segment, sIndex) in note.split('|')" :key="`${index}-${sIndex}`">
-              <span class="note-segment" :class="{ 'primary': sIndex === 0 }">
-                {{ segment.trim() }}
-              </span>
-            </template>
+      <p v-if="task.description" class="task-card-description">
+        {{ task.description }}
+      </p>
+
+      <div class="task-controls" v-if="!task.isComplete">
+        <div class="control-group">
+          <div class="control-row">
+            <label>Status:</label>
+            <select v-model="currentStatus" @change="handleStatusChange">
+              <option value="pending">Pending</option>
+              <option value="in_progress">In Progress</option>
+              <option value="completed">Completed</option>
+            </select>
+          </div>
+          <div class="control-row">
+            <label>Priority:</label>
+            <select v-model="currentPriority" @change="handlePriorityChange">
+              <option value="low">Low</option>
+              <option value="medium">Medium</option>
+              <option value="high">High</option>
+            </select>
           </div>
         </div>
       </div>
 
-      <div v-if="!task.isComplete" class="add-note">
-        <div class="note-input-wrapper">
-          <input
-            v-model="newNote"
-            type="text"
-            placeholder="Add note (use | to separate segments)..."
-            @keyup.enter="handleAddNote"
-          >
-          <button
-            class="btn add-btn"
-            :disabled="!newNote.trim()"
-            @click="handleAddNote"
-          >
-            Add
-          </button>
+      <div class="task-notes-section">
+        <div v-if="task.notes && task.notes.length > 0" class="task-notes">
+          <div class="notes-header" @click="isNotesExpanded = !isNotesExpanded">
+            <span class="notes-title">📝 Notes ({{ task.notes.length }})</span>
+            <span class="expand-icon" :class="{ 'expanded': isNotesExpanded }">▼</span>
+          </div>
+          <div class="notes-list" v-if="isNotesExpanded">
+            <div v-for="(note, index) in formattedNotes" :key="index" class="note-item">
+              <template v-for="(segment, sIndex) in note.split('|')" :key="`${index}-${sIndex}`">
+                <span class="note-segment" :class="{ 'primary': sIndex === 0 }">
+                  {{ segment.trim() }}
+                </span>
+              </template>
+            </div>
+          </div>
+        </div>
+
+        <div v-if="!task.isComplete" class="add-note">
+          <div class="note-input-wrapper">
+            <input
+              v-model="newNote"
+              type="text"
+              placeholder="Add note (use | to separate segments)..."
+              @keyup.enter="handleAddNote"
+            >
+            <button
+              class="btn add-btn"
+              :disabled="!newNote.trim()"
+              @click="handleAddNote"
+            >
+              Add
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -129,6 +132,7 @@ const currentStatus = ref(props.task.status)
 const currentPriority = ref(props.task.priority)
 const isNotesExpanded = ref(false)
 const newNote = ref('')
+const cardContent = ref(null)
 
 const handleStatusChange = () => {
   emit('updateStatus', { id: props.task.id, status: currentStatus.value })
@@ -193,6 +197,22 @@ const formatCompletionInfo = computed(() => {
     return `${Math.abs(diffDays)} day${Math.abs(diffDays) > 1 ? 's' : ''} late`
   }
 })
+
+const handleMouseLeave = () => {
+  if (cardContent.value) {
+    const content = cardContent.value
+    const currentScroll = content.scrollTop
+
+    if (currentScroll > 0) {
+      content.style.scrollBehavior = 'smooth'
+      content.scrollTop = 0
+
+      setTimeout(() => {
+        content.style.scrollBehavior = 'auto'
+      }, 300)
+    }
+  }
+}
 </script>
 
 <style scoped>
