@@ -341,11 +341,12 @@ exports.requestPasswordReset = async (req, res) => {
 
     res.json(response);
   } catch (error) {
-    logger.error('Password reset request failed', {
-      email,
-      error: error.message,
-      stack: error.stack
-    });
+	logger.error(error.message)
+	// logger.error('Password reset request failed', {
+    //   email,
+    //   error: error.message,
+    //   stack: error.stack
+    // });
 
     res.status(500).json({
       error: 'An error occurred while processing your request'
