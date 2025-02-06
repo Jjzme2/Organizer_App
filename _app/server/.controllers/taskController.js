@@ -1,7 +1,7 @@
 const { Op } = require("sequelize");
-const Task = require("../.models/Task");
-const Category = require("../.models/Category");
-const TaskReminder = require("../.models/TaskReminder");
+const Task = require("../models/Task");
+const Category = require("../models/Category");
+const TaskReminder = require("../models/TaskReminder");
 const logger = require("../utils/logger");
 const { AuthenticationError, NotFoundError, AppError } = require("../utils/errorUtils");
 

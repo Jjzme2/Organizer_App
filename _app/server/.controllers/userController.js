@@ -1,4 +1,4 @@
-const User = require("../.models/User"); // Import your Sequelize model
+const User = require("../models/User"); // Import your Sequelize model
 
 // Get all items
 exports.getAllItems = async (req, res) => {

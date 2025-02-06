@@ -1,4 +1,4 @@
-const Category = require("../.models/Category");
+const Category = require("../models/Category");
 const logger = require("../utils/logger");
 const { AuthenticationError, NotFoundError, AppError } = require("../utils/errorUtils");
 

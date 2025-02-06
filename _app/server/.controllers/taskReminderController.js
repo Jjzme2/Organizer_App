@@ -1,6 +1,6 @@
 const { Op } = require("sequelize");
-const TaskReminder = require("../.models/TaskReminder");
-const Task = require("../.models/Task");
+const TaskReminder = require("../models/TaskReminder");
+const Task = require("../models/Task");
 const logger = require("../utils/logger");
 
 exports.getAllItems = async (req, res) => {

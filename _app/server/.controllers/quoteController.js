@@ -1,4 +1,4 @@
-const Quote = require("../.models/Quote");
+const Quote = require("../models/Quote");
 const logger = require("../utils/logger");
 const { AuthenticationError, NotFoundError, AppError } = require("../utils/errorUtils");
 const { Op } = require("sequelize");

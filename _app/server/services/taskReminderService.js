@@ -1,8 +1,8 @@
 const schedule = require('node-schedule');
 const { Op } = require('sequelize');
-const TaskReminder = require('../.models/TaskReminder');
-const Task = require('../.models/Task');
-const User = require('../.models/User');
+const TaskReminder = require('../models/TaskReminder');
+const Task = require('../models/Task');
+const User = require('../models/User');
 const emailService = require('./emailService');
 const logger = require('../utils/logger');
 

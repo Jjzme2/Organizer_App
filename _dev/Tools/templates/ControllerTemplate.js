@@ -10,7 +10,7 @@
  */
 
 const { Op } = require("sequelize");
-const YourModel = require("../.models/YourModel"); // Import your Sequelize model
+const YourModel = require("../models/YourModel"); // Import your Sequelize model
 
 /*
  ---------------------------------------------------------------
@@ -71,7 +71,7 @@ exports.getAllItems = async (req, res) => {
   }
 };
 
-/* 
+/*
  ---------------------------------------------------------------
  | SETTERS |
  ---------------------------------------------------------------

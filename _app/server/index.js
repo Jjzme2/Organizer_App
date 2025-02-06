@@ -6,8 +6,6 @@ const cors = require("cors");
 const logger = require("./utils/logger"); // For more advanced logging (if needed)
 const path = require('path');
 
-// Import models with associations
-require('./.models/associations');
 
 const allowedOrigins = [
 	'http://localhost:5173',
