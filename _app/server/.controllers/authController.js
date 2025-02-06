@@ -290,6 +290,19 @@ exports.requestPasswordReset = async (req, res) => {
   const { email } = req.body;
 
   try {
+    logger.info('Processing password reset request', { email });
+
+    // Validate environment variables
+    if (!process.env.CLIENT_URL) {
+      logger.error('CLIENT_URL environment variable is not set');
+      throw new Error('Server configuration error');
+    }
+
+    if (!process.env.JWT_RESET_SECRET) {
+      logger.error('JWT_RESET_SECRET environment variable is not set');
+      throw new Error('Server configuration error');
+    }
+
     const user = await User.getByEmail(email);
 
     // Always return the same response regardless of whether the user exists
@@ -298,26 +311,40 @@ exports.requestPasswordReset = async (req, res) => {
     };
 
     if (!user) {
+      logger.info('No user found with email', { email });
       return res.json(response);
     }
 
     const resetToken = authUtility.generateResetToken(user.id);
     const resetUrl = `${process.env.CLIENT_URL}/reset-password/${resetToken}`;
 
+    logger.info('Sending password reset email', {
+      email,
+      resetUrl: resetUrl.replace(/\/[^/]*$/, '/[TOKEN]') // Log URL without token
+    });
+
     await emailService.send({
       to: user.email,
       template: 'passwordReset',
       context: {
-        username: user.username,
+        username: user.username || 'User',
         resetUrl
       }
+    }).catch(error => {
+      logger.error('Email service error', {
+        error: error.message,
+        stack: error.stack,
+        email
+      });
+      throw error;
     });
 
     res.json(response);
   } catch (error) {
     logger.error('Password reset request failed', {
       email,
-      error: error.message
+      error: error.message,
+      stack: error.stack
     });
 
     res.status(500).json({
