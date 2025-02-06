@@ -29,7 +29,16 @@ const logger = winston.createLogger({
     winston.format.colorize(),
     winston.format.timestamp({ format: "YYYY-MM-DD HH:mm:ss" }),
     winston.format.printf(
-      ({ timestamp, level, message }) => `\n ${timestamp} ${level}: \n ${message}`
+      ({ timestamp, level, message, ...metadata }) => {
+        let output = `\n ${timestamp} ${level}: \n ${message}`;
+
+        // Add any additional metadata if present
+        if (Object.keys(metadata).length > 0) {
+          output += `\n Additional Data: ${JSON.stringify(metadata, null, 2)}`;
+        }
+
+        return output;
+      }
     )
   ),
   transports: [

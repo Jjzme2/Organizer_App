@@ -27,6 +27,25 @@ class EmailService {
       throw error;
     }
   }
+
+  async send(to, template, context) {
+    try {
+      const msg = {
+        to,
+        from: process.env.EMAIL_FROM,
+        subject: 'Password Reset Request',
+		template,
+		context
+      };
+
+      const info = await sgMail.send(msg);
+      logger.info('Email sent successfully:', info[0].statusCode);
+      return info;
+	} catch (error) {
+		logger.error('Error sending email:', error);
+		throw error;
+	}
+  }
 }
 
 module.exports = new EmailService();
