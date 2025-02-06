@@ -4,11 +4,19 @@
       <p class="quote-text">"{{ quote.text }}"</p>
       <p class="quote-author">— {{ quote.author }}</p>
     </div>
-    <button @click="$emit('refresh')" class="refresh-btn" title="Get new quote">
-      <svg class="icon" viewBox="0 0 24 24">
-        <path d="M17.65 6.35A7.958 7.958 0 0012 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0112 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/>
-      </svg>
-    </button>
+    <div class="quote-actions">
+      <router-link to="/quotes" class="btn btn-text" title="View all quotes">
+        <svg class="icon" viewBox="0 0 24 24">
+          <path d="M6 17h3l2-4V7H5v6h3zm8 0h3l2-4V7h-6v6h3z"/>
+        </svg>
+        View All
+      </router-link>
+      <button @click="$emit('refresh')" class="refresh-btn" title="Get new quote">
+        <svg class="icon" viewBox="0 0 24 24">
+          <path d="M17.65 6.35A7.958 7.958 0 0012 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0112 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/>
+        </svg>
+      </button>
+    </div>
   </div>
 </template>
 
@@ -43,6 +51,25 @@ defineEmits(['refresh'])
 
 .quote-author {
   color: var(--color-text-light);
+}
+
+.quote-actions {
+  display: flex;
+  gap: var(--spacing-sm);
+  align-items: center;
+}
+
+.btn-text {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  color: var(--color-primary);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.btn-text:hover {
+  color: var(--color-primary-dark);
 }
 
 .refresh-btn {

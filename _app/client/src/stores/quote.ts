@@ -90,6 +90,21 @@ export const useQuoteStore = defineStore('quote', {
         this.error = 'Failed to delete quote'
         throw error
       }
+    },
+
+    async updateQuote(id: string, data: Partial<Quote>) {
+      this.error = null
+      try {
+        const response = await api.put(`/quotes/${id}`, data)
+        const index = this.quotes.findIndex(q => q.id === id)
+        if (index !== -1) {
+          this.quotes[index] = response.data
+        }
+        return response.data
+      } catch (error) {
+        this.error = 'Failed to update quote'
+        throw error
+      }
     }
   }
 })

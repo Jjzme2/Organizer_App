@@ -80,4 +80,16 @@ defineEmits(['add-task', 'manage-categories'])
   background: var(--color-primary-dark);
   border-color: var(--color-primary-dark);
 }
+
+.btn-text {
+  background: transparent;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-text:hover {
+  text-decoration: underline;
+}
 </style>

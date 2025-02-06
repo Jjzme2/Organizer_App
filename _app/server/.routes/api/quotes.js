@@ -18,5 +18,6 @@ router.get("/random", quoteController.getRandomQuote);
 router.post("/", quoteController.createQuote);
 router.put("/:id/favorite", quoteController.toggleFavorite);
 router.delete("/:id", quoteController.deleteQuote);
+router.put("/:id", quoteController.updateQuote);
 
 module.exports = router;

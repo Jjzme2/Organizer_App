@@ -2,6 +2,7 @@ const Quote = require("../models/Quote");
 const logger = require("../utils/logger");
 const { AuthenticationError, NotFoundError, AppError } = require("../utils/errorUtils");
 const { Op } = require("sequelize");
+const defaultQuotes = require("../config/defaultQuotes");
 
 exports.getAllQuotes = async (req, res) => {
   try {
@@ -33,10 +34,8 @@ exports.getRandomQuote = async (req, res) => {
     });
 
     if (!quote) {
-      return res.json({
-        text: "The journey of a thousand miles begins with one step.",
-        author: "Lao Tzu"
-      });
+      const randomDefault = defaultQuotes[Math.floor(Math.random() * defaultQuotes.length)];
+      return res.json(randomDefault);
     }
 
     res.json(quote);
@@ -113,5 +112,30 @@ exports.deleteQuote = async (req, res) => {
   } catch (error) {
     logger.error('Error in deleteQuote:', error);
     throw new AppError("Failed to delete quote", 500, "QUOTE_DELETE_ERROR");
+  }
+};
+
+exports.updateQuote = async (req, res) => {
+  try {
+    if (!req.user || !req.user.id) {
+      throw new AuthenticationError();
+    }
+
+    const quote = await Quote.findOne({
+      where: {
+        id: req.params.id,
+        userId: req.user.id
+      }
+    });
+
+    if (!quote) {
+      throw new NotFoundError("Quote not found");
+    }
+
+    await quote.update(req.body);
+    res.json(quote);
+  } catch (error) {
+    logger.error('Error in updateQuote:', error);
+    throw new AppError("Failed to update quote", 500, "QUOTE_UPDATE_ERROR");
   }
 };

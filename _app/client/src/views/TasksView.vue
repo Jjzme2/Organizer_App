@@ -27,7 +27,7 @@
         >
           <template #actions>
             <router-link to="/tasks/incomplete" class="btn btn-text">
-              Show All
+              {{ showAllText }}
               <svg class="icon" viewBox="0 0 24 24">
                 <path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/>
               </svg>
@@ -48,14 +48,14 @@
 
         <!-- Recently Completed Tasks -->
         <TaskList
-          :title="`Recently Completed (${completedTasks.length})`"
+          :title="`Recently Completed`"
           :tasks="recentlyCompletedTasks"
           @toggle="toggleTaskComplete"
           @delete="deleteTask"
         >
           <template #actions>
             <router-link to="/tasks/completed" class="btn btn-text">
-              Show All
+              {{ showAllText }}
               <svg class="icon" viewBox="0 0 24 24">
                 <path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/>
               </svg>
@@ -123,6 +123,8 @@ const editingTask = ref(null)
 const showError = ref(true)
 
 const activeTasks = computed(() => incompleteTasks.value)
+
+const showAllText = computed(() => 'Show All')
 
 const getErrorTitle = (err) => {
   if (typeof err === 'object' && err !== null) {
