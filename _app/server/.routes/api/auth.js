@@ -11,6 +11,7 @@ router.post('/login', authController.login);
 router.post('/refresh-token', authController.refreshToken);
 router.post('/logout', authController.logout);
 router.put('/update-password', authenticateToken, authController.updatePassword);
+router.post('/update-password', authController.resetPassword);
 router.post("/request-reset", authController.requestPasswordReset);
 
 // Protected routes

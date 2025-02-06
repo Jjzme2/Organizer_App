@@ -108,7 +108,7 @@ export const useAuthStore = defineStore('auth', () => {
     try {
       const response = await api.post('/auth/update-password', {
         token,
-        newPassword
+        newPassword,
       })
       return response.data
     } catch (error) {
