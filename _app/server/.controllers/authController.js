@@ -292,31 +292,34 @@ exports.requestPasswordReset = async (req, res) => {
   try {
     const user = await User.getByEmail(email);
 
+    // Always return the same response regardless of whether the user exists
+    const response = {
+      message: 'If an account exists with this email, you will receive reset instructions.'
+    };
+
     if (!user) {
-      // Don't reveal if email exists
-      return res.json({
-        message: 'If an account exists with this email, you will receive reset instructions.'
-      });
+      return res.json(response);
     }
 
     const resetToken = authUtility.generateResetToken(user.id);
     const resetUrl = `${process.env.CLIENT_URL}/reset-password/${resetToken}`;
 
-    await emailService.sendEmail({
+    await emailService.send({
       to: user.email,
-      subject: 'Password Reset Request',
-      template: 'password-reset',
+      template: 'passwordReset',
       context: {
-        resetUrl,
-        username: user.username
+        username: user.username,
+        resetUrl
       }
     });
 
-    res.json({
-      message: 'If an account exists with this email, you will receive reset instructions.'
-    });
+    res.json(response);
   } catch (error) {
-    logger.error('Password reset request error:', error);
+    logger.error('Password reset request failed', {
+      email,
+      error: error.message
+    });
+
     res.status(500).json({
       error: 'An error occurred while processing your request'
     });
