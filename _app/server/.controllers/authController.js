@@ -298,9 +298,9 @@ exports.requestPasswordReset = async (req, res) => {
       throw new Error('Server configuration error');
     }
 
-    if (!process.env.JWT_RESET_SECRET) {
-      logger.error('JWT_RESET_SECRET environment variable is not set');
-      throw new Error('Server configuration error');
+    if (!process.env.RESET_TOKEN_SECRET) {
+      logger.error("RESET_TOKEN_SECRET environment variable is not set");
+      throw new Error("Server configuration error");
     }
 
     const user = await User.getByEmail(email);

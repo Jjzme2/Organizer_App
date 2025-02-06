@@ -97,7 +97,7 @@ const authUtility = {
 
 	verifyResetToken(token) {
 		try {
-			return jwt.verify(token, process.env.JWT_RESET_SECRET);
+			return jwt.verify(token, process.env.RESET_TOKEN_SECRET);
 		} catch (error) {
 			return null;
 		}
