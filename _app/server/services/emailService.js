@@ -1,50 +1,66 @@
 const sgMail = require('@sendgrid/mail');
 const logger = require('../utils/logger');
-const dotenv = require('dotenv');
-
-dotenv.config();
 
 class EmailService {
   constructor() {
+    const requiredEnvVars = ['SENDGRID_API_KEY', 'EMAIL_FROM'];
+    const missingVars = requiredEnvVars.filter(varName => !process.env[varName]);
+
+    if (missingVars.length > 0) {
+      throw new Error(`Missing required environment variables: ${missingVars.join(', ')}`);
+    }
+
     sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+    this.from = process.env.EMAIL_FROM;
   }
 
   async sendEmail(to, subject, html, attachments = []) {
     try {
+      if (!this.isValidEmail(to)) {
+        throw new Error('Invalid recipient email address');
+      }
+
       const msg = {
         to,
-        from: process.env.EMAIL_FROM,
+        from: this.from,
         subject,
         html,
         attachments
       };
 
-      const info = await sgMail.send(msg);
-      logger.info('Email sent successfully:', info[0].statusCode);
-      return info;
+      const [response] = await sgMail.send(msg);
+      logger.info('Email sent successfully', { to, statusCode: response.statusCode });
+      return response;
     } catch (error) {
-      logger.error('Error sending email:', error);
+      logger.error('Failed to send email', { to, error: error.message });
       throw error;
     }
   }
 
-  async send(to, template, context) {
+  async sendTemplate(to, templateId, dynamicData = {}) {
     try {
+      if (!this.isValidEmail(to)) {
+        throw new Error('Invalid recipient email address');
+      }
+
       const msg = {
         to,
-        from: process.env.EMAIL_FROM,
-        subject: 'Password Reset Request',
-		template,
-		context
+        from: this.from,
+        templateId,
+        dynamicTemplateData: dynamicData
       };
 
-      const info = await sgMail.send(msg);
-      logger.info('Email sent successfully:', info[0].statusCode);
-      return info;
-	} catch (error) {
-		logger.error('Error sending email:', error);
-		throw error;
-	}
+      const [response] = await sgMail.send(msg);
+      logger.info('Template email sent successfully', { to, templateId, statusCode: response.statusCode });
+      return response;
+    } catch (error) {
+      logger.error('Failed to send template email', { to, templateId, error: error.message });
+      throw error;
+    }
+  }
+
+  isValidEmail(email) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   }
 }
 

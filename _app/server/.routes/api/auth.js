@@ -11,8 +11,13 @@ router.post('/login', authController.login);
 router.post('/refresh-token', authController.refreshToken);
 router.post('/logout', authController.logout);
 
+// Email verification routes
+router.post('/verify-email/:token', authController.verifyEmail);
+router.post('/resend-verification', authenticateToken, authController.resendVerification);
+
 // Password reset flow
 router.post('/forgot-password', authController.requestPasswordReset);
+
 router.post('/reset-password/:token', authController.resetPassword);
 
 // Protected routes

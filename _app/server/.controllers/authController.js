@@ -42,6 +42,13 @@ const removeRefreshToken = (userId, token) => {
     }
 };
 
+const handleAuthError = (error, res, customMessage) => {
+  logger.error(`${customMessage}:`, error);
+  const status = error.status || 500;
+  const message = error.message || 'Internal server error';
+  return res.status(status).json({ error: message });
+};
+
 exports.register = async (req, res) => {
     const { fName, lName, username, email, password } = req.body;
 
@@ -287,70 +294,52 @@ exports.getCurrentUser = async (req, res) => {
 };
 
 exports.requestPasswordReset = async (req, res) => {
-  const { email } = req.body;
+    const { email } = req.body;
 
-  try {
-    logger.info('Processing password reset request', { email });
-
-    // Validate environment variables
-    if (!process.env.CLIENT_URL) {
-      logger.error('CLIENT_URL environment variable is not set');
-      throw new Error('Server configuration error');
+    if(!email) {
+        return res.status(400).json({ error: "Email is required" });
     }
 
-    if (!process.env.RESET_TOKEN_SECRET) {
-      logger.error("RESET_TOKEN_SECRET environment variable is not set");
-      throw new Error("Server configuration error");
+    try {
+        // Validate environment variables
+        if (!process.env.CLIENT_URL || !process.env.RESET_TOKEN_SECRET || !process.env.SENDGRID_RESET_TEMPLATE_ID) {
+            throw new Error('Required environment variables are missing');
+        }
+
+        const user = await User.getByEmail(email);
+
+        // Always return success to prevent email enumeration
+        const response = {
+            message: 'If an account exists with this email, you will receive reset instructions.'
+        };
+
+        if (!user) {
+            logger.info('Password reset requested for non-existent email:', email);
+            return res.json(response);
+        }
+
+        const resetToken = authUtility.generateResetToken(user.id);
+        const resetUrl = `${process.env.CLIENT_URL}/reset-password/${resetToken}`;
+
+        await emailService.sendTemplate(
+            email,
+            process.env.SENDGRID_RESET_TEMPLATE_ID,
+            {
+                username: user.username || user.firstName || 'User',
+                resetUrl: resetUrl,
+                appName: process.env.APP_NAME || 'Task Manager',
+                expiryTime: '1 hour',
+                year: new Date().getFullYear()
+            }
+        );
+
+        res.json(response);
+    } catch (error) {
+        logger.error('Password reset request failed:', error);
+        res.status(500).json({
+            error: 'An error occurred while processing your request'
+        });
     }
-
-    const user = await User.getByEmail(email);
-
-    // Always return the same response regardless of whether the user exists
-    const response = {
-      message: 'If an account exists with this email, you will receive reset instructions.'
-    };
-
-    if (!user) {
-      logger.info('No user found with email', { email });
-      return res.json(response);
-    }
-
-    const resetToken = authUtility.generateResetToken(user.id);
-    const resetUrl = `${process.env.CLIENT_URL}/reset-password/${resetToken}`;
-
-    logger.info('Sending password reset email', {
-      email,
-      resetUrl: resetUrl.replace(/\/[^/]*$/, '/[TOKEN]') // Log URL without token
-    });
-
-    await emailService.send({
-      to: user.email,
-      template: 'passwordReset',
-      context: {
-        username: user.username || 'User',
-        resetUrl
-      }
-    }).catch(error => {
-      logger.error('Email service error', {
-        error: error.message,
-        stack: error.stack,
-        email
-      });
-      throw error;
-    });
-
-    res.json(response);
-  } catch (error) {
-	logger.error('Password reset request failed: ' + error.message, {
-      email,
-      error: error.message,
-      stack: error.stack
-    });
-
-    res.status(500).json({
-      error: 'An error occurred while processing your request'
-    });
-  }
 };
 
 exports.resetPassword = async (req, res) => {
@@ -410,5 +399,37 @@ exports.verifyEmail = async (req, res) => {
   } catch (error) {
     logger.error('Email verification error:', error);
     res.status(500).json({ error: 'Failed to verify email' });
+  }
+};
+
+exports.resendVerification = async (req, res) => {
+  try {
+    const user = await User.findByPk(req.user.id);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    if (user.emailVerified) {
+      return res.status(400).json({ error: 'Email is already verified' });
+    }
+
+    const verificationToken = authUtility.generateEmailToken(user.id);
+    const verificationUrl = `${process.env.CLIENT_URL}/verify-email/${verificationToken}`;
+
+    await emailService.sendTemplate(
+      user.email,
+      process.env.SENDGRID_VERIFICATION_TEMPLATE_ID,
+      {
+        username: user.username || user.firstName || 'User',
+        verificationUrl: verificationUrl,
+        appName: process.env.APP_NAME || 'Task Manager',
+        year: new Date().getFullYear()
+      }
+    );
+
+    res.json({ message: 'Verification email has been resent' });
+  } catch (error) {
+    logger.error('Resend verification error:', error);
+    res.status(500).json({ error: 'Failed to resend verification email' });
   }
 };

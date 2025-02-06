@@ -104,17 +104,16 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
-  async function resetPassword(token, newPassword) {
-    try {
-      const response = await api.post('/auth/update-password', {
-        token,
-        newPassword,
-      })
-      return response.data
-    } catch (error) {
-      throw new Error(error.response?.data?.message || 'Error resetting password')
-    }
-  }
+ async function resetPassword(token, newPassword) {
+   try {
+     const response = await api.post(`/auth/reset-password/${token}`, {
+       newPassword,
+     })
+     return response.data
+   } catch (error) {
+     throw new Error(error.response?.data?.message || 'Error resetting password')
+   }
+ }
 
   async function verifyEmail(token) {
     try {

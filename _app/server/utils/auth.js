@@ -2,8 +2,8 @@ const jwt = require("jsonwebtoken");
 const logger = require("./logger");
 
 // Ensure secrets are provided
-if (!process.env.JWT_SECRET || !process.env.REFRESH_TOKEN_SECRET) {
-    logger.error("JWT_SECRET and REFRESH_TOKEN_SECRET must be set in environment variables");
+if (!process.env.JWT_SECRET || !process.env.REFRESH_TOKEN_SECRET || !process.env.EMAIL_TOKEN_SECRET) {
+    logger.error("JWT_SECRET, REFRESH_TOKEN_SECRET, and EMAIL_TOKEN_SECRET must be set in environment variables");
     process.exit(1);
 }
 
@@ -97,11 +97,55 @@ const authUtility = {
 
 	verifyResetToken(token) {
 		try {
-			return jwt.verify(token, process.env.RESET_TOKEN_SECRET);
+			const decoded = jwt.verify(token, process.env.RESET_TOKEN_SECRET, {
+				algorithms: ["HS256"]
+			});
+
+			// Verify token type
+			if (decoded.type !== 'reset') {
+				logger.warn('Invalid token type provided to verifyResetToken');
+				return null;
+			}
+
+			return decoded;
 		} catch (error) {
+			logger.error('Reset token verification failed:', error.message);
 			return null;
 		}
 	},
+
+    generateEmailToken(userId) {
+        return jwt.sign(
+            {
+                id: userId,
+                type: 'email-verification'
+            },
+            process.env.EMAIL_TOKEN_SECRET,
+            {
+                expiresIn: '24h',
+                algorithm: 'HS256'
+            }
+        );
+    },
+
+    verifyEmailToken(token) {
+        try {
+            const decoded = jwt.verify(token, process.env.EMAIL_TOKEN_SECRET, {
+                algorithms: ['HS256']
+            });
+
+            // Verify token type
+            if (decoded.type !== 'email-verification') {
+                logger.warn('Invalid token type provided to verifyEmailToken');
+                return null;
+            }
+
+            return decoded;
+        } catch (error) {
+            logger.error('Email verification token verification failed:', error.message);
+            return null;
+        }
+    }
 };
 
 module.exports = authUtility;
