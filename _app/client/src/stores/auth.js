@@ -97,7 +97,7 @@ export const useAuthStore = defineStore('auth', () => {
 
   async function requestPasswordReset(email) {
     try {
-      const response = await api.post('/auth/request-reset', { email })
+      const response = await api.post('/auth/forgot-password', { email })
       return response.data
     } catch (error) {
       throw new Error(error.response?.data?.message || 'Error requesting password reset')
