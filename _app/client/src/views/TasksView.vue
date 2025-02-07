@@ -1,5 +1,9 @@
 <template>
   <div class="tasks-view">
+    <QuoteBanner
+      @refresh="fetchNewRandomQuote"
+      class="quote-banner"
+    />
     <TaskHeader
       @add-task="showNewTaskForm = true"
       @manage-categories="showCategoryModal = true"

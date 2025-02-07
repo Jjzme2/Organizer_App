@@ -1,8 +1,8 @@
 <template>
   <div class="quote-banner">
     <div class="quote-content">
-      <p class="quote-text">"{{ quote.text }}"</p>
-      <p class="quote-author">— {{ quote.author }}</p>
+      <p class="quote-text">"{{ displayQuote.text }}"</p>
+      <p class="quote-author">— {{ displayQuote.author }}</p>
     </div>
     <div class="quote-actions">
       <router-link to="/quotes" class="btn btn-text" title="View all quotes">
@@ -11,8 +11,13 @@
         </svg>
         View All
       </router-link>
-      <button @click="$emit('refresh')" class="refresh-btn" title="Get new quote">
-        <svg class="icon" viewBox="0 0 24 24">
+      <button
+        @click="fetchNewRandomQuote"
+        class="refresh-btn"
+        title="Get new quote"
+        :disabled="isLoading"
+      >
+        <svg class="icon" :class="{ 'rotating': isLoading }" viewBox="0 0 24 24">
           <path d="M17.65 6.35A7.958 7.958 0 0012 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0112 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/>
         </svg>
       </button>
@@ -20,15 +25,61 @@
   </div>
 </template>
 
-<script setup>
-defineProps({
-  quote: {
-    type: Object,
-    required: true
-  }
-})
+<script setup lang="ts">
+interface Quote {
+  text: string;
+  author: string;
+  id?: string;
+  source?: string;
+  category?: string;
+  isFavorite?: boolean;
+}
 
-defineEmits(['refresh'])
+const props = defineProps<{
+  quote?: Quote | null;
+}>();
+
+import { ref, onMounted, computed } from 'vue';
+import { useQuoteStore } from '../../stores/quote';
+import { storeToRefs } from 'pinia';
+
+const quoteStore = useQuoteStore();
+const { randomQuote } = storeToRefs(quoteStore);
+const isLoading = ref(false);
+
+// Use the default quotes from the server as fallback
+const defaultQuote: Quote = {
+  text: "The journey of a thousand miles begins with one step.",
+  author: "Lao Tzu",
+  category: "motivation"
+};
+
+const displayQuote = computed(() => {
+  if (props.quote?.text && props.quote?.author) {
+    return props.quote;
+  }
+
+  return randomQuote.value || defaultQuote;
+});
+
+const fetchNewRandomQuote = async () => {
+  if (isLoading.value) return;
+
+  isLoading.value = true;
+  try {
+    await quoteStore.fetchRandomQuote();
+  } catch (error) {
+    console.error('Failed to fetch random quote:', error);
+  } finally {
+    isLoading.value = false;
+  }
+};
+
+onMounted(async () => {
+  if (!props.quote && !randomQuote.value) {
+    await fetchNewRandomQuote();
+  }
+});
 </script>
 
 <style scoped>
@@ -82,7 +133,12 @@ defineEmits(['refresh'])
   transition: all 0.2s ease;
 }
 
-.refresh-btn:hover {
+.refresh-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.refresh-btn:not(:disabled):hover {
   color: var(--color-primary);
   background: var(--color-surface-hover);
 }
@@ -90,5 +146,14 @@ defineEmits(['refresh'])
 .icon {
   width: 1.5rem;
   height: 1.5rem;
+}
+
+.rotating {
+  animation: rotate 1s linear infinite;
+}
+
+@keyframes rotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 </style>
