@@ -24,7 +24,7 @@ router.get("/", async (req, res) => {
             status,
             timestamp: new Date().toISOString(),
             service: {
-                name: "Organizer App API",
+                name: "ILYTAT Organizer API",
                 environment: process.env.NODE_ENV === 'production' ? 'production' : 'development'
             }
         };

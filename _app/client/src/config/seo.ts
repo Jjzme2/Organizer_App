@@ -15,7 +15,7 @@ interface SeoConfig {
 
 const seoConfig: SeoConfig = {
   default: {
-    title: 'Organizer App - Your Personal Task Management Solution',
+    title: 'ILYTAT Organizer - Your Personal Task Management Solution',
     description: 'Streamline your productivity with our intuitive task management app. Organize tasks, set reminders, and track progress with ease.',
     keywords: ['task management', 'productivity', 'organization', 'to-do list', 'reminders', 'project management'],
     image: '/meta/default-social.png',
@@ -23,49 +23,49 @@ const seoConfig: SeoConfig = {
   },
   pages: {
     home: {
-      title: 'Welcome to Organizer App - Smart Task Management',
-      description: 'Get started with Organizer App and transform the way you manage tasks. Features include task organization, reminders, and progress tracking.',
+      title: 'Welcome to ILYTAT Organizer - Smart Task Management',
+      description: 'Get started with ILYTAT Organizer and transform the way you manage tasks. Features include task organization, reminders, and progress tracking.',
       keywords: ['task manager', 'getting started', 'productivity tool', 'organization app'],
       type: 'website'
     },
     tasks: {
-      title: 'Manage Your Tasks - Organizer App',
+      title: 'Manage Your Tasks - ILYTAT Organizer',
       description: 'View, create, and organize your tasks efficiently. Stay on top of your to-dos with our intuitive task management interface.',
       keywords: ['task list', 'to-do', 'task management', 'productivity'],
       type: 'website'
     },
     calendar: {
-      title: 'Task Calendar - Organizer App',
+      title: 'Task Calendar - ILYTAT Organizer',
       description: 'View your tasks in a calendar format. Plan ahead and manage your schedule effectively with our calendar view.',
       keywords: ['calendar', 'schedule', 'planning', 'time management'],
       type: 'website'
     },
     profile: {
-      title: 'Your Profile - Organizer App',
-      description: 'Manage your profile settings and preferences. Customize your Organizer App experience.',
+      title: 'Your Profile - ILYTAT Organizer',
+      description: 'Manage your profile settings and preferences. Customize your ILYTAT Organizer experience.',
       keywords: ['profile', 'settings', 'preferences', 'account'],
       type: 'profile'
     },
     login: {
-      title: 'Login - Organizer App',
-      description: 'Log in to your Organizer App account to access your tasks and preferences.',
+      title: 'Login - ILYTAT Organizer',
+      description: 'Log in to your ILYTAT Organizer account to access your tasks and preferences.',
       keywords: ['login', 'sign in', 'account access'],
       type: 'website'
     },
     register: {
-      title: 'Create Account - Organizer App',
-      description: 'Sign up for Organizer App and start managing your tasks more effectively.',
+      title: 'Create Account - ILYTAT Organizer',
+      description: 'Sign up for ILYTAT Organizer and start managing your tasks more effectively.',
       keywords: ['register', 'sign up', 'create account', 'new user'],
       type: 'website'
     },
     completedTasks: {
-      title: 'Completed Tasks - Organizer App',
+      title: 'Completed Tasks - ILYTAT Organizer',
       description: 'View your completed tasks and track your productivity progress.',
       keywords: ['completed tasks', 'achievements', 'task history', 'productivity tracking'],
       type: 'website'
     },
     incompleteTasks: {
-      title: 'Active Tasks - Organizer App',
+      title: 'Active Tasks - ILYTAT Organizer',
       description: 'View and manage your active and pending tasks. Stay organized and on track.',
       keywords: ['active tasks', 'pending tasks', 'current tasks', 'to-do list'],
       type: 'website'
@@ -93,7 +93,7 @@ export const generateMetaTags = (config: MetaConfig) => {
     { property: 'og:image', content: imageUrl },
     { property: 'og:type', content: config.type || 'website' },
     { property: 'og:url', content: baseUrl },
-    { property: 'og:site_name', content: 'Organizer App' },
+    { property: 'og:site_name', content: 'ILYTAT Organizer' },
     
     // Twitter Card Tags
     { name: 'twitter:card', content: 'summary_large_image' },
@@ -102,8 +102,8 @@ export const generateMetaTags = (config: MetaConfig) => {
     { name: 'twitter:image', content: imageUrl },
     
     // Additional Meta Tags
-    { name: 'application-name', content: 'Organizer App' },
-    { name: 'apple-mobile-web-app-title', content: 'Organizer App' },
+    { name: 'application-name', content: 'ILYTAT Organizer' },
+    { name: 'apple-mobile-web-app-title', content: 'ILYTAT Organizer' },
     { name: 'theme-color', content: '#4CAF50' }
   ];
 };
