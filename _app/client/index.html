@@ -1,13 +1,74 @@
 <!DOCTYPE html>
-<html lang="">
+<html lang="en">
   <head>
     <meta charset="UTF-8">
-    <link rel="icon" href="/favicon.ico">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ILYTAT Organizer</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    
+    <!-- Primary Meta Tags -->
+    <title>Organizer App - Your Personal Task Management Solution</title>
+    <meta name="title" content="Organizer App - Your Personal Task Management Solution">
+    <meta name="description" content="Streamline your productivity with our intuitive task management app. Organize tasks, set reminders, and track progress with ease.">
+    <meta name="keywords" content="task management, productivity, organization, to-do list, reminders, project management">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://organizer-app.com/">
+    <meta property="og:title" content="Organizer App - Your Personal Task Management Solution">
+    <meta property="og:description" content="Streamline your productivity with our intuitive task management app. Organize tasks, set reminders, and track progress with ease.">
+    <meta property="og:image" content="https://organizer-app.com/meta/default-social.png">
+    
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://organizer-app.com/">
+    <meta property="twitter:title" content="Organizer App - Your Personal Task Management Solution">
+    <meta property="twitter:description" content="Streamline your productivity with our intuitive task management app. Organize tasks, set reminders, and track progress with ease.">
+    <meta property="twitter:image" content="https://organizer-app.com/meta/default-social.png">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="/icons/favicon.svg">
+    <link rel="alternate icon" type="image/png" href="/icons/favicon.png">
+    <link rel="apple-touch-icon" href="/icons/app-icon.svg">
+    <link rel="mask-icon" href="/icons/app-icon.svg" color="#4CAF50">
+    
+    <!-- PWA -->
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#4CAF50">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Organizer App">
+    
+    <!-- Additional Meta Tags -->
+    <meta name="application-name" content="Organizer App">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="format-detection" content="telephone=no">
+    <meta name="msapplication-TileColor" content="#4CAF50">
+    <meta name="msapplication-config" content="/browserconfig.xml">
+    
+    <!-- Preconnect to Origins -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Prevent Flash of Unstyled Content -->
+    <style>
+      html { background: #ffffff; }
+      @media (prefers-color-scheme: dark) {
+        html { background: #121212; }
+      }
+    </style>
   </head>
   <body>
     <div id="app"></div>
-    <script type="module" src="/src/main.js"></script>
+    <script type="module" src="/src/main.ts"></script>
+    
+    <!-- No-JavaScript Fallback -->
+    <noscript>
+      <div style="padding: 20px; text-align: center;">
+        <h1>JavaScript Required</h1>
+        <p>We're sorry, but Organizer App requires JavaScript to function properly. Please enable JavaScript to continue.</p>
+      </div>
+    </noscript>
   </body>
 </html>
