@@ -64,7 +64,7 @@
 
 <script setup>
 import { reactive } from 'vue'
-import BaseModal from '../ui/BaseModal.vue'
+import BaseModal from '../modals/BaseModal.vue'
 
 const props = defineProps({
   show: Boolean,

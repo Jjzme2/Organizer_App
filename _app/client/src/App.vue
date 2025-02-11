@@ -3,11 +3,16 @@
     <Navbar />
     <main class="main-content">
       <div class="container view-container">
-        <router-view v-slot="{ Component }">
-          <transition name="fade" mode="out-in">
-            <component :is="Component" />
-          </transition>
-        </router-view>
+<router-view v-slot="{ Component }">
+<transition name="fade" mode="out-in">
+<component v-if="Component" :is="Component" />
+<div v-else class="loading-container">
+<div class="loading-spinner"></div>
+<div class="loading-text">Loading...</div>
+<div class="loading-subtext">Something went wrong. Please try refreshing the page.</div>
+</div>
+</transition>
+</router-view>
       </div>
     </main>
   </div>
@@ -22,6 +27,7 @@ import Navbar from './components/Navbar.vue'
 
 .app {
   min-height: 100vh;
+  width: clamp(300px, 40vw, 800px);
   display: flex;
   flex-direction: column;
 }

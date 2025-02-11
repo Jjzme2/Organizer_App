@@ -28,17 +28,27 @@ exports.getRandomQuote = async (req, res) => {
       throw new AuthenticationError();
     }
 
-    const quote = await Quote.findOne({
-      where: { userId: req.user.id },
-      order: [Op.random()]
+    // Count the number of quotes for the user
+    const count = await Quote.count({
+      where: { userId: req.user.id }
     });
 
-    if (!quote) {
+    if (count === 0) {
       const randomDefault = defaultQuotes[Math.floor(Math.random() * defaultQuotes.length)];
       return res.json(randomDefault);
     }
 
-    res.json(quote);
+    // Generate a random offset
+    const randomOffset = Math.floor(Math.random() * count);
+
+    // Fetch a random quote using the offset
+    const quotes = await Quote.findAll({
+      where: { userId: req.user.id },
+      limit: 1,
+      offset: randomOffset
+    });
+
+    res.json(quotes[0]);
   } catch (error) {
     logger.error('Error in getRandomQuote:', error);
     throw new AppError("Failed to get random quote", 500, "QUOTE_FETCH_ERROR");

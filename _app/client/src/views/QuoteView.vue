@@ -127,7 +127,7 @@ import { storeToRefs } from 'pinia'
 import QuoteBanner from '../components/Quotes/QuoteBanner.vue'
 import QuoteCard from '../components/Quotes/QuoteCard.vue'
 import AddQuoteModal from '../components/Quotes/AddQuoteModal.vue'
-import BaseModal from '../components/ui/BaseModal.vue'
+import BaseModal from '../components/modals/BaseModal.vue'
 import MessageBox from '../components/MessageBox.vue'
 
 const quoteStore = useQuoteStore()

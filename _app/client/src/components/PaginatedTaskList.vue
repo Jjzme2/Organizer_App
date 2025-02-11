@@ -3,13 +3,12 @@
     <div class="section-header">
       <h2>{{ title }}</h2>
       <div class="section-actions">
-        <slot name="actions" />
         <button
           v-if="tasks.length > defaultLimit"
           class="btn btn-text"
           @click="handleShowAll"
         >
-          {{ showAll ? 'Show Less' : 'Show All' }}
+          {{ showAll ? 'Show Less' : `View All (${tasks.length})` }}
         </button>
       </div>
     </div>
@@ -17,18 +16,18 @@
     <TransitionGroup
       name="task-list"
       tag="div"
-      class="task-list"
+      class="task-grid"
     >
       <TaskCard
         v-for="task in displayedTasks"
         :key="task.id"
         :task="task"
-        @toggle="$emit('toggle', $event)"
-        @edit="$emit('edit', $event)"
-        @delete="$emit('delete', $event)"
-        @updateStatus="$emit('updateStatus', $event)"
-        @updatePriority="$emit('updatePriority', $event)"
-        @addNote="$emit('addNote', $event)"
+        @toggle-complete="emit('toggle-complete', task.id)"
+        @edit="emit('edit', task)"
+        @delete="emit('delete', task.id)"
+        @update-status="emit('update-status', $event)"
+        @update-priority="emit('update-priority', $event)"
+        @add-note="emit('add-note', $event)"
       />
     </TransitionGroup>
 
@@ -42,10 +41,7 @@
 
 <script setup>
 import { computed, ref } from 'vue'
-import TaskCard from './TaskCard.vue'
-import { useRouter } from 'vue-router'
-
-const router = useRouter()
+import TaskCard from './cards/TaskCard.vue'
 
 const props = defineProps({
   title: {
@@ -58,16 +54,18 @@ const props = defineProps({
   },
   defaultLimit: {
     type: Number,
-    default: 3
-  },
-  type: {
-    type: String,
-    required: true,
-    validator: (value) => ['completed', 'incomplete'].includes(value)
+    default: 4
   }
 })
 
-defineEmits(['toggle', 'edit', 'delete', 'updateStatus', 'updatePriority', 'addNote'])
+const emit = defineEmits([
+  'toggle-complete',
+  'edit',
+  'delete',
+  'update-status',
+  'update-priority',
+  'add-note'
+])
 
 const showAll = ref(false)
 
@@ -77,47 +75,73 @@ const displayedTasks = computed(() => {
 })
 
 function handleShowAll() {
-  if (!showAll.value) {
-    router.push(`/tasks/${props.type}`)
-  } else {
-    showAll.value = false
-  }
+  showAll.value = !showAll.value
 }
 </script>
 
 <style scoped>
 .task-list-section {
-  background: var(--color-surface-dark);
-  border-radius: 20px;
+  background: var(--color-surface);
+  border-radius: 8px;
   padding: 1.5rem;
   height: 100%;
   display: flex;
   flex-direction: column;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .section-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1rem;
 }
 
-.section-actions {
-  display: flex;
-  gap: 0.5rem;
-  align-items: center;
+.section-header h2 {
+  font-size: 1.25rem;
+  color: var(--color-text-primary);
+  margin: 0;
+}
+
+.task-grid {
+  display: grid;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 2rem;
+  color: var(--color-text-light);
 }
 
 .btn-text {
-  color: var(--color-primary);
-  font-size: 0.875rem;
-  padding: 0.25rem 0.5rem;
-  background: transparent;
+  background: none;
   border: none;
+  color: var(--color-primary);
+  text-decoration: underline;
+  padding: 0.25rem;
   cursor: pointer;
+  font-weight: 500;
 }
 
 .btn-text:hover {
-  text-decoration: underline;
+  color: var(--color-primary-dark);
+}
+
+/* Transition animations */
+.task-list-enter-active,
+.task-list-leave-active {
+  transition: all 0.3s ease;
+}
+
+.task-list-enter-from,
+.task-list-leave-to {
+  opacity: 0;
+  transform: translateY(30px);
+}
+
+.task-list-move {
+  transition: transform 0.3s ease;
 }
 </style>

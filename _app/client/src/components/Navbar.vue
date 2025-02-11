@@ -10,6 +10,7 @@
         <span class="nav-link" :class="{ 'active': $route.path === '/' }" @click="navTo('/')">Home</span>
         <span class="nav-link" :class="{ 'active': $route.path === '/tasks' }" @click="navTo('/tasks')">Tasks</span>
         <span class="nav-link" :class="{ 'active': $route.path === '/calendar' }" @click="navTo('/calendar')">Calendar</span>
+        <span class="nav-link" :class="{ 'active': $route.path === '/notebook' }" @click="navTo('/notebook')">Notebook</span>
       </div>
 
       <div class="nav-actions">

@@ -153,10 +153,10 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
-import BaseSlider from './ui/BaseSlider.vue'
-import { reminderService } from '../services/reminderService'
-import { useCategoryStore } from '../stores/categories'
-import type { Task, TaskFormData } from '../types/task'
+import BaseSlider from '../ui/BaseSlider.vue'
+import { reminderService } from '../../services/reminderService'
+import { useCategoryStore } from '../../stores/categories'
+import type { Task, TaskFormData } from '../../types/task'
 
 const props = defineProps<{
   task: Task | null

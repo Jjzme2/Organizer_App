@@ -28,4 +28,9 @@ router.put("/:id", authenticateToken, taskController.updateItem);
 // Deactivate a task
 router.put("/:id/deactivate", authenticateToken, taskController.deactivateItem);
 
+// Delete a task
+router.delete("/:id", authenticateToken, taskController.deleteItem);
+
+
+
 module.exports = router;

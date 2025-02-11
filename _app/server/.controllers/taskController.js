@@ -265,3 +265,48 @@ exports.reactivateItem = async (req, res) => {
     throw new AppError("Failed to reactivate task", 500, "TASK_REACTIVATE_ERROR");
   }
 };
+
+// Delete an item by ID
+exports.deleteItem = async (req, res) => {
+  try {
+    // Ensure user is authenticated
+    if (!req.user || !req.user.id) {
+      throw new AuthenticationError();
+    }
+
+    const { id } = req.params;
+    
+    // Find the task
+    const task = await Task.findOne({
+      where: {
+        id,
+        userId: req.user.id // Ensure the task belongs to the user
+      }
+    });
+
+    if (!task) {
+      throw new NotFoundError('Task not found');
+    }
+
+    // Delete associated reminders first
+    await TaskReminder.destroy({
+      where: { taskId: id }
+    });
+
+    // Delete the task
+    await task.destroy();
+
+    logger.info(`Task ${id} deleted successfully`);
+    res.status(200).json({ message: 'Task deleted successfully' });
+
+  } catch (error) {
+    logger.error('Error deleting task:', error);
+    if (error instanceof AuthenticationError || error instanceof NotFoundError) {
+      res.status(error.statusCode).json({ error: error.message });
+    } else {
+      res.status(500).json({ error: 'Failed to delete task' });
+    }
+  }
+};
+
+module.exports = exports;

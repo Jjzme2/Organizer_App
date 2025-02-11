@@ -1,136 +1,104 @@
 <template>
-  <div class="login-view">
-    <h1>Login</h1>
-    <form @submit.prevent="handleSubmit" class="login-form">
-      <div class="form-group">
-        <label for="email">Email</label>
-        <input id="email" v-model="email" type="email" required placeholder="Enter your email" />
-      </div>
-
-      <div class="form-group">
-        <label for="password">Password</label>
-        <input
-          id="password"
-          v-model="password"
-          type="password"
-          required
-          placeholder="Enter your password"
-        />
-      </div>
-
-      <div v-if="error" class="error-message">
-        {{ error }}
-      </div>
-
-      <button type="submit" :disabled="loading">
-        {{ loading ? 'Logging in...' : 'Login' }}
-      </button>
-
-      <div class="register-link">
-        Don't have an account?
-        <router-link to="/register">Register here</router-link>
-      </div>
-
-      <div class="forgot-password-link">
-  <router-link to="/forgot-password">Forgot Password?</router-link>
-</div>
-    </form>
+  <div class="login-wrapper">
+<div class="login-view">
+  <div class="login-left">
+    <LoginForm />
   </div>
+  <div class="login-right">
+    <LoginAnnouncer
+      backgroundImage='/src/assets/images/hero-bg.jpg'
+      mainText_1="Organize Your Life,"
+      mainText_2="One Task at a Time"
+      subText="A powerful, intuitive task management solution that helps you stay focused and productive"
+      buttonText="Get Started - It's Free"
+      buttonRoute="/register"
+    />
+    <FeatureList />
+  </div>
+</div>
+</div>
+
 </template>
 
 <script setup>
-import { ref } from 'vue'
-import { useRouter, useRoute } from 'vue-router'
-import { useAuthStore } from '../stores/auth'
-
-const router = useRouter()
-const route = useRoute()
-const authStore = useAuthStore()
-
-const email = ref('')
-const password = ref('')
-const error = ref('')
-const loading = ref(false)
-
-async function handleSubmit() {
-  if (loading.value) return
-
-  loading.value = true
-  error.value = ''
-
-  try {
-    await authStore.login(email.value, password.value)
-    const redirectPath = route.query.redirect || '/'
-    router.push(redirectPath)
-  } catch (err) {
-    error.value = err.message
-  } finally {
-    loading.value = false
-  }
-}
+import LoginAnnouncer from '@/components/LoginAnnouncer.vue';
+import LoginForm from '@/components/LoginForm.vue';
+import FeatureList from '@/components/FeatureList.vue';
 </script>
 
 <style scoped>
-.login-view {
-  max-width: 400px;
-  margin: 40px auto;
-  padding: 20px;
+.login-wrapper {
+display: flex;
+flex-direction: column;
+align-items: center;
+justify-content: center;
+padding: 2rem;
+min-height: 100vh;
 }
-
 .login-form {
+width: 100%;
+max-width: 400px;
+margin: 0 auto;
+padding: 1rem;
+border: 1px solid #ccc;
+border-radius: 4px;
+}
+
+.login-view {
+  display: flex; /* Use flexbox to create a responsive layout */
+  justify-content: space-between; /* Space between child elements */
+  align-items: center; /* Center items vertically */
+  padding: 20px;
+  border-radius: 8px; /* Rounded corners for a softer look */
+}
+
+.login-left {
+  flex: 1; /* Allows the login form section to take the remaining space */
+  width: 500px; /* Widen the login form */
+  padding: 20px; /* Padding around content */
+}
+
+.login-right {
+  flex: 0 0 300px; /* Narrow the right column */
   display: flex;
-  flex-direction: column;
-  gap: 20px;
+  flex-direction: column; /* Stack announcer and feature list vertically */
+  gap: 20px; /* Space between announcer and feature list */
 }
 
-.form-group {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+.login-announcer {
+  flex: 1; /* Allows the LoginAnnouncer to take the remaining space */
+  margin-left: 20px; /* Space between feature list and announcer */
+  background-image: url('/src/assets/images/hero-bg.jpg'); /* Background image */
+  background-size: cover; /* Ensure the background covers the area */
+  border-radius: 8px; /* Match rounded corners */
+  color: white; /* Text color for contrast against background */
+  padding: 20px; /* Padding around content */
+  display: flex; /* Flexbox for internal alignment */
+  flex-direction: column; /* Stack text vertically */
+  justify-content: center; /* Center vertically */
 }
 
-label {
-  font-weight: bold;
+.feature-list {
+  margin-left: 20px; /* Space between announcer and feature list */
+  flex: 1; /* Allows the FeatureList to take the remaining space */
+  border-radius: 8px; /* Match rounded corners */
+  padding: 20px; /* Padding around content */
 }
 
-input {
-  padding: 8px 12px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 16px;
-}
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .login-view {
+    flex-direction: column; /* Stack elements vertically on smaller screens */
+  }
 
-button {
-  padding: 12px;
-  background-color: #4caf50;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 16px;
-}
+  .login-left,
+  .login-right {
+    max-width: none; /* Remove max width to allow full use of space */
+    width: 100%; /* Full width in mobile view */
+  }
 
-button:disabled {
-  background-color: #cccccc;
-  cursor: not-allowed;
+  .login-wrapper {
+padding: 1rem;
 }
-
-.error-message {
-  color: #ff0000;
-  font-size: 14px;
-}
-
-.register-link {
-  text-align: center;
-  font-size: 14px;
-}
-
-a {
-  color: #4caf50;
-  text-decoration: none;
-}
-
-a:hover {
-  text-decoration: underline;
 }
 </style>

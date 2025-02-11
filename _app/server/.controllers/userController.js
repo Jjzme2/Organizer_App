@@ -1,4 +1,7 @@
 const User = require("../models/User"); // Import your Sequelize model
+const Quote = require("../models/Quote");
+const defaultQuotes = require("../config/defaultQuotes");
+
 
 // Get all items
 exports.getAllItems = async (req, res) => {
@@ -26,6 +29,15 @@ exports.createItem = async (req, res) => {
   const itemData = req.body;
   try {
     const newItem = await User.create(itemData);
+
+    // Create default quotes for the new user
+    const quotesWithUserId = defaultQuotes.map(quote => ({
+      ...quote,
+      userId: user.id
+    }));
+
+    await Quote.bulkCreate(quotesWithUserId);
+
     res.status(201).json(newItem); // 201 Created
   } catch (error) {
     res.status(500).json({ error: `Failed to create ${User.name}`, message: error.message });

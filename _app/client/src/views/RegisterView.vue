@@ -60,6 +60,7 @@
           type="password"
           required
           placeholder="Enter your password"
+          autocomplete="new-password"
           @input="validatePassword"
         />
         <div class="password-strength" v-if="form.password">

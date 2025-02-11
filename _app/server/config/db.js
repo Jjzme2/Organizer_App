@@ -1,6 +1,9 @@
 const { Sequelize } = require("sequelize");
 const logger = require("../utils/logger");
 
+let isConnected = false;
+let connectionError = null;
+
 const sequelize = new Sequelize(process.env.DB_NAME, process.env.DB_USER, process.env.DB_PASSWORD, {
     host: process.env.DB_HOST || 'localhost',
     dialect: "mysql",
@@ -30,6 +33,8 @@ const initDatabase = async () => {
     try {
         // Test the connection
         await sequelize.authenticate();
+        isConnected = true;
+        connectionError = null;
         logger.info("Database connection established successfully.");
 
         try {
@@ -50,20 +55,18 @@ const initDatabase = async () => {
                 message: modelError.message,
                 stack: modelError.stack
             });
+            connectionError = modelError;
             throw modelError;
         }
 
     } catch (error) {
-        logger.error("Database initialization failed:", {
+        isConnected = false;
+        connectionError = error;
+        logger.error("Unable to connect to the database:", {
             message: error.message,
-            stack: error.stack,
+            stack: error.stack
         });
-
-        // Attempt to reconnect after a delay
-        setTimeout(() => {
-            logger.info("Attempting to reconnect...");
-            initDatabase();
-        }, 5000);
+        throw error;
     }
 };
 
@@ -73,6 +76,20 @@ process.on('unhandledRejection', (error) => {
         message: error.message,
         stack: error.stack
     });
+    isConnected = false;
+    connectionError = error;
+});
+
+// Add connection status methods to sequelize instance
+sequelize.getConnectionStatus = () => ({
+    isConnected,
+    error: connectionError ? connectionError.message : null,
+    dialect: sequelize.getDialect(),
+    // Only expose non-sensitive configuration
+    config: {
+        host: process.env.NODE_ENV === 'production' ? '***' : sequelize.config.host,
+        database: process.env.NODE_ENV === 'production' ? '***' : sequelize.config.database
+    }
 });
 
 // Run initialization
@@ -83,4 +100,6 @@ initDatabase().catch(error => {
     });
 });
 
+// Export both the sequelize instance and initDatabase function
 module.exports = sequelize;
+module.exports.initDatabase = initDatabase;

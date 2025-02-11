@@ -80,7 +80,7 @@
 <script setup lang="ts">
 import { ref, reactive } from 'vue'
 import { useQuoteStore } from '../../stores/quote'
-import BaseModal from '../ui/BaseModal.vue'
+import BaseModal from '../modals/BaseModal.vue'
 
 const props = defineProps<{
   show: boolean

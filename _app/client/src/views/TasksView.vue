@@ -1,308 +1,277 @@
 <template>
   <div class="tasks-view">
-    <QuoteBanner
-      @refresh="fetchNewRandomQuote"
-      class="quote-banner"
-    />
-    <TaskHeader
-      @add-task="showNewTaskForm = true"
-      @manage-categories="showCategoryModal = true"
-    />
+    <header class="view-header">
+      <div class="container">
+        <div class="header-content">
+          <h1>Tasks</h1>
+          <div class="header-actions">
+            <button @click="showAddTaskModal = true" class="btn btn-primary">
+              Add Task
+            </button>
+            <button @click="showCategoryModal = true" class="btn btn-secondary">
+              Manage Categories
+            </button>
+          </div>
+        </div>
+      </div>
+    </header>
 
-    <MessageBox
-      v-if="error"
-      type="error"
-      :message="error"
-      :title="getErrorTitle(error)"
-      dismissible
-      v-model:show="showError"
-    />
+    <main class="view-content container">
+      <!-- Quote Banner -->
+      <QuoteBanner class="quote-banner" />
 
-    <main class="view-content">
-      <div class="tasks-content">
+      <!-- Task Lists -->
+      <div class="task-lists">
+        <!-- Incomplete Tasks -->
         <PaginatedTaskList
-          :title="`Active Tasks (${incompleteTasks.length})`"
-          :tasks="activeTasks"
-          type="incomplete"
-          :defaultLimit="5"
-          @toggle="toggleTaskComplete"
-          @edit="editTask"
-          @delete="deleteTask"
+          title="Active Tasks"
+          :tasks="incompleteTasks"
+          :defaultLimit="4"
+          @toggle-complete="handleTaskComplete"
+          @update-priority="handlePriorityUpdate"
+          @update-status="handleStatusUpdate"
+          @add-note="handleAddNote"
+          @edit="handleTaskEdit"
+          @delete="handleTaskDelete"
         >
-          <template #actions>
-            <router-link to="/tasks/incomplete" class="btn btn-text">
-              {{ showAllText }}
-              <svg class="icon" viewBox="0 0 24 24">
-                <path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/>
-              </svg>
-            </router-link>
-          </template>
           <template #empty>
-            <div class="tasks-empty">
-              <svg class="empty-icon" viewBox="0 0 24 24">
-                <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
-              </svg>
+            <div class="empty-state">
               <p>No active tasks</p>
-              <button class="btn btn-primary" @click="showNewTaskForm = true">
+              <button @click="showAddTaskModal = true" class="btn btn-primary">
                 Create Task
               </button>
             </div>
           </template>
         </PaginatedTaskList>
 
-        <!-- Recently Completed Tasks -->
-        <TaskList
-          :title="`Recently Completed`"
+        <!-- Completed Tasks -->
+        <PaginatedTaskList
+          title="Recently Completed"
           :tasks="recentlyCompletedTasks"
-          @toggle="toggleTaskComplete"
-          @delete="deleteTask"
+          :defaultLimit="4"
+          @toggle-complete="handleTaskComplete"
+          @update-priority="handlePriorityUpdate"
+          @update-status="handleStatusUpdate"
+          @add-note="handleAddNote"
+          @edit="handleTaskEdit"
+          @delete="handleTaskDelete"
         >
-          <template #actions>
-            <router-link to="/tasks/completed" class="btn btn-text">
-              {{ showAllText }}
-              <svg class="icon" viewBox="0 0 24 24">
-                <path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/>
-              </svg>
-            </router-link>
-          </template>
           <template #empty>
-            <div class="tasks-empty">
-              <svg class="empty-icon" viewBox="0 0 24 24">
-                <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/>
-              </svg>
-              <p>Let's get some tasks completed!</p>
+            <div class="empty-state">
+              <p>No completed tasks yet</p>
             </div>
           </template>
-        </TaskList>
+        </PaginatedTaskList>
       </div>
     </main>
 
-    <!-- Task Form Modal -->
+    <!-- Task Modal -->
     <BaseModal
-      v-model:show="showNewTaskForm"
+      v-if="showAddTaskModal"
+      @close="closeTaskModal"
+      :show="showAddTaskModal"
       :title="editingTask ? 'Edit Task' : 'New Task'"
     >
       <TaskForm
         :task="editingTask"
-        :submitting="submitting"
-        :is-editing="!!editingTask"
-        @submit="handleSubmit"
-        @cancel="closeModal"
+        @submit="handleTaskSubmit"
+        @cancel="closeTaskModal"
       />
     </BaseModal>
 
-    <!-- Category Management Modal -->
+    <!-- Category Modal -->
     <BaseModal
-      v-model:show="showCategoryModal"
+      v-if="showCategoryModal"
+      @close="showCategoryModal = false"
+      :show="showCategoryModal"
       title="Manage Categories"
     >
       <CategoryManagement />
     </BaseModal>
+
+    <!-- Message Box for Errors -->
+    <MessageBox
+      v-if="error"
+      :message="error"
+      type="error"
+      @close="error = null"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
 import { useTaskStore } from '../stores/tasks'
-import { useQuoteStore } from '../stores/quote'
-import { storeToRefs } from 'pinia'
 import PaginatedTaskList from '../components/PaginatedTaskList.vue'
-import TaskForm from '../components/TaskForm.vue'
-import TaskHeader from '../components/TaskHeader.vue'
+import TaskForm from '../components/forms/TaskForm.vue'
 import MessageBox from '../components/MessageBox.vue'
-import BaseModal from '../components/ui/BaseModal.vue'
+import BaseModal from '../components/modals/BaseModal.vue'
 import CategoryManagement from '../components/CategoryManagement.vue'
-import TaskList from '../components/TaskList.vue'
 import QuoteBanner from '../components/Quotes/QuoteBanner.vue'
 
 const taskStore = useTaskStore()
-const quoteStore = useQuoteStore()
-const { loading, error, incompleteTasks, recentlyCompletedTasks, completedTasks } = storeToRefs(taskStore)
-const { randomQuote } = storeToRefs(quoteStore)
-
-const showNewTaskForm = ref(false)
+const error = ref(null)
+const showAddTaskModal = ref(false)
 const showCategoryModal = ref(false)
-const submitting = ref(false)
 const editingTask = ref(null)
-const showError = ref(true)
 
-const activeTasks = computed(() => incompleteTasks.value)
+// Computed properties
+const incompleteTasks = computed(() => taskStore.incompleteTasks)
+const completedTasks = computed(() => taskStore.completedTasks)
+const recentlyCompletedTasks = computed(() => taskStore.recentlyCompletedTasks)
 
-const showAllText = computed(() => 'Show All')
-
-const getErrorTitle = (err) => {
-  if (typeof err === 'object' && err !== null) {
-    switch (err.code) {
-      case 'AUTHENTICATION_ERROR':
-        return 'Authentication Error'
-      case 'VALIDATION_ERROR':
-        return 'Validation Error'
-      case 'TASK_FETCH_ERROR':
-        return 'Error Loading Tasks'
-      case 'TASK_CREATE_ERROR':
-        return 'Error Creating Task'
-      case 'TASK_UPDATE_ERROR':
-        return 'Error Updating Task'
-      default:
-        return 'Operation Failed'
-    }
+// Task handlers
+async function handleTaskComplete(taskId) {
+  try {
+    await taskStore.toggleTaskComplete(taskId)
+  } catch (err) {
+    error.value = 'Failed to update task completion status'
   }
-  return 'Error'
 }
 
-onMounted(async () => {
-  await Promise.all([
-    taskStore.fetchTasks(),
-    quoteStore.fetchRandomQuote()
-  ])
-})
+async function handlePriorityUpdate({ id, priority }) {
+  try {
+    await taskStore.updateTaskPriority({ id, priority })
+  } catch (err) {
+    error.value = 'Failed to update task priority'
+  }
+}
 
-function closeModal() {
-  showNewTaskForm.value = false
+async function handleStatusUpdate({ id, status }) {
+  try {
+    await taskStore.updateTaskStatus({ id, status })
+  } catch (err) {
+    error.value = 'Failed to update task status'
+  }
+}
+
+async function handleAddNote({ id, note }) {
+  try {
+    await taskStore.addTaskNote({ id, note })
+  } catch (err) {
+    error.value = 'Failed to add note to task'
+  }
+}
+
+function handleTaskEdit(task) {
+  editingTask.value = { ...task }
+  showAddTaskModal.value = true
+}
+
+async function handleTaskDelete(taskId) {
+  if (confirm('Are you sure you want to delete this task?')) {
+    try {
+      await taskStore.deleteTask(taskId)
+    } catch (err) {
+      error.value = 'Failed to delete task'
+    }
+  }
+}
+
+async function handleTaskSubmit(taskData) {
+  try {
+    if (editingTask.value) {
+      await taskStore.updateTask(editingTask.value.id, taskData)
+    } else {
+      await taskStore.createTask(taskData)
+    }
+    closeTaskModal()
+  } catch (err) {
+    error.value = 'Failed to save task'
+  }
+}
+
+function closeTaskModal() {
+  showAddTaskModal.value = false
   editingTask.value = null
 }
 
-function editTask(task) {
-  editingTask.value = task
-  showNewTaskForm.value = true
-}
-
-async function handleSubmit(formData) {
-  submitting.value = true
+onMounted(async () => {
   try {
-    let task
-    if (editingTask.value) {
-      task = await taskStore.updateTask(editingTask.value.id, formData)
-    } else {
-      task = await taskStore.createTask(formData)
-    }
-    closeModal()
-    return task
+    await taskStore.fetchTasks()
   } catch (err) {
-    console.error('Error submitting task:', err)
-  } finally {
-    submitting.value = false
+    error.value = 'Failed to load tasks'
   }
-}
-
-async function toggleTaskComplete(taskId) {
-  const task = incompleteTasks.value.find(t => t.id === taskId)
-  if (!task) return
-
-  if (task.isComplete) {
-    task.isUncompleting = true
-  } else {
-    task.isCompleting = true
-  }
-
-  try {
-    await taskStore.toggleTaskComplete(taskId)
-  } catch {
-    // Error is already handled by the store
-  } finally {
-    setTimeout(() => {
-      task.isCompleting = false
-      task.isUncompleting = false
-    }, 500)
-  }
-}
-
-async function deleteTask(taskId) {
-  if (!confirm('Are you sure you want to delete this task?')) return
-
-  try {
-    await taskStore.deleteTask(taskId)
-  } catch {
-    // Error is already handled by the store
-  }
-}
-
-const fetchNewRandomQuote = () => {
-  quoteStore.fetchRandomQuote()
-}
+})
 </script>
 
 <style scoped>
 .tasks-view {
-  min-height: 100%;
+  min-height: 100vh;
+  padding: 2rem 0;
+}
+
+.view-header {
+  margin-bottom: 2rem;
+  background: var(--color-surface);
+  padding: 1rem 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.header-content {
   display: flex;
-  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.header-actions {
+  display: flex;
+  gap: 1rem;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1rem;
 }
 
 .view-content {
-  flex: 1;
-  position: relative;
-  padding: 0 var(--spacing-lg);
-  max-width: var(--container-max-width);
-  margin: 0 auto;
-  width: 100%;
-}
-
-.tasks-content {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-xl);
-}
-
-.tasks-empty {
-  text-align: center;
-  padding: var(--spacing-xl) var(--spacing-md);
-  color: var(--color-text-light);
-  background: var(--color-surface);
-  border-radius: var(--border-radius);
-  border: 1px solid var(--color-border);
-  margin: var(--spacing-md);
-}
-
-.tasks-empty p {
-  margin-bottom: var(--spacing-md);
-  font-size: 1.125rem;
-}
-
-.loading-overlay {
-  position: absolute;
-  inset: 0;
-  background: rgba(15, 23, 42, 0.5);
-  backdrop-filter: blur(4px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 10;
-}
-
-.empty-icon {
-  width: 48px;
-  height: 48px;
-  fill: currentColor;
-  margin-bottom: var(--spacing-md);
-}
-
-.icon {
-  width: 1.5rem;
-  height: 1.5rem;
-  fill: currentColor;
-}
-
-.btn-text {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-xs);
-  color: var(--color-primary);
-  text-decoration: none;
-  font-weight: 500;
-}
-
-.btn-text:hover {
-  color: var(--color-primary-dark);
-}
-
-@media (max-width: 768px) {
-  .view-content {
-    padding: 0 var(--spacing-md);
-  }
+  gap: 2rem;
 }
 
 .quote-banner {
-  margin-bottom: var(--spacing-lg);
+  margin-bottom: 2rem;
+}
+
+.task-lists {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 2rem;
+  color: var(--color-text-light);
+}
+
+.empty-state p {
+  margin-bottom: 1rem;
+}
+
+.btn {
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.btn-primary {
+  background-color: var(--color-primary);
+  color: white;
+  border: none;
+}
+
+.btn-secondary {
+  background-color: transparent;
+  border: 1px solid var(--color-border);
+}
+
+@media (max-width: 768px) {
+  .task-lists {
+    grid-template-columns: 1fr;
+  }
 }
 </style>

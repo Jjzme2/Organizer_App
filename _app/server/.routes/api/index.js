@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 
+const healthRoutes = require("./health");
 const testRoutes = require("./test");
 const taskRoutes = require("./tasks");
 const authRoutes = require("./auth");
@@ -8,8 +9,17 @@ const userRoutes = require("./user");
 const categoryRoutes = require("./categories");
 const taskReminderRoutes = require("./taskReminders");
 const quoteRoutes = require("./quotes");
+const jottingRoutes = require("./jottings");
+const jottingCommentsRoutes = require("./jottingComments");
+const articleRoutes = require("./articles");
+const articleCommentsRoutes = require("./articleComments");
+
 
 const routes = [
+    {
+        path: "/health",
+        routes: healthRoutes
+    },
     {
         path: "/test",
         routes: testRoutes
@@ -37,7 +47,23 @@ const routes = [
     {
         path: "/quotes",
         routes: quoteRoutes
-    }
+    },
+	{
+		path: "/jottings",
+		routes: jottingRoutes
+	},
+	{
+		path: "/jotting-comments",
+		routes: jottingCommentsRoutes
+	},
+	{
+		path: "/articles",
+		routes: articleRoutes
+	},
+	{
+		path: "/article-comments",
+		routes: articleCommentsRoutes
+	}
 ];
 
 routes.forEach((route) => {

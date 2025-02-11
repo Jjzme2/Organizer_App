@@ -4,11 +4,11 @@
       <slot></slot>
     </div>
     <div class="hero-overlay"></div>
-    <div 
-      class="hero-background" 
-      :style="{ 
+    <div
+      class="hero-background"
+      :style="{
         'background-image': `url(${backgroundImage})`,
-        'background-position': backgroundPosition 
+        'background-position': backgroundPosition
       }"
     ></div>
   </div>
@@ -32,10 +32,12 @@ defineProps({
 </script>
 
 <style scoped>
+/* Hero Component Styles */
 .hero-container {
   position: relative;
   width: 100%;
-  height: var(--hero-height);
+  /* Use a more responsive height, or a fixed max height */
+  height: clamp(20vh, 30vh, 40vh); /* Example: Min 30vh, Max 60vh, grows to 50vh normally */
   overflow: hidden;
 }
 
@@ -83,9 +85,10 @@ defineProps({
   transform: scale(1);
 }
 
+
 @media (max-width: 768px) {
   .hero-container {
-    height: 100vh;
+    height: clamp(20vh, 30vh, 40vh); /* Adjusted for mobile */
   }
 }
 </style>

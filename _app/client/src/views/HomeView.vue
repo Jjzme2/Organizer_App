@@ -1,92 +1,94 @@
 <template>
   <div class="home">
-    <HeroImage
-      background-image="/src/assets/images/hero-bg.jpg"
-      height="60vh"
-      class="home-hero"
-    >
-      <div class="hero-content container text-center slide-up">
-        <h1 class="hero-title">
-          Organize Your Life,<br>
-          <span class="gradient-text">One Task at a Time</span>
-        </h1>
-        <p class="hero-subtitle">
-          A powerful, intuitive task management solution that helps you stay focused and productive
-        </p>
-        <div class="hero-actions">
-          <router-link v-if="!isAuthenticated" to="/register" class="btn btn-primary btn-lg glow">
-            Get Started - It's Free
-          </router-link>
-          <router-link v-else to="/tasks" class="btn btn-primary btn-lg glow">
-            Go to My Tasks
-          </router-link>
-          <a href="#features" class="btn btn-outline btn-lg">
-            Learn More
-          </a>
-        </div>
-      </div>
-    </HeroImage>
 
-    <section id="features" class="features-section">
+    <section class="greeting-section bg-gradient-primary">
       <div class="container">
-        <h2 class="section-title">Why Choose Our Organizer?</h2>
-        <div class="features-grid">
-          <FeatureCard
-            v-for="(feature, index) in features"
-            :key="feature.title"
-            :feature="feature"
-            :delay="index * 100"
-          />
+        <div class="greeting-content">
+          <h1 class="text-4xl">Welcome back, {{ user.username }}</h1>
+          <p class="text-xl">Here's what's on your plate today.</p>
         </div>
       </div>
     </section>
 
-    <section class="cta-section">
-      <div class="container text-center">
-        <h2 class="section-title light">Ready to Get Organized?</h2>
-        <p class="section-subtitle light">Join thousands of users who have transformed their productivity</p>
-        <router-link v-if="!isAuthenticated" to="/register" class="btn btn-light btn-lg glow">
-          Start Free Trial
-        </router-link>
-        <router-link v-else to="/tasks" class="btn btn-light btn-lg glow">
-          Go to Dashboard
-        </router-link>
+    <section class="tasks-section">
+      <div class="tasks-content">
+        <div v-if="loading">
+          <p>Loading tasks...</p>  </div>
+        <div v-else-if="error">
+          <p>Error loading tasks: {{ error }}</p> </div>
+        <div v-else>  <PaginatedTaskList
+            v-if="myTasks.length"
+            :title="`Active Tasks (${myTasks.length})`"
+            :tasks="myTasks"  type="incomplete"
+            :defaultLimit="5"
+            @toggle="toggleTaskComplete"
+            @edit="editTask"
+            @delete="deleteTask"
+          >
+            <template #actions>
+              <router-link to="/tasks/incomplete" class="btn btn-text">
+                {{ showAllText }}
+                <svg class="icon" viewBox="0 0 24 24">
+                  <path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/>
+                </svg>
+              </router-link>
+            </template>
+          </PaginatedTaskList>
+          <div v-else class="tasks-empty">
+            <p>No active tasks</p>
+          </div>
+        </div>
       </div>
+    </section>
+
+    <section class="jottings-section">
+      <h2 class="section-title">Jottings</h2>
+      <JottingsList />
+    </section>
+
+    <section class="articles-section">
+      <h2 class="section-title">Articles</h2>
+      <ArticlesList />
     </section>
   </div>
 </template>
 
 <script setup>
 import { useAuthStore } from '../stores/auth'
+import { useTaskStore } from '../stores/tasks'
 import { storeToRefs } from 'pinia'
-import HeroImage from '../components/HeroImage.vue'
-import FeatureCard from '../components/FeatureCard.vue'
+import { ref, onMounted } from 'vue'
+
+import ArticlesList from '../components/ArticlesList.vue'
+import JottingsList from '../components/JottingsList.vue'
+import PaginatedTaskList from '../components/PaginatedTaskList.vue'
+
 
 const authStore = useAuthStore()
-const { isAuthenticated } = storeToRefs(authStore)
+const taskStore = useTaskStore()
 
-const features = [
-  {
-    icon: '📝',
-    title: 'Smart Task Management',
-    description: 'Organize tasks with intuitive categories, priorities, and due dates'
-  },
-  {
-    icon: '🔄',
-    title: 'Real-time Sync',
-    description: 'Access your tasks from anywhere, with instant updates across devices'
-  },
-  {
-    icon: '📊',
-    title: 'Progress Tracking',
-    description: 'Monitor your productivity with detailed statistics and insights'
-  },
-  {
-    icon: '🔔',
-    title: 'Smart Reminders',
-    description: 'Never miss a deadline with customizable notifications'
+const { user } = storeToRefs(authStore)
+const { incompleteTasks } = storeToRefs(taskStore)
+
+const loading = ref(false)
+const error = ref('')
+const myTasks = ref([])
+
+onMounted(async () => {
+  loading.value = true
+  error.value = null
+  try {
+    const response = await taskStore.fetchTasks()
+    console.log("Fetched tasks:", response)
+    myTasks.value = incompleteTasks.value
+  } catch (err) {
+    error.value = err.message || "An error occurred."
+    console.error("Error fetching tasks:", err)
+  } finally {
+    loading.value = false
   }
-]
+})
+
 </script>
 
 <style scoped>

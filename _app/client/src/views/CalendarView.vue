@@ -109,7 +109,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useTaskStore } from '../stores/tasks'
 import { storeToRefs } from 'pinia'
-import BaseModal from '../components/ui/BaseModal.vue'
+import BaseModal from '../components/modals/BaseModal.vue'
 
 const taskStore = useTaskStore()
 const { tasks } = storeToRefs(taskStore)

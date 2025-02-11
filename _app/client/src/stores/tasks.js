@@ -102,16 +102,22 @@ export const useTaskStore = defineStore('tasks', () => {
   }
 
   async function updateTask(taskId, taskData) {
+    loading.value = true
+    error.value = null
     try {
       checkAuth()
+      console.log('Updating task:', taskId, taskData) // Debug log
       const response = await api.put(`/tasks/${taskId}`, taskData)
+      console.log('Update response:', response.data) // Debug log
       const index = tasks.value.findIndex(t => t.id === taskId)
       if (index !== -1) {
         tasks.value[index] = response.data
       }
       return response.data
     } catch (err) {
+      console.error('Error updating task:', err) // Debug log
       handleError(err, 'Error updating task')
+      throw err // Re-throw to handle in calling function
     } finally {
       loading.value = false
     }
@@ -132,16 +138,30 @@ export const useTaskStore = defineStore('tasks', () => {
   }
 
   async function toggleTaskComplete(taskId) {
-    const task = tasks.value.find(t => t.id === taskId)
-    if (task) {
-      const isCompleting = !task.isComplete
-      await updateTask(taskId, {
-        ...task,
-        isComplete: isCompleting,
-        status: isCompleting ? 'completed' : 'pending',
-        isActive: !isCompleting,
-        completedAt: isCompleting ? new Date().toISOString() : null
-      })
+    loading.value = true
+    error.value = null
+    try {
+      checkAuth()
+      const task = tasks.value.find(t => t.id === taskId)
+      if (task) {
+        const isCompleting = !task.isComplete
+        const updatedTask = await updateTask(taskId, {
+          ...task,
+          isComplete: isCompleting,
+          status: isCompleting ? 'completed' : 'pending',
+          isActive: !isCompleting,
+          completedAt: isCompleting ? new Date().toISOString() : null
+        })
+        // Update the task in the local state
+        const index = tasks.value.findIndex(t => t.id === taskId)
+        if (index !== -1) {
+          tasks.value[index] = updatedTask
+        }
+      }
+    } catch (err) {
+      handleError(err, 'Failed to toggle task completion')
+    } finally {
+      loading.value = false
     }
   }
 
@@ -159,27 +179,69 @@ export const useTaskStore = defineStore('tasks', () => {
   }
 
   async function updateTaskStatus({ id, status }) {
-    const task = tasks.value.find(t => t.id === id)
-    if (task) {
-      return updateTask(id, { ...task, status })
+    loading.value = true
+    error.value = null
+    try {
+      checkAuth()
+      const task = tasks.value.find(t => t.id === id)
+      if (task) {
+        const updatedTask = await updateTask(id, { ...task, status })
+        // Update the task in the local state
+        const index = tasks.value.findIndex(t => t.id === id)
+        if (index !== -1) {
+          tasks.value[index] = updatedTask
+        }
+      }
+    } catch (err) {
+      handleError(err, 'Failed to update task status')
+    } finally {
+      loading.value = false
     }
   }
 
   async function updateTaskPriority({ id, priority }) {
-    const task = tasks.value.find(t => t.id === id)
-    if (task) {
-      return updateTask(id, { ...task, priority })
+    loading.value = true
+    error.value = null
+    try {
+      checkAuth()
+      const task = tasks.value.find(t => t.id === id)
+      if (task) {
+        const updatedTask = await updateTask(id, { ...task, priority })
+        // Update the task in the local state
+        const index = tasks.value.findIndex(t => t.id === id)
+        if (index !== -1) {
+          tasks.value[index] = updatedTask
+        }
+      }
+    } catch (err) {
+      handleError(err, 'Failed to update task priority')
+    } finally {
+      loading.value = false
     }
   }
 
   async function addTaskNote({ id, note }) {
-    const task = tasks.value.find(t => t.id === id)
-    if (task) {
-      const notes = task.notes || []
-      return updateTask(id, {
-        ...task,
-        notes: [...notes, note]
-      })
+    loading.value = true
+    error.value = null
+    try {
+      checkAuth()
+      const task = tasks.value.find(t => t.id === id)
+      if (task) {
+        const notes = task.notes || []
+        const updatedTask = await updateTask(id, {
+          ...task,
+          notes: [...notes, note]
+        })
+        // Update the task in the local state
+        const index = tasks.value.findIndex(t => t.id === id)
+        if (index !== -1) {
+          tasks.value[index] = updatedTask
+        }
+      }
+    } catch (err) {
+      handleError(err, 'Failed to add note to task')
+    } finally {
+      loading.value = false
     }
   }
 

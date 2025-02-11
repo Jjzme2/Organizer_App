@@ -10,9 +10,9 @@
       </div>
     </div>
 
-    <TransitionGroup 
-      name="task-list" 
-      tag="div" 
+    <TransitionGroup
+      name="task-list"
+      tag="div"
       class="task-list"
     >
       <TaskCard
@@ -34,7 +34,7 @@
 </template>
 
 <script setup>
-import TaskCard from './TaskCard.vue'
+import TaskCard from './cards/TaskCard.vue'
 
 defineProps({
   title: {

@@ -73,9 +73,9 @@
 import { ref, computed } from 'vue'
 import { useTaskStore } from '../stores/tasks'
 import { storeToRefs } from 'pinia'
-import TaskCard from '../components/TaskCard.vue'
+import TaskCard from '../components/cards/TaskCard.vue'
 import TaskForm from '../components/TaskForm.vue'
-import BaseModal from '../components/ui/BaseModal.vue'
+import BaseModal from '../components/modals/BaseModal.vue'
 
 const taskStore = useTaskStore()
 const { loading, incompleteTasks } = storeToRefs(taskStore)
