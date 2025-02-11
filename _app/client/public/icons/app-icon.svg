@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="512" height="512" rx="128" fill="#4CAF50"/>
+  
+  <!-- Checklist Design -->
+  <g transform="translate(96, 96)">
+    <!-- Paper Background -->
+    <rect x="0" y="0" width="320" height="320" rx="24" fill="white"/>
+    
+    <!-- List Lines -->
+    <g stroke="#E0E0E0" stroke-width="2">
+      <line x1="40" y1="80" x2="280" y2="80"/>
+      <line x1="40" y1="160" x2="280" y2="160"/>
+      <line x1="40" y1="240" x2="280" y2="240"/>
+    </g>
+    
+    <!-- Checkmarks -->
+    <g fill="#4CAF50">
+      <!-- First Item -->
+      <circle cx="60" cy="120" r="16"/>
+      <path d="M52 120l6 6 10-10" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+      
+      <!-- Second Item -->
+      <circle cx="60" cy="200" r="16"/>
+      <path d="M52 200l6 6 10-10" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+    </g>
+  </g>
+</svg>

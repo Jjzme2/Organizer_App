@@ -1,0 +1,11 @@
+User-agent: *
+Allow: /
+
+# Disallow all API endpoints
+Disallow: /api/
+
+# Sitemap location
+Sitemap: https://organizer-app.com/sitemap.xml
+
+# Crawl-delay for all bots
+Crawl-delay: 10

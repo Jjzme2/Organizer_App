@@ -3,23 +3,28 @@
     <Navbar />
     <main class="main-content">
       <div class="container view-container">
-<router-view v-slot="{ Component }">
-<transition name="fade" mode="out-in">
-<component v-if="Component" :is="Component" />
-<div v-else class="loading-container">
-<div class="loading-spinner"></div>
-<div class="loading-text">Loading...</div>
-<div class="loading-subtext">Something went wrong. Please try refreshing the page.</div>
-</div>
-</transition>
-</router-view>
+        <RouterView v-slot="{ Component }">
+          <transition name="fade" mode="out-in">
+            <component v-if="Component" :is="Component" />
+            <div v-else class="loading-container">
+              <div class="loading-spinner"></div>
+              <div class="loading-text">Loading...</div>
+              <div class="loading-subtext">Something went wrong. Please try refreshing the page.</div>
+            </div>
+          </transition>
+        </RouterView>
       </div>
     </main>
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import Navbar from './components/Navbar.vue'
+import { RouterView } from 'vue-router'
+import { useSeo } from './composables/useSeo'
+
+// Initialize SEO
+useSeo()
 </script>
 
 <style>
