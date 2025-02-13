@@ -1,9 +1,9 @@
 <template>
-  <div class="reset-password-view">
-    <h1>Reset Password</h1>
-    <form @submit.prevent="handleSubmit" class="reset-password-form">
+  <div class="reset-password-view container">
+    <h1 class="section-title">Reset Password</h1>
+    <form @submit.prevent="handleSubmit" class="form-group animate-fade-in">
       <div class="form-group">
-        <label for="newPassword">New Password</label>
+        <label for="newPassword" class="form-label">New Password</label>
         <input
           id="newPassword"
           v-model="form.password"
@@ -11,15 +11,20 @@
           required
           placeholder="Enter new password"
           @input="validatePassword"
+          class="form-control"
         />
-        <div class="password-strength" v-if="form.password">
-          <div class="strength-meter" :class="passwordStrength"></div>
-          <span class="strength-text">{{ passwordStrengthText }}</span>
+        <div v-if="form.password" class="mt-2">
+          <div class="slider-container">
+            <div class="slider-input-container">
+              <div class="slider-input" :class="passwordStrength"></div>
+            </div>
+            <span class="slider-value text-sm">{{ passwordStrengthText }}</span>
+          </div>
         </div>
       </div>
 
-      <div class="form-group">
-        <label for="confirmPassword">Confirm Password</label>
+      <div class="form-group mt-3">
+        <label for="confirmPassword" class="form-label">Confirm Password</label>
         <input
           id="confirmPassword"
           v-model="form.confirmPassword"
@@ -27,19 +32,29 @@
           required
           placeholder="Confirm new password"
           @input="validateConfirmPassword"
+          class="form-control"
         />
-        <span v-if="passwordError" class="error-text">{{ passwordError }}</span>
+        <span v-if="passwordError" class="text-danger text-sm mt-1">{{ passwordError }}</span>
       </div>
 
-      <div v-if="error" class="error-message">
-        {{ error }}
+      <div v-if="error" class="message-box message-box--error mt-3">
+        <div class="message-box__content">
+          <span class="message-box__text">{{ error }}</span>
+        </div>
       </div>
 
-      <div v-if="success" class="success-message">
-        {{ success }}
+      <div v-if="success" class="message-box message-box--success mt-3">
+        <div class="message-box__content">
+          <span class="message-box__text">{{ success }}</span>
+        </div>
       </div>
 
-      <button type="submit" :disabled="loading || !isValid">
+      <button 
+        type="submit" 
+        :disabled="loading || !isValid"
+        class="btn btn-primary mt-4 d-flex items-center justify-center"
+      >
+        <span v-if="loading" class="icon icon--spin mr-2"></span>
         {{ loading ? 'Resetting Password...' : 'Reset Password' }}
       </button>
     </form>
@@ -138,25 +153,3 @@ async function handleSubmit() {
   }
 }
 </script>
-
-<style scoped>
-.reset-password-view {
-  max-width: 400px;
-  margin: 40px auto;
-  padding: 20px;
-}
-
-/* Reuse existing form and password strength styles from RegisterView */
-.reset-password-form {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-.success-message {
-  color: var(--color-success);
-  padding: 10px;
-  background-color: var(--color-success-light);
-  border-radius: 4px;
-}
-</style>

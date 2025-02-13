@@ -1,3 +1,4 @@
+/* Basic Animations */
 @keyframes slideUp {
   from {
     opacity: 0;
@@ -9,53 +10,38 @@
   }
 }
 
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-@keyframes scaleIn {
+@keyframes slideDown {
   from {
     opacity: 0;
-    transform: scale(0.95);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
-/* Reusable animation classes */
-.animate-slide-up {
-  animation: slideUp var(--transition-normal) forwards;
-}
-
-.animate-fade-in {
-  animation: fadeIn var(--transition-normal) forwards;
-}
-
-.animate-scale-in {
-  animation: scaleIn var(--transition-normal) forwards;
-}
-
-/* Stagger children animations */
-.stagger-children > * {
-  opacity: 0;
-  animation: slideUp var(--transition-normal) forwards;
-}
-
-.stagger-children > *:nth-child(1) { animation-delay: 100ms; }
-.stagger-children > *:nth-child(2) { animation-delay: 200ms; }
-.stagger-children > *:nth-child(3) { animation-delay: 300ms; }
-.stagger-children > *:nth-child(4) { animation-delay: 400ms; }
-  from {
-    opacity: 0;
-    transform: translateY(20px);
+    transform: translateY(-20px);
   }
   to {
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+@keyframes slideLeft {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideRight {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
 
 @keyframes fadeIn {
   from { opacity: 0; }
@@ -73,20 +59,45 @@
   }
 }
 
-/* Reusable animation classes */
-.animate-slide-up {
-  animation: slideUp var(--transition-normal) forwards;
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 
-.animate-fade-in {
-  animation: fadeIn var(--transition-normal) forwards;
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
 }
 
-.animate-scale-in {
-  animation: scaleIn var(--transition-normal) forwards;
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-2px); }
+  20%, 40%, 60%, 80% { transform: translateX(2px); }
 }
 
-/* Stagger children animations */
+/* Animation Utility Classes */
+.animate-slide-up { animation: slideUp var(--transition-normal) forwards; }
+.animate-slide-down { animation: slideDown var(--transition-normal) forwards; }
+.animate-slide-left { animation: slideLeft var(--transition-normal) forwards; }
+.animate-slide-right { animation: slideRight var(--transition-normal) forwards; }
+.animate-fade-in { animation: fadeIn var(--transition-normal) forwards; }
+.animate-scale-in { animation: scaleIn var(--transition-normal) forwards; }
+.animate-spin { animation: spin 1s linear infinite; }
+.animate-pulse { animation: pulse 2s infinite; }
+.animate-shake { animation: shake 0.5s; }
+
+/* Animation Modifiers */
+.animation-delay-100 { animation-delay: 100ms; }
+.animation-delay-200 { animation-delay: 200ms; }
+.animation-delay-300 { animation-delay: 300ms; }
+.animation-delay-400 { animation-delay: 400ms; }
+.animation-delay-500 { animation-delay: 500ms; }
+
+.animation-duration-fast { animation-duration: var(--transition-fast); }
+.animation-duration-normal { animation-duration: var(--transition-normal); }
+.animation-duration-slow { animation-duration: var(--transition-slow); }
+
+/* Stagger Children Animations */
 .stagger-children > * {
   opacity: 0;
   animation: slideUp var(--transition-normal) forwards;
@@ -96,3 +107,32 @@
 .stagger-children > *:nth-child(2) { animation-delay: 200ms; }
 .stagger-children > *:nth-child(3) { animation-delay: 300ms; }
 .stagger-children > *:nth-child(4) { animation-delay: 400ms; }
+.stagger-children > *:nth-child(5) { animation-delay: 500ms; }
+
+/* Hover Animations */
+.hover-scale {
+  transition: transform var(--transition-fast);
+}
+
+.hover-scale:hover {
+  transform: scale(1.05);
+}
+
+.hover-lift {
+  transition: transform var(--transition-fast);
+}
+
+.hover-lift:hover {
+  transform: translateY(-2px);
+}
+
+/* Page Transition Classes */
+.page-enter-active,
+.page-leave-active {
+  transition: opacity var(--transition-normal);
+}
+
+.page-enter-from,
+.page-leave-to {
+  opacity: 0;
+}

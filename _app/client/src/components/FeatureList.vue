@@ -55,19 +55,3 @@ const features = [
   }
 ]
 </script>
-
-<style scoped>
-.feature-list {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: var(--spacing-md);
-}
-
-@media (max-width: 768px) {
-  .feature-list {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-
-</style>

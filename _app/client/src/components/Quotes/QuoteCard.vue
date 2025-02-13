@@ -1,25 +1,37 @@
 <template>
-  <div class="quote-card" :class="{ 'is-favorite': quote.isFavorite }">
-    <div class="quote-content">
-      <div class="quote-text">
+  <div 
+    class="card hover-lift p-4" 
+    :class="{ 'border-primary': quote.isFavorite }"
+  >
+    <div class="mb-4">
+      <div class="text-lg font-medium mb-3">
         "{{ quote.text }}"
       </div>
-      <div class="quote-attribution">
-        <span class="quote-author">— {{ quote.author }}</span>
-        <span v-if="quote.source" class="quote-source">({{ quote.source }})</span>
+      <div class="text-light">
+        <span class="font-medium">— {{ quote.author }}</span>
+        <span v-if="quote.source" class="text-sm ml-2">({{ quote.source }})</span>
       </div>
     </div>
 
-    <div class="quote-footer">
-      <span class="quote-category" :class="quote.category">
+    <div class="d-flex justify-between items-center">
+      <span 
+        class="text-sm px-2 py-1 rounded-full" 
+        :class="{
+          'bg-primary text-white': quote.category === 'motivation',
+          'bg-success text-white': quote.category === 'success',
+          'bg-info text-white': quote.category === 'wisdom',
+          'bg-warning text-dark': quote.category === 'leadership',
+          'bg-secondary text-white': quote.category === 'personal_growth'
+        }"
+      >
         {{ formatCategory(quote.category) }}
       </span>
 
-      <div class="quote-actions">
+      <div class="d-flex gap-2">
         <button
           @click="$emit('toggle-favorite')"
-          class="action-btn favorite-btn"
-          :class="{ 'is-active': quote.isFavorite }"
+          class="btn btn-icon hover-scale"
+          :class="{ 'text-primary': quote.isFavorite }"
           title="Toggle favorite"
         >
           <svg class="icon" viewBox="0 0 24 24">
@@ -29,7 +41,7 @@
         </button>
         <button
           @click="$emit('delete', quote.id)"
-          class="action-btn delete-btn"
+          class="btn btn-icon hover-scale text-danger"
           title="Delete quote"
         >
           <svg class="icon" viewBox="0 0 24 24">
@@ -38,7 +50,7 @@
         </button>
         <button
           @click="$emit('edit', quote)"
-          class="action-btn edit-btn"
+          class="btn btn-icon hover-scale"
           title="Edit quote"
         >
           <svg class="icon" viewBox="0 0 24 24">
@@ -72,108 +84,3 @@ const formatCategory = (category: string) => {
   ).join(' ')
 }
 </script>
-
-<style scoped>
-.quote-card {
-  background: var(--color-surface);
-  border-radius: var(--border-radius);
-  padding: var(--spacing-lg);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  transition: all 0.2s ease;
-}
-
-.quote-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-}
-
-.quote-content {
-  margin-bottom: var(--spacing-md);
-}
-
-.quote-text {
-  font-size: 1.1rem;
-  font-style: italic;
-  line-height: 1.5;
-  margin-bottom: var(--spacing-sm);
-  color: var(--color-text);
-}
-
-.quote-attribution {
-  color: var(--color-text-light);
-  font-size: 0.9rem;
-}
-
-.quote-source {
-  margin-left: var(--spacing-xs);
-}
-
-.quote-footer {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding-top: var(--spacing-md);
-  border-top: 1px solid var(--color-border);
-}
-
-.quote-category {
-  font-size: 0.85rem;
-  padding: 0.25rem 0.75rem;
-  border-radius: 1rem;
-  background: var(--color-surface-hover);
-}
-
-.quote-actions {
-  display: flex;
-  gap: var(--spacing-sm);
-}
-
-.action-btn {
-  background: none;
-  border: none;
-  padding: var(--spacing-xs);
-  cursor: pointer;
-  border-radius: 50%;
-  transition: all 0.2s ease;
-}
-
-.action-btn:hover {
-  background: var(--color-surface-hover);
-}
-
-.favorite-btn {
-  color: var(--color-text-light);
-}
-
-.favorite-btn.is-active {
-  color: var(--color-danger);
-}
-
-.delete-btn {
-  color: var(--color-text-light);
-}
-
-.delete-btn:hover {
-  color: var(--color-danger);
-}
-
-.edit-btn {
-  color: var(--color-text-light);
-}
-
-.edit-btn:hover {
-  color: var(--color-danger);
-}
-
-.icon {
-  width: 1.25rem;
-  height: 1.25rem;
-}
-
-/* Category colors */
-.motivation { background: var(--color-success-light); color: var(--color-success); }
-.success { background: var(--color-primary-light); color: var(--color-primary); }
-.wisdom { background: var(--color-warning-light); color: var(--color-warning); }
-.leadership { background: var(--color-info-light); color: var(--color-info); }
-.personal_growth { background: var(--color-purple-light); color: var(--color-purple); }
-</style>

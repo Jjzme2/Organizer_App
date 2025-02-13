@@ -1,0 +1,48 @@
+/* Icon Component Styles */
+.icon {
+  width: 24px;
+  height: 24px;
+}
+
+/* Icon sizes */
+.icon--sm {
+  width: 16px;
+  height: 16px;
+}
+
+.icon--lg {
+  width: 32px;
+  height: 32px;
+}
+
+.icon--xl {
+  width: 48px;
+  height: 48px;
+}
+
+/* Icon animations */
+.icon--spin {
+  animation: spin 1s linear infinite;
+}
+
+.icon--pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: .5;
+  }
+}

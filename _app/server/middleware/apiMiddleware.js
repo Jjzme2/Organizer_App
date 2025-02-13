@@ -2,12 +2,29 @@
 
 const logger = require("../utils/logger"); // Or your preferred logger
 
-const apiMiddleware = (req, res, next) => {
-  // 1. Log the request (including method, URL, and optionally headers or body)
-  logger.info(`API request: ${req.method} ${req.originalUrl}`);
-  logger.debug(`Request headers: ${JSON.stringify(req.headers)}`);
-  logger.info(`Root URL: ${req.protocol}://${req.get('host')}`);
+function apiMiddleware(req, res, next) {
+  // Log request details
+  logger.debug('API Request:', {
+    method: req.method,
+    url: req.url,
+    body: req.body,
+    headers: {
+      authorization: req.headers.authorization ? 'Bearer [token]' : 'none',
+      'content-type': req.headers['content-type']
+    }
+  });
 
+  // Track response
+  const oldSend = res.send;
+  res.send = function(data) {
+    logger.debug('API Response:', {
+      method: req.method,
+      url: req.url,
+      statusCode: res.statusCode,
+      data: typeof data === 'string' ? JSON.parse(data) : data
+    });
+    return oldSend.apply(res, arguments);
+  };
 
   // 2. (Optional) Add headers to the response (e.g., CORS headers)
   res.header("Access-Control-Allow-Origin", "*"); // Allow requests from any origin
@@ -21,7 +38,6 @@ const apiMiddleware = (req, res, next) => {
       return res.status(400).json({ error: 'Request body is required' });
     }
   }
-
 
   // 4. Call next() to continue to the next middleware or route handler
   next();

@@ -1,24 +1,41 @@
-/* Import all CSS files */
-@import './abstracts/variables.css';
-@import './abstracts/utilities.css';
-@import './abstracts/animations.css';
+/*
+ * Main CSS Entry Point
+ * This file imports all CSS modules in the correct order to ensure proper cascading
+ */
 
-@import './base/reset.css';
-/* @import './base/typography.css'; */
-@import './base/base.css';
+/* Base - Core styles */
+@import './base/reset.css';          /* CSS Reset */
+@import './base/typography.css';     /* Typography styles */
+@import './base/base.css';           /* Base styles */
 
-@import './components/buttons.css';
-@import './components/cards.css';
-@import './components/forms.css';
-/* @import './components/input.css'; */
-/* @import './components/list.css'; */
-/* @import './components/modal.css'; */
-/* @import './components/task.css'; */
+/* Abstracts - Variables, functions, mixins */
+@import './abstracts/variables.css';  /* CSS Variables */
+@import './abstracts/breakpoints.css'; /* Responsive breakpoints */
+@import './abstracts/animations.css'; /* Animation keyframes */
 
-@import './layout/grid.css';
-@import './layout/task-layout.css';
-@import './layout/layout.css';
-@import './layout/home.css';
-@import './components/feature-card.css';
-@import './utilities/text.css';
+/* Layout - Structure and grid systems */
+@import './layout/grid.css';          /* Grid system */
+@import './layout/layout.css';        /* Main layout structure */
+@import './layout/task-layout.css';   /* Task-specific layouts */
+@import './layout/home.css';          /* Home page layout */
 
+/* Components - Individual components */
+@import './components/buttons.css';   /* Button styles */
+@import './components/forms.css';     /* Form styles */
+@import './components/cards.css';     /* Card styles */
+@import './components/slider.css';    /* Slider component */
+@import './components/quote.css';     /* Quote component */
+@import './components/category.css';  /* Category component */
+@import './components/hero.css';      /* Hero sections */
+@import './components/message-box.css'; /* Message boxes */
+@import './components/icon.css';      /* Icon styles */
+@import './components/navbar.css';    /* Navbar component */
+@import './components/login.css';     /* Login view styles */
+@import './components/views.css';     /* View-specific styles */
+@import './components/feature-card.css'; /* Feature cards */
+@import './components/modals.css';    /* Modal dialogs */
+@import './components/lists.css';     /* List styles */
+
+/* Utilities - Helper classes */
+@import './abstracts/utilities.css';  /* Core utility classes */
+@import './utilities/text.css';       /* Typography utilities */

@@ -22,13 +22,3 @@ onMounted(async () => {
   router.push('/login')
 })
 </script>
-
-<style scoped>
-.logout-view {
-  min-height: 60vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: var(--spacing-xl);
-}
-</style>

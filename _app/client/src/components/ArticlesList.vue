@@ -43,31 +43,3 @@ onMounted(async () => {
 })
 </script>
 
-<style scoped>
-.articles-list-section {
-  background: var(--color-surface-dark);
-  border-radius: 20px;
-  padding: 1.5rem;
-}
-.section-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1.5rem;
-}
-.article-count {
-  font-size: 0.875rem;
-  font-weight: normal;
-  color: var(--color-text-light);
-}
-.articles-list {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-.empty-state {
-  text-align: center;
-  padding: 2rem;
-  color: var(--color-text-light);
-}
-</style>

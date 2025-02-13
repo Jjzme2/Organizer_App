@@ -58,19 +58,3 @@ const prevPage = () => {
   }
 };
 </script>
-
-<style scoped>
-.paginated-list {
-  margin: 16px 0;
-}
-.list-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-.pagination-controls {
-  display: flex;
-  justify-content: space-between;
-  margin-top: 16px;
-}
-</style>

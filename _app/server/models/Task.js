@@ -37,15 +37,22 @@ const Task = sequelize.define("Task", {
     get() {
       const rawValue = this.getDataValue('notes');
       if (!rawValue) return [];
-      return rawValue.split('|').map(note => note.trim());
+      try {
+        return JSON.parse(rawValue);
+      } catch (e) {
+        return rawValue.split('|').map(note => note.trim());
+      }
     },
     set(value) {
       if (Array.isArray(value)) {
-        this.setDataValue('notes', value.join('|'));
+        this.setDataValue('notes', JSON.stringify(value));
       } else if (typeof value === 'string') {
-        this.setDataValue('notes', value);
+        // Handle single note addition
+        const currentNotes = this.notes || [];
+        currentNotes.push(value);
+        this.setDataValue('notes', JSON.stringify(currentNotes));
       } else {
-        this.setDataValue('notes', '');
+        this.setDataValue('notes', '[]');
       }
     }
   },

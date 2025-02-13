@@ -1,125 +1,263 @@
 <template>
-  <div class="home">
+  <main class="dashboard">
+    <!-- Welcome Section -->
+    <section class="welcome-section">
+      <h1>Welcome back, {{ user?.username || 'User' }}!</h1>
+      <p class="current-time">{{ formattedDateTime }}</p>
+    </section>
 
-    <section class="greeting-section bg-gradient-primary">
-      <div class="container">
-        <div class="greeting-content">
-          <h1 class="text-4xl">Welcome back, {{ user.username }}</h1>
-          <p class="text-xl">Here's what's on your plate today.</p>
+    <!-- Quick Stats -->
+    <section class="quick-stats">
+      <div class="stat-card tasks">
+        <h3>Tasks</h3>
+        <div class="stat-numbers">
+          <p><span>{{ pendingTasks }}</span> pending</p>
+          <p><span>{{ dueSoonTasks }}</span> due soon</p>
         </div>
+        <router-link to="/tasks" class="view-all">View Tasks →</router-link>
+      </div>
+
+      <div class="stat-card articles">
+        <h3>Articles</h3>
+        <div class="stat-numbers">
+          <p><span>{{ totalArticles }}</span> saved</p>
+          <p><span>{{ unreadArticles }}</span> unread</p>
+        </div>
+        <router-link to="/articles" class="view-all">View Articles →</router-link>
+      </div>
+
+      <div class="stat-card jottings">
+        <h3>Jottings</h3>
+        <div class="stat-numbers">
+          <p><span>{{ totalJottings }}</span> total</p>
+          <p><span>{{ recentJottings }}</span> this week</p>
+        </div>
+        <router-link to="/jottings" class="view-all">View Jottings →</router-link>
       </div>
     </section>
 
-    <section class="tasks-section">
-      <div class="tasks-content">
-        <div v-if="loading">
-          <p>Loading tasks...</p>  </div>
-        <div v-else-if="error">
-          <p>Error loading tasks: {{ error }}</p> </div>
-        <div v-else>  <PaginatedTaskList
-            v-if="myTasks.length"
-            :title="`Active Tasks (${myTasks.length})`"
-            :tasks="myTasks"  type="incomplete"
-            :defaultLimit="5"
-            @toggle="toggleTaskComplete"
-            @edit="editTask"
-            @delete="deleteTask"
-          >
-            <template #actions>
-              <router-link to="/tasks/incomplete" class="btn btn-text">
-                {{ showAllText }}
-                <svg class="icon" viewBox="0 0 24 24">
-                  <path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/>
-                </svg>
-              </router-link>
-            </template>
-          </PaginatedTaskList>
-          <div v-else class="tasks-empty">
-            <p>No active tasks</p>
-          </div>
-        </div>
+    <!-- Quick Actions -->
+    <section class="quick-actions">
+      <h2>Quick Actions</h2>
+      <div class="actions-grid">
+        <router-link to="/tasks/new" class="action-card">
+          <i class="fas fa-plus-circle"></i>
+          <span>New Task</span>
+        </router-link>
+        <router-link to="/articles/new" class="action-card">
+          <i class="fas fa-bookmark"></i>
+          <span>Save Article</span>
+        </router-link>
+        <router-link to="/jottings/new" class="action-card">
+          <i class="fas fa-pen"></i>
+          <span>Quick Jotting</span>
+        </router-link>
       </div>
     </section>
-
-    <section class="jottings-section">
-      <h2 class="section-title">Jottings</h2>
-      <JottingsList />
-    </section>
-
-    <section class="articles-section">
-      <h2 class="section-title">Articles</h2>
-      <ArticlesList />
-    </section>
-  </div>
+  </main>
 </template>
 
 <script setup>
+import { ref, computed, onMounted } from 'vue'
 import { useAuthStore } from '../stores/auth'
 import { useTaskStore } from '../stores/tasks'
-import { storeToRefs } from 'pinia'
-import { ref, onMounted } from 'vue'
-
-import ArticlesList from '../components/ArticlesList.vue'
-import JottingsList from '../components/JottingsList.vue'
-import PaginatedTaskList from '../components/PaginatedTaskList.vue'
-
+import { useArticleStore } from '../stores/article'
+import { useJottingStore } from '../stores/jotting'
 
 const authStore = useAuthStore()
 const taskStore = useTaskStore()
+const articleStore = useArticleStore()
+const jottingStore = useJottingStore()
 
-const { user } = storeToRefs(authStore)
-const { incompleteTasks } = storeToRefs(taskStore)
+const user = computed(() => authStore.user)
 
-const loading = ref(false)
-const error = ref('')
-const myTasks = ref([])
-
-onMounted(async () => {
-  loading.value = true
-  error.value = null
-  try {
-    const response = await taskStore.fetchTasks()
-    console.log("Fetched tasks:", response)
-    myTasks.value = incompleteTasks.value
-  } catch (err) {
-    error.value = err.message || "An error occurred."
-    console.error("Error fetching tasks:", err)
-  } finally {
-    loading.value = false
-  }
+// Time formatting
+const formattedDateTime = computed(() => {
+  const now = new Date()
+  return new Intl.DateTimeFormat('en-US', {
+    weekday: 'long',
+    month: 'long',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit'
+  }).format(now)
 })
 
+// Task stats
+const pendingTasks = computed(() => {
+  return taskStore.tasks.filter(task => !task.isComplete).length
+})
+
+const dueSoonTasks = computed(() => {
+  const threeDaysFromNow = new Date()
+  threeDaysFromNow.setDate(threeDaysFromNow.getDate() + 3)
+  return taskStore.tasks.filter(task => {
+    return !task.isComplete && 
+           task.dueDate && 
+           new Date(task.dueDate) <= threeDaysFromNow
+  }).length
+})
+
+// Article stats
+const totalArticles = computed(() => articleStore.articles.length)
+const unreadArticles = computed(() => articleStore.articles.filter(article => !article.isRead).length)
+
+// Jotting stats
+const totalJottings = computed(() => jottingStore.jottings.length)
+const recentJottings = computed(() => {
+  const weekAgo = new Date()
+  weekAgo.setDate(weekAgo.getDate() - 7)
+  return jottingStore.jottings.filter(jotting => 
+    new Date(jotting.createdAt) >= weekAgo
+  ).length
+})
+
+// Load data
+onMounted(async () => {
+  await Promise.all([
+    taskStore.fetchTasks(),
+    articleStore.fetchArticles(),
+    jottingStore.fetchJottings()
+  ])
+})
 </script>
 
 <style scoped>
-.feature-icon {
-  font-size: 3rem;
+.dashboard {
+  padding: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
-.bg-gradient-primary {
-  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+.welcome-section {
+  margin-bottom: 2rem;
+  text-align: center;
 }
 
-/* Responsive adjustments */
+.welcome-section h1 {
+  font-size: 2rem;
+  color: var(--color-text-primary);
+  margin-bottom: 0.5rem;
+}
+
+.current-time {
+  color: var(--color-text-secondary);
+  font-size: 1.1rem;
+}
+
+.quick-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 3rem;
+}
+
+.stat-card {
+  background: var(--color-background-secondary);
+  border-radius: var(--border-radius);
+  padding: 1.5rem;
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.2s ease;
+}
+
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.stat-card h3 {
+  color: var(--color-text-primary);
+  margin-bottom: 1rem;
+  font-size: 1.25rem;
+}
+
+.stat-numbers {
+  margin-bottom: 1rem;
+}
+
+.stat-numbers p {
+  color: var(--color-text-secondary);
+  margin: 0.5rem 0;
+}
+
+.stat-numbers span {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: var(--color-primary);
+  margin-right: 0.5rem;
+}
+
+.view-all {
+  color: var(--color-primary);
+  text-decoration: none;
+  font-weight: 500;
+  display: inline-block;
+  margin-top: 0.5rem;
+}
+
+.view-all:hover {
+  text-decoration: underline;
+}
+
+.quick-actions {
+  margin-top: 2rem;
+}
+
+.quick-actions h2 {
+  font-size: 1.5rem;
+  color: var(--color-text-primary);
+  margin-bottom: 1.5rem;
+}
+
+.actions-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.action-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-background-secondary);
+  padding: 1.5rem;
+  border-radius: var(--border-radius);
+  text-decoration: none;
+  color: var(--color-text-primary);
+  transition: all 0.2s ease;
+}
+
+.action-card:hover {
+  background: var(--color-primary);
+  color: white;
+  transform: translateY(-2px);
+}
+
+.action-card i {
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+}
+
+.action-card span {
+  font-weight: 500;
+}
+
 @media (max-width: 768px) {
-  .text-4xl {
-    font-size: var(--font-size-3xl);
+  .dashboard {
+    padding: 1rem;
   }
 
-  .text-3xl {
-    font-size: var(--font-size-2xl);
+  .welcome-section h1 {
+    font-size: 1.75rem;
   }
 
-  .text-xl {
-    font-size: var(--font-size-lg);
+  .stat-card {
+    padding: 1rem;
   }
 
-  .d-flex {
-    flex-direction: column;
-  }
-
-  .btn {
-    width: 100%;
+  .action-card {
+    padding: 1rem;
   }
 }
 </style>
