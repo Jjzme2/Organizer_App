@@ -41,7 +41,7 @@
 
 <script setup>
 import { computed, ref } from 'vue'
-import TaskCard from './cards/TaskCard.vue'
+import TaskCard from '../../components/cards/TaskCard.vue'
 
 const props = defineProps({
   title: {
@@ -78,70 +78,3 @@ function handleShowAll() {
   showAll.value = !showAll.value
 }
 </script>
-
-<style scoped>
-.task-list-section {
-  background: var(--color-surface);
-  border-radius: 8px;
-  padding: 1.5rem;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.section-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1rem;
-}
-
-.section-header h2 {
-  font-size: 1.25rem;
-  color: var(--color-text-primary);
-  margin: 0;
-}
-
-.task-grid {
-  display: grid;
-  gap: 1rem;
-  margin-bottom: 1rem;
-}
-
-.empty-state {
-  text-align: center;
-  padding: 2rem;
-  color: var(--color-text-light);
-}
-
-.btn-text {
-  background: none;
-  border: none;
-  color: var(--color-primary);
-  text-decoration: underline;
-  padding: 0.25rem;
-  cursor: pointer;
-  font-weight: 500;
-}
-
-.btn-text:hover {
-  color: var(--color-primary-dark);
-}
-
-/* Transition animations */
-.task-list-enter-active,
-.task-list-leave-active {
-  transition: all 0.3s ease;
-}
-
-.task-list-enter-from,
-.task-list-leave-to {
-  opacity: 0;
-  transform: translateY(30px);
-}
-
-.task-list-move {
-  transition: transform 0.3s ease;
-}
-</style>

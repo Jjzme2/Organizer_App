@@ -32,7 +32,7 @@ useSeo()
 
 .app {
   min-height: 100vh;
-  width: clamp(300px, 40vw, 800px);
+  width: clamp(300px, 90vw, 1200px);
   display: flex;
   flex-direction: column;
 }

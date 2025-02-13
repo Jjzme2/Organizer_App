@@ -67,26 +67,28 @@
 
     <!-- Task Modal -->
     <BaseModal
-      v-if="showAddTaskModal"
-      @close="closeTaskModal"
-      :show="showAddTaskModal"
+      v-model:show="showAddTaskModal"
       :title="editingTask ? 'Edit Task' : 'New Task'"
+      @close="closeTaskModal"
     >
-      <TaskForm
-        :task="editingTask"
-        @submit="handleTaskSubmit"
-        @cancel="closeTaskModal"
-      />
+      <template #default>
+        <TaskForm
+          :task="editingTask"
+          @submit="handleTaskSubmit"
+          @cancel="closeTaskModal"
+        />
+      </template>
     </BaseModal>
 
     <!-- Category Modal -->
     <BaseModal
-      v-if="showCategoryModal"
-      @close="showCategoryModal = false"
-      :show="showCategoryModal"
+      v-model:show="showCategoryModal"
       title="Manage Categories"
+      @close="showCategoryModal = false"
     >
-      <CategoryManagement />
+      <template #default>
+        <CategoryManagement />
+      </template>
     </BaseModal>
 
     <!-- Message Box for Errors -->
@@ -100,9 +102,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useTaskStore } from '../stores/tasks'
-import PaginatedTaskList from '../components/PaginatedTaskList.vue'
+import { useRoute, useRouter } from 'vue-router'
+import PaginatedTaskList from '../components/pagination/TaskList_Paginated.vue'
 import TaskForm from '../components/forms/TaskForm.vue'
 import MessageBox from '../components/MessageBox.vue'
 import BaseModal from '../components/modals/BaseModal.vue'
@@ -114,6 +117,9 @@ const error = ref(null)
 const showAddTaskModal = ref(false)
 const showCategoryModal = ref(false)
 const editingTask = ref(null)
+
+const route = useRoute()
+const router = useRouter()
 
 // Computed properties
 const incompleteTasks = computed(() => taskStore.incompleteTasks)
@@ -189,89 +195,14 @@ function closeTaskModal() {
 onMounted(async () => {
   try {
     await taskStore.fetchTasks()
+    // Show new task modal if route meta indicates
+    if (route.meta.showNewModal) {
+      showAddTaskModal.value = true
+      // Remove the meta flag from history
+      router.replace({ name: 'tasks' })
+    }
   } catch (err) {
-    error.value = 'Failed to load tasks'
+    console.error('Error fetching tasks:', err)
   }
 })
 </script>
-
-<style scoped>
-.tasks-view {
-  min-height: 100vh;
-  padding: 2rem 0;
-}
-
-.view-header {
-  margin-bottom: 2rem;
-  background: var(--color-surface);
-  padding: 1rem 0;
-  border-bottom: 1px solid var(--color-border);
-}
-
-.header-content {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.header-actions {
-  display: flex;
-  gap: 1rem;
-}
-
-.container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 1rem;
-}
-
-.view-content {
-  display: flex;
-  flex-direction: column;
-  gap: 2rem;
-}
-
-.quote-banner {
-  margin-bottom: 2rem;
-}
-
-.task-lists {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 2rem;
-}
-
-.empty-state {
-  text-align: center;
-  padding: 2rem;
-  color: var(--color-text-light);
-}
-
-.empty-state p {
-  margin-bottom: 1rem;
-}
-
-.btn {
-  padding: 0.5rem 1rem;
-  border-radius: 4px;
-  cursor: pointer;
-  font-weight: 500;
-}
-
-.btn-primary {
-  background-color: var(--color-primary);
-  color: white;
-  border: none;
-}
-
-.btn-secondary {
-  background-color: transparent;
-  border: 1px solid var(--color-border);
-}
-
-@media (max-width: 768px) {
-  .task-lists {
-    grid-template-columns: 1fr;
-  }
-}
-</style>

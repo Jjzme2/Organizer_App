@@ -62,32 +62,3 @@ const saveJotting = (updatedJotting) => {
   closeModal();
 };
 </script>
-
-<style scoped>
-.jottings-list-section {
-  background: var(--color-surface-dark);
-  border-radius: 20px;
-  padding: 1.5rem;
-}
-.section-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1.5rem;
-}
-.jotting-count {
-  font-size: 0.875rem;
-  font-weight: normal;
-  color: var(--color-text-light);
-}
-.jottings-list {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-.empty-state {
-  text-align: center;
-  padding: 2rem;
-  color: var(--color-text-light);
-}
-</style>

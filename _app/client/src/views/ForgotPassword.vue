@@ -61,25 +61,3 @@ async function handleSubmit() {
   }
 }
 </script>
-
-<style scoped>
-.forgot-password-view {
-  max-width: 400px;
-  margin: 40px auto;
-  padding: 20px;
-}
-
-/* Reuse existing form styles */
-.password-reset-form {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-.success-message {
-  color: var(--color-success);
-  padding: 10px;
-  background-color: var(--color-success-light);
-  border-radius: 4px;
-}
-</style>

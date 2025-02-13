@@ -131,6 +131,12 @@ exports.updateItem = async (req, res) => {
       throw new AuthenticationError();
     }
 
+    logger.debug('Update task request:', {
+      taskId: req.params.id,
+      userId: req.user.id,
+      body: req.body
+    });
+
     const task = await Task.findOne({
       where: {
         id: req.params.id,
@@ -142,25 +148,53 @@ exports.updateItem = async (req, res) => {
       throw new NotFoundError("Task not found");
     }
 
-    // Start transaction for update with potential reminder changes
-    await task.update(req.body);
+    logger.debug('Found task to update:', {
+      taskId: task.id,
+      currentState: task.toJSON()
+    });
 
-    // Handle reminder updates
-    if (req.body.reminderTime) {
-      // Update or create reminder
-      await TaskReminder.upsert({
-        taskId: task.id,
-        reminderTime: new Date(req.body.reminderTime),
-        isSent: false
-      }, {
-        where: { taskId: task.id }
-      });
-    } else if (req.body.reminderTime === null) {
-      // Remove reminder if explicitly set to null
-      await TaskReminder.destroy({
-        where: { taskId: task.id }
-      });
+    // Handle status update
+    if (req.body.status) {
+      task.status = req.body.status;
+      if (req.body.status === 'completed') {
+        task.completedAt = new Date();
+        task.isComplete = true;
+      } else {
+        task.completedAt = null;
+        task.isComplete = false;
+      }
     }
+
+    // Handle priority update
+    if (req.body.priority) {
+      task.priority = req.body.priority;
+    }
+
+    // Handle notes update
+    if (req.body.notes) {
+      if (Array.isArray(req.body.notes)) {
+        task.notes = req.body.notes;
+      } else if (typeof req.body.notes === 'string') {
+        const currentNotes = task.notes || [];
+        currentNotes.push(req.body.notes);
+        task.notes = currentNotes;
+      }
+    }
+
+    // Handle other updates
+    if (req.body.name) task.name = req.body.name;
+    if (req.body.description) task.description = req.body.description;
+    if (req.body.dueDate) task.dueDate = req.body.dueDate;
+    if (req.body.expectedDifficulty) task.expectedDifficulty = req.body.expectedDifficulty;
+    if (req.body.categoryId) task.categoryId = req.body.categoryId;
+    if (typeof req.body.isActive === 'boolean') task.isActive = req.body.isActive;
+
+    await task.save();
+
+    logger.debug('Task updated:', {
+      taskId: task.id,
+      newState: task.toJSON()
+    });
 
     // Fetch updated task with category data
     const updatedTask = await Task.findOne({
@@ -172,6 +206,11 @@ exports.updateItem = async (req, res) => {
         model: Category,
         attributes: ['id', 'name', 'color']
       }]
+    });
+
+    logger.debug('Sending updated task response:', {
+      taskId: updatedTask.id,
+      finalState: updatedTask.toJSON()
     });
 
     res.json(updatedTask);

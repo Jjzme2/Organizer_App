@@ -106,7 +106,7 @@ export const useTaskStore = defineStore('tasks', () => {
     error.value = null
     try {
       checkAuth()
-      console.log('Updating task:', taskId, taskData) // Debug log
+      console.log('Updating task:', { taskId, taskData }) // Debug log
       const response = await api.put(`/tasks/${taskId}`, taskData)
       console.log('Update response:', response.data) // Debug log
       const index = tasks.value.findIndex(t => t.id === taskId)
@@ -183,16 +183,18 @@ export const useTaskStore = defineStore('tasks', () => {
     error.value = null
     try {
       checkAuth()
+      console.log('Updating task status:', { id, status }) // Debug log
       const task = tasks.value.find(t => t.id === id)
       if (task) {
-        const updatedTask = await updateTask(id, { ...task, status })
-        // Update the task in the local state
+        const updatedTask = await updateTask(id, { status })
+        console.log('Status update response:', updatedTask) // Debug log
         const index = tasks.value.findIndex(t => t.id === id)
         if (index !== -1) {
           tasks.value[index] = updatedTask
         }
       }
     } catch (err) {
+      console.error('Error updating task status:', err) // Debug log
       handleError(err, 'Failed to update task status')
     } finally {
       loading.value = false
@@ -204,16 +206,18 @@ export const useTaskStore = defineStore('tasks', () => {
     error.value = null
     try {
       checkAuth()
+      console.log('Updating task priority:', { id, priority }) // Debug log
       const task = tasks.value.find(t => t.id === id)
       if (task) {
-        const updatedTask = await updateTask(id, { ...task, priority })
-        // Update the task in the local state
+        const updatedTask = await updateTask(id, { priority })
+        console.log('Priority update response:', updatedTask) // Debug log
         const index = tasks.value.findIndex(t => t.id === id)
         if (index !== -1) {
           tasks.value[index] = updatedTask
         }
       }
     } catch (err) {
+      console.error('Error updating task priority:', err) // Debug log
       handleError(err, 'Failed to update task priority')
     } finally {
       loading.value = false
@@ -225,20 +229,20 @@ export const useTaskStore = defineStore('tasks', () => {
     error.value = null
     try {
       checkAuth()
+      console.log('Adding task note:', { id, note }) // Debug log
       const task = tasks.value.find(t => t.id === id)
       if (task) {
-        const notes = task.notes || []
-        const updatedTask = await updateTask(id, {
-          ...task,
-          notes: [...notes, note]
+        const updatedTask = await updateTask(id, { 
+          notes: [...(task.notes || []), note]
         })
-        // Update the task in the local state
+        console.log('Note addition response:', updatedTask) // Debug log
         const index = tasks.value.findIndex(t => t.id === id)
         if (index !== -1) {
           tasks.value[index] = updatedTask
         }
       }
     } catch (err) {
+      console.error('Error adding task note:', err) // Debug log
       handleError(err, 'Failed to add note to task')
     } finally {
       loading.value = false

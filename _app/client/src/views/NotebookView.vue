@@ -41,27 +41,26 @@
     </main>
 
     <!-- Jotting Modal -->
-    <JottingModal
+    <NoteModal
       v-if="showJottingModal"
       @close="handleJottingClose"
       @submit="handleJottingSubmit"
-      :jotting="editingJotting"
+      :note="editingJotting"
     />
 
     <!-- Article Modal -->
-    <ArticleModal
+    <NoteModal
       v-if="showArticleModal"
       @close="handleArticleClose"
       @submit="handleArticleSubmit"
-      :article="editingArticle"
+      :note="editingArticle"
     />
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
-import JottingModal from '../components/modals/JottingModal.vue';
-import ArticleModal from '../components/modals/ArticleModal.vue';
+import NoteModal from '../components/modals/NoteModal.vue'
 import PaginatedJottingsList from '../components/pagination/JottingsList_Paginated.vue';
 import PaginatedArticlesList from '../components/pagination/ArticlesList_Paginated.vue';
 import { useArticleStore } from '../stores/article';
@@ -183,47 +182,3 @@ function handleArticleClose() {
   editingArticle.value = null;
 }
 </script>
-
-<style scoped>
-.notebook-view {
-  min-height: 100vh;
-  padding: 2rem 0;
-}
-
-.view-header {
-  margin-bottom: 2rem;
-  background: var(--color-surface);
-  padding: 1rem 0;
-  border-bottom: 1px solid var(--color-border);
-}
-
-.header-content {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.header-actions {
-  display: flex;
-  gap: 1rem;
-}
-
-.container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 1rem;
-}
-
-.view-content {
-  display: flex;
-  flex-direction: column;
-  gap: 2rem;
-}
-
-section {
-  background: var(--color-surface);
-  border-radius: 8px;
-  padding: 1.5rem;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-</style>

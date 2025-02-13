@@ -113,7 +113,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, watch } from 'vue';
 import BaseCard from './BaseCard.vue';
 import { useCategoryStore } from '../../stores/categories'
 
@@ -136,6 +136,15 @@ const isNotesExpanded = ref(false);
 const newNote = ref('');
 const currentStatus = ref(props.task.status);
 const currentPriority = ref(props.task.priority);
+
+// Watch for changes in task props and update local state
+watch(() => props.task.status, (newStatus) => {
+  currentStatus.value = newStatus;
+}, { immediate: true });
+
+watch(() => props.task.priority, (newPriority) => {
+  currentPriority.value = newPriority;
+}, { immediate: true });
 
 const formattedNotes = computed(() => {
   return props.task.notes?.map(note => note.replace(/\n/g, '|')) || [];
@@ -187,211 +196,20 @@ const formatCompletionInfo = computed(() => {
 });
 
 function handleStatusChange() {
+  console.log('Status change:', currentStatus.value); // Debug log
   emit('update-status', { id: props.task.id, status: currentStatus.value });
 }
 
 function handlePriorityChange() {
+  console.log('Priority change:', currentPriority.value); // Debug log
   emit('update-priority', { id: props.task.id, priority: currentPriority.value });
 }
 
 function handleAddNote() {
   if (newNote.value.trim()) {
+    console.log('Adding note:', newNote.value.trim()); // Debug log
     emit('add-note', { id: props.task.id, note: newNote.value.trim() });
     newNote.value = '';
   }
 }
 </script>
-
-<style scoped>
-.task-card {
-  /* Add any additional task-specific styles here */
-}
-
-.task-card-description {
-  color: var(--color-text-light);
-  font-size: 0.875rem;
-  margin: 0.5rem 0;
-}
-
-.task-controls {
-  margin-top: 1rem;
-}
-
-.control-group {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.control-row {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.control-row label {
-  min-width: 60px;
-  font-size: 0.875rem;
-  color: var(--color-text-light);
-}
-
-.control-row select {
-  flex: 1;
-  padding: 0.25rem;
-  border: 1px solid var(--color-border);
-  border-radius: 4px;
-  background: var(--color-surface);
-  color: var(--color-text);
-  font-size: 0.875rem;
-}
-
-.task-notes-section {
-  margin-top: 1rem;
-}
-
-.notes-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  cursor: pointer;
-  padding: 0.25rem 0;
-}
-
-.notes-title {
-  font-size: 0.875rem;
-  color: var(--color-text-light);
-}
-
-.expand-icon {
-  font-size: 0.75rem;
-  transition: transform 0.2s ease;
-}
-
-.expand-icon.expanded {
-  transform: rotate(180deg);
-}
-
-.notes-list {
-  margin-top: 0.5rem;
-}
-
-.note-item {
-  font-size: 0.875rem;
-  padding: 0.25rem 0;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.25rem;
-}
-
-.note-segment {
-  color: var(--color-text-light);
-}
-
-.note-segment.primary {
-  color: var(--color-text);
-  font-weight: 500;
-}
-
-.add-note {
-  margin-top: 0.5rem;
-}
-
-.note-input-wrapper {
-  display: flex;
-  gap: 0.5rem;
-}
-
-.note-input-wrapper input {
-  flex: 1;
-  padding: 0.375rem 0.5rem;
-  border: 1px solid var(--color-border);
-  border-radius: 4px;
-  font-size: 0.875rem;
-  background: var(--color-surface);
-  color: var(--color-text);
-}
-
-.note-input-wrapper input::placeholder {
-  color: var(--color-text-light);
-}
-
-.add-btn {
-  padding: 0.375rem 0.75rem;
-  background: var(--color-primary);
-  color: white;
-  border: none;
-  border-radius: 4px;
-  font-size: 0.875rem;
-  cursor: pointer;
-}
-
-.add-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.task-actions {
-  display: flex;
-  gap: 0.5rem;
-  margin-top: 0.5rem;
-}
-
-.btn {
-  padding: 0.25rem 0.5rem;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 0.875rem;
-  background: transparent;
-  color: var(--color-text-light);
-}
-
-.btn:hover {
-  color: var(--color-text);
-}
-
-.checkbox-wrapper {
-  position: relative;
-  display: inline-block;
-  width: 18px;
-  height: 18px;
-}
-
-.checkbox-wrapper input {
-  opacity: 0;
-  width: 0;
-  height: 0;
-}
-
-.checkbox-custom {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 18px;
-  height: 18px;
-  border: 2px solid var(--color-border);
-  border-radius: 4px;
-  background: var(--color-surface);
-  cursor: pointer;
-}
-
-.checkbox-wrapper input:checked + .checkbox-custom {
-  background: var(--color-primary);
-  border-color: var(--color-primary);
-}
-
-.checkbox-wrapper input:checked + .checkbox-custom::after {
-  content: '✓';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  color: white;
-  font-size: 12px;
-}
-
-.checkbox-wrapper input:disabled + .checkbox-custom {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-</style>

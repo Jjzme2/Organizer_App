@@ -6,6 +6,8 @@ import ResetPassword from '../views/ResetPassword.vue'
 import EmailVerification from '../views/EmailVerification.vue'
 import QuoteView from '../views/QuoteView.vue'
 import NotebookView from '../views/NotebookView.vue'
+import ArticlesView from '../views/ArticlesView.vue'
+import JottingsView from '../views/JottingsView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -14,76 +16,79 @@ const router = createRouter({
       path: '/',
       name: 'home',
       component: HomeView,
-      meta: { requiresAuth: true },
+      meta: { requiresAuth: true }
     },
     {
       path: '/login',
       name: 'login',
       component: () => import('../views/LoginView.vue'),
-      meta: { guest: true },
+      meta: { requiresGuest: true }
     },
     {
       path: '/register',
       name: 'register',
       component: () => import('../views/RegisterView.vue'),
-      meta: { guest: true },
+      meta: { requiresGuest: true }
     },
     {
       path: '/tasks',
       name: 'tasks',
       component: () => import('../views/TasksView.vue'),
-      meta: { requiresAuth: true },
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/tasks/new',
+      name: 'new-task',
+      component: () => import('../views/TasksView.vue'),
+      meta: { requiresAuth: true, showNewModal: true }
+    },
+    {
+      path: '/tasks/completed',
+      name: 'completed-tasks',
+      component: () => import('../views/CompletedTasksView.vue'),
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/tasks/incomplete',
+      name: 'incomplete-tasks',
+      component: () => import('../views/IncompleteTasksView.vue'),
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/articles',
+      name: 'articles',
+      component: ArticlesView,
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/articles/new',
+      name: 'new-article',
+      component: ArticlesView,
+      meta: { requiresAuth: true, showNewModal: true }
+    },
+    {
+      path: '/jottings',
+      name: 'jottings',
+      component: JottingsView,
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/jottings/new',
+      name: 'new-jotting',
+      component: JottingsView,
+      meta: { requiresAuth: true, showNewModal: true }
     },
     {
       path: '/calendar',
       name: 'calendar',
       component: () => import('../views/CalendarView.vue'),
-      meta: { requiresAuth: true },
+      meta: { requiresAuth: true }
     },
     {
-      path: '/profile',
-      name: 'profile',
-      component: () => import('../views/ProfileView.vue'),
-      meta: { requiresAuth: true },
-    },
-    {
-      path: '/logout',
-      name: 'logout',
-      component: () => import('../views/LogoutView.vue'),
-      meta: { requiresAuth: true },
-    },
-    {
-      path: '/about',
-      name: 'about',
-      // route level code-splitting
-      // this generates a separate chunk (About.[hash].js) for this route
-      // which is lazy-loaded when the route is visited.
-      component: () => import('../views/AboutView.vue'),
-    },
-    {
-      path: '/tasks/completed',
-      name: 'CompletedTasks',
-      component: () => import('../views/CompletedTasksView.vue')
-    },
-    {
-      path: '/tasks/incomplete',
-      name: 'IncompleteTasks',
-      component: () => import('../views/IncompleteTasksView.vue')
-    },
-    {
-      path: '/forgot-password',
-      name: 'ForgotPassword',
-      component: ForgotPassword
-    },
-    {
-      path: '/reset-password/:token',
-      name: 'ResetPassword',
-      component: ResetPassword
-    },
-    {
-      path: '/verify-email/:token',
-      name: 'EmailVerification',
-      component: EmailVerification
+      path: '/notebook',
+      name: 'notebook',
+      component: NotebookView,
+      meta: { requiresAuth: true }
     },
     {
       path: '/quotes',
@@ -92,25 +97,62 @@ const router = createRouter({
       meta: { requiresAuth: true }
     },
     {
-      path: '/notebook',
-      name: 'notebook',
-      component: NotebookView,
+      path: '/profile',
+      name: 'profile',
+      component: () => import('../views/ProfileView.vue'),
       meta: { requiresAuth: true }
+    },
+    {
+      path: '/logout',
+      name: 'logout',
+      component: () => import('../views/LogoutView.vue')
+    },
+    {
+      path: '/verify-email/:token',
+      name: 'verify-email',
+      component: EmailVerification
+    },
+    {
+      path: '/forgot-password',
+      name: 'forgot-password',
+      component: ForgotPassword,
+      meta: { requiresGuest: true }
+    },
+    {
+      path: '/reset-password/:token',
+      name: 'reset-password',
+      component: ResetPassword,
+      meta: { requiresGuest: true }
+    },
+    {
+      path: '/about',
+      name: 'about',
+      // route level code-splitting
+      // this generates a separate chunk (About.[hash].js) for this route
+      // which is lazy-loaded when the route is visited.
+      component: () => import('../views/AboutView.vue'),
     }
-  ],
+  ]
 })
 
-// Navigation guard
+// Navigation guards
 router.beforeEach((to, from, next) => {
   const authStore = useAuthStore()
+  const isAuthenticated = authStore.isAuthenticated
 
-  if (to.meta.requiresAuth && !authStore.isAuthenticated) {
+  // Handle routes that require authentication
+  if (to.meta.requiresAuth && !isAuthenticated) {
     next({ name: 'login', query: { redirect: to.fullPath } })
-  } else if (to.meta.guest && authStore.isAuthenticated) {
-    next({ name: 'home' })
-  } else {
-    next()
+    return
   }
+
+  // Handle routes that require guest access (like login/register)
+  if (to.meta.requiresGuest && isAuthenticated) {
+    next({ name: 'home' })
+    return
+  }
+
+  next()
 })
 
 export default router

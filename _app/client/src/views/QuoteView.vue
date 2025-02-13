@@ -1,25 +1,24 @@
 <template>
-  <div class="quotes-view">
-    <header class="view-header">
-      <div class="container">
-        <div class="header-content">
-          <h1>Inspirational Quotes</h1>
-          <div class="header-actions">
-            <button @click="showAddQuoteModal = true" class="btn btn-primary">
-              <svg class="icon" viewBox="0 0 24 24">
-                <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
-              </svg>
-              Add Quote
-            </button>
-          </div>
-        </div>
+  <div class="quotes-view animate-fade-in">
+    <header class="hero-container">
+      <div class="hero-background" style="background-image: url('/images/quotes-bg.jpg')"></div>
+      <div class="hero-overlay"></div>
+      <div class="hero-content">
+        <h1 class="text-3xl font-bold mb-2">Inspirational Quotes</h1>
+        <button @click="showAddQuoteModal = true" class="btn btn-primary d-flex items-center mt-3">
+          <svg class="icon mr-2" viewBox="0 0 24 24">
+            <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
+          </svg>
+          Add Quote
+        </button>
       </div>
     </header>
 
-    <main class="view-content container">
+    <main class="container mt-4">
       <!-- Loading State -->
-      <div v-if="loading" class="loading-overlay">
-        <div class="loading-spinner">Loading quotes...</div>
+      <div v-if="loading" class="d-flex justify-center items-center p-4">
+        <span class="icon icon--spin mr-2"></span>
+        <div class="loading-spinner text-lg">Loading quotes...</div>
       </div>
 
       <!-- Error Message -->
@@ -29,10 +28,11 @@
         :message="error"
         type="error"
         @close="showError = false"
+        class="mb-4"
       />
 
       <!-- Featured Quote -->
-      <div v-if="randomQuote" class="featured-section">
+      <div v-if="randomQuote" class="mb-4 animate-slide-up">
         <QuoteBanner
           :quote="randomQuote"
           @refresh="fetchNewRandomQuote"
@@ -40,8 +40,8 @@
       </div>
 
       <!-- Filter and Sort -->
-      <div class="controls-section">
-        <div class="filter-group">
+      <div class="d-flex justify-between items-center gap-4 mb-4">
+        <div class="flex-1">
           <select v-model="filterCategory" class="form-control">
             <option value="">All Categories</option>
             <option value="motivation">Motivation</option>
@@ -51,7 +51,7 @@
             <option value="personal_growth">Personal Growth</option>
           </select>
         </div>
-        <div class="sort-group">
+        <div class="flex-1">
           <select v-model="sortBy" class="form-control">
             <option value="createdAt-desc">Newest First</option>
             <option value="createdAt-asc">Oldest First</option>
@@ -65,7 +65,7 @@
       <TransitionGroup
         name="list"
         tag="div"
-        class="quotes-grid"
+        class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
       >
         <QuoteCard
           v-for="quote in filteredAndSortedQuotes"
@@ -73,15 +73,16 @@
           :quote="quote"
           @toggle-favorite="toggleFavorite"
           @delete="confirmDeleteQuote"
+          class="animate-scale-in"
         />
       </TransitionGroup>
 
       <!-- Empty State -->
-      <div v-if="!loading && !quotes.length" class="empty-state">
-        <svg class="empty-icon" viewBox="0 0 24 24">
+      <div v-if="!loading && !quotes.length" class="text-center p-8">
+        <svg class="icon icon--xl mx-auto mb-4 text-light" viewBox="0 0 24 24">
           <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H6l-2 2V4h16v12z"/>
         </svg>
-        <p>No quotes found</p>
+        <p class="text-lg text-light mb-4">No quotes found</p>
         <button @click="showAddQuoteModal = true" class="btn btn-primary">Add Your First Quote</button>
       </div>
     </main>
@@ -99,8 +100,8 @@
       v-model:show="showDeleteModal"
       title="Delete Quote"
     >
-      <p>Are you sure you want to delete this quote? This action cannot be undone.</p>
-      <div class="modal-actions">
+      <p class="mb-4">Are you sure you want to delete this quote? This action cannot be undone.</p>
+      <div class="d-flex justify-end gap-3">
         <button
           @click="showDeleteModal = false"
           class="btn btn-text"
@@ -110,9 +111,10 @@
         </button>
         <button
           @click="deleteQuote"
-          class="btn btn-danger"
+          class="btn btn-danger d-flex items-center"
           :disabled="submitting"
         >
+          <span v-if="submitting" class="icon icon--spin mr-2"></span>
           {{ submitting ? 'Deleting...' : 'Delete Quote' }}
         </button>
       </div>
@@ -237,91 +239,3 @@ onMounted(async () => {
   }
 })
 </script>
-
-<style scoped>
-.quotes-view {
-  min-height: 100vh;
-}
-
-.view-header {
-  background: var(--color-surface);
-  padding: var(--spacing-lg) 0;
-  border-bottom: 1px solid var(--color-border);
-  margin-bottom: var(--spacing-lg);
-}
-
-.header-content {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.featured-section {
-  margin-bottom: var(--spacing-xl);
-}
-
-.controls-section {
-  display: flex;
-  gap: var(--spacing-md);
-  margin-bottom: var(--spacing-lg);
-}
-
-.filter-group,
-.sort-group {
-  flex: 1;
-}
-
-.quotes-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: var(--spacing-lg);
-  padding: var(--spacing-lg) 0;
-}
-
-.empty-state {
-  text-align: center;
-  padding: var(--spacing-xl) 0;
-  color: var(--color-text-light);
-}
-
-.empty-icon {
-  width: 48px;
-  height: 48px;
-  margin-bottom: var(--spacing-md);
-}
-
-.modal-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: var(--spacing-sm);
-  margin-top: var(--spacing-lg);
-}
-
-.icon {
-  width: 1.5rem;
-  height: 1.5rem;
-  margin-right: var(--spacing-xs);
-}
-
-/* Transitions */
-.list-enter-active,
-.list-leave-active {
-  transition: all 0.3s ease;
-}
-
-.list-enter-from,
-.list-leave-to {
-  opacity: 0;
-  transform: translateY(30px);
-}
-
-@media (max-width: 768px) {
-  .controls-section {
-    flex-direction: column;
-  }
-
-  .quotes-grid {
-    grid-template-columns: 1fr;
-  }
-}
-</style>
