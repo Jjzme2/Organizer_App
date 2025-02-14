@@ -13,7 +13,7 @@ const jottingRoutes = require("./jottings");
 const jottingCommentsRoutes = require("./jottingComments");
 const articleRoutes = require("./articles");
 const articleCommentsRoutes = require("./articleComments");
-
+const contactILYTATRoutes = require("./contactILYTAT");
 
 const routes = [
     {
@@ -63,6 +63,10 @@ const routes = [
 	{
 		path: "/article-comments",
 		routes: articleCommentsRoutes
+	},
+	{
+		path: "/contact-ilytat",
+		routes: contactILYTATRoutes
 	}
 ];
 

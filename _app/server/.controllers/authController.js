@@ -402,7 +402,7 @@ exports.verifyEmail = async (req, res) => {
   }
 };
 
-exports.resendVerification = async (req, res) => {
+exports.sendVerification = async (req, res) => {
   try {
     const user = await User.findByPk(req.user.id);
     if (!user) {
@@ -429,7 +429,7 @@ exports.resendVerification = async (req, res) => {
 
     res.json({ message: 'Verification email has been resent' });
   } catch (error) {
-    logger.error('Resend verification error:', error);
-    res.status(500).json({ error: 'Failed to resend verification email' });
+    logger.error('Send verification error:', error);
+    res.status(500).json({ error: 'Failed to send verification email' });
   }
 };

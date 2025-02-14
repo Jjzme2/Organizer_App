@@ -1,31 +1,37 @@
 <template>
   <div class="login-wrapper">
-    <div class="container">
-      <div class="login-view">
-        <div class="login-left animate-fade-in">
-          <LoginForm />
+    <div class="login-container">
+      <!-- Left Side - Login Form -->
+      <div class="login-left animate-fade-in">
+        <div class="login-header">
+          <h1 class="login-title">Welcome Back</h1>
+          <p class="login-subtitle">Sign in to continue to your workspace</p>
         </div>
+        <LoginForm />
+        <div class="form-footer">
+          <p>Don't have an account? <router-link to="/register" class="auth-link">Create one</router-link></p>
+        </div>
+      </div>
 
-        <div class="login-right animate-slide-in">
-          <LoginAnnouncer
-            class="login-announcer"
-            backgroundImage='/src/assets/images/hero-bg.jpg'
-            mainText_1="Organize Your Life,"
-            mainText_2="One Task at a Time"
-            subText="A powerful, intuitive task management solution that helps you stay focused and productive"
-            buttonText="Get Started - It's Free"
-            buttonRoute="/register"
-          />
-          
-          <FeatureList />
+      <!-- Right Side - Feature Showcase -->
+      <div class="login-right animate-slide-in">
+        <div class="hero-section">
+          <div class="hero-content">
+            <h2 class="hero-title">Organize Your Work</h2>
+            <p class="hero-subtitle">Join thousands of users who trust our platform</p>
+          </div>
         </div>
+        <FeatureCarousel />
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import LoginAnnouncer from '@/components/LoginAnnouncer.vue';
 import LoginForm from '@/components/LoginForm.vue';
-import FeatureList from '@/components/FeatureList.vue';
+import FeatureCarousel from '@/components/features/FeatureCarousel.vue';
 </script>
+
+<style>
+@import '@/assets/css/views/login.css';
+</style>

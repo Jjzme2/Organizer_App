@@ -49,4 +49,3 @@ defineProps({
 
 defineEmits(['toggle', 'edit', 'delete'])
 </script>
-

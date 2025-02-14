@@ -124,12 +124,12 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
-  async function resendVerification() {
+  async function sendVerification() {
     try {
-      const response = await api.post('/auth/resend-verification')
+      const response = await api.post('/auth/send-verification')
       return response.data
     } catch (error) {
-      throw new Error(error.response?.data?.message || 'Error resending verification email')
+      throw new Error(error.response?.data?.message || 'Error sending verification email')
     }
   }
 
@@ -147,6 +147,6 @@ export const useAuthStore = defineStore('auth', () => {
     requestPasswordReset,
     resetPassword,
     verifyEmail,
-    resendVerification
+    sendVerification
   }
 })

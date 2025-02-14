@@ -1,5 +1,6 @@
 <template>
   <div class="app">
+    <MessageHandler />
     <Navbar />
     <main class="main-content">
       <div class="container view-container">
@@ -22,6 +23,7 @@
 import Navbar from './components/Navbar.vue'
 import { RouterView } from 'vue-router'
 import { useSeo } from './composables/useSeo'
+import MessageHandler from './components/messages/MessageHandler.vue'
 
 // Initialize SEO
 useSeo()

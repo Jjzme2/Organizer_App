@@ -1,0 +1,328 @@
+/* Form Component Styles */
+:root {
+  /* Form-specific variables */
+  --input-height: 3rem;
+  --input-padding: 0.75rem 1rem;
+  --input-border-width: 2px;
+  --input-icon-size: 1.25rem;
+  --input-spacing: 1.5rem;
+}
+
+/* Form Container */
+.form-container {
+  width: 100%;
+  max-width: 100%;
+}
+
+/* Form Groups */
+.form-group {
+  margin-bottom: var(--input-spacing);
+  position: relative;
+}
+
+/* Labels */
+.form-label {
+  display: block;
+  margin-bottom: 0.5rem;
+  color: var(--color-text);
+  font-weight: var(--font-weight-medium);
+  font-size: 0.875rem;
+}
+
+/* Input Groups */
+.input-group {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+/* Base Input Styles */
+.form-control {
+  width: 100%;
+  height: var(--input-height);
+  padding: var(--input-padding);
+  padding-left: 2.75rem; /* Space for icon */
+  border: var(--input-border-width) solid var(--color-border);
+  border-radius: var(--border-radius-md);
+  background: var(--color-background);
+  color: var(--color-text);
+  font-size: 1rem;
+  line-height: 1.5;
+  transition: all var(--transition-fast);
+}
+
+.form-control:hover {
+  border-color: var(--color-border-light);
+}
+
+.form-control:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(110, 231, 183, 0.1);
+  outline: none;
+}
+
+.form-control:disabled {
+  background-color: var(--color-background-alt);
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.form-control::placeholder {
+  color: var(--color-text-lighter);
+  opacity: 0.7;
+}
+
+/* Input Icons */
+.input-icon {
+  position: absolute;
+  left: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--color-text-lighter);
+  font-size: var(--input-icon-size);
+  pointer-events: none;
+  transition: color var(--transition-fast);
+}
+
+.input-group:focus-within .input-icon {
+  color: var(--color-primary);
+}
+
+/* Password Toggle */
+.password-toggle {
+  position: absolute;
+  right: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: var(--color-text-lighter);
+  cursor: pointer;
+  padding: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color var(--transition-fast);
+}
+
+.password-toggle:hover,
+.password-toggle:focus {
+  color: var(--color-text);
+}
+
+/* Form Options (Remember me, Forgot password) */
+.form-options {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--input-spacing);
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+/* Checkbox Styles */
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  user-select: none;
+}
+
+.checkbox-label input[type="checkbox"] {
+  position: absolute;
+  opacity: 0;
+  cursor: pointer;
+  height: 0;
+  width: 0;
+}
+
+.checkbox-text {
+  position: relative;
+  padding-left: 1.75rem;
+  color: var(--color-text);
+  font-size: 0.875rem;
+}
+
+.checkbox-text::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 1.25rem;
+  height: 1.25rem;
+  border: var(--input-border-width) solid var(--color-border);
+  border-radius: var(--border-radius-sm);
+  background-color: var(--color-background);
+  transition: all var(--transition-fast);
+}
+
+.checkbox-label input[type="checkbox"]:checked + .checkbox-text::before {
+  background-color: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
+.checkbox-label input[type="checkbox"]:checked + .checkbox-text::after {
+  content: '✓';
+  position: absolute;
+  left: 0.25rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--color-text);
+  font-size: 0.875rem;
+}
+
+/* Form Links */
+.form-link {
+  color: var(--color-primary);
+  text-decoration: none;
+  font-size: 0.875rem;
+  font-weight: var(--font-weight-medium);
+  transition: color var(--transition-fast);
+}
+
+.form-link:hover {
+  color: var(--color-primary-light);
+  text-decoration: underline;
+}
+
+/* Form Buttons */
+.form-submit {
+  width: 100%;
+  height: var(--input-height);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: var(--input-padding);
+  font-size: 1rem;
+  font-weight: var(--font-weight-medium);
+  border-radius: var(--border-radius-md);
+  transition: all var(--transition-fast);
+}
+
+/* Social Login */
+.social-login {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 1rem;
+  margin-top: var(--input-spacing);
+}
+
+.social-btn {
+  height: var(--input-height);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: var(--input-padding);
+  font-size: 0.875rem;
+  font-weight: var(--font-weight-medium);
+  border: var(--input-border-width) solid var(--color-border);
+  border-radius: var(--border-radius-md);
+  background: transparent;
+  color: var(--color-text);
+  transition: all var(--transition-fast);
+}
+
+.social-btn:hover {
+  background: var(--color-background-alt);
+  border-color: var(--color-text-lighter);
+}
+
+.social-icon {
+  width: var(--input-icon-size);
+  height: var(--input-icon-size);
+}
+
+/* Divider */
+.divider {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  margin: var(--input-spacing) 0;
+  color: var(--color-text-lighter);
+  font-size: 0.875rem;
+}
+
+.divider::before,
+.divider::after {
+  content: '';
+  flex: 1;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.divider span {
+  padding: 0 1rem;
+}
+
+/* Form Validation */
+.form-control.is-invalid {
+  border-color: var(--color-error);
+}
+
+.invalid-feedback {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: 0.875rem;
+  color: var(--color-error);
+}
+
+/* Loading State */
+.form-loading {
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+.spinner {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Responsive Adjustments */
+@media screen and (max-width: 480px) {
+  :root {
+    --input-height: 2.75rem;
+    --input-padding: 0.5rem 0.75rem;
+  }
+
+  .form-options {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  .social-login {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* High Contrast Mode */
+@media (prefers-contrast: high) {
+  .form-control {
+    border-width: 2px;
+  }
+
+  .checkbox-text::before {
+    border-width: 2px;
+  }
+}
+
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  .form-control,
+  .password-toggle,
+  .social-btn,
+  .form-link {
+    transition: none;
+  }
+}
