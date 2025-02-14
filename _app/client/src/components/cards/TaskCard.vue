@@ -91,7 +91,8 @@
           ✅ Marked Completed {{ formatCompletionInfo }}
         </span>
         <span v-else-if="task.dueDate" class="due-date" :class="{ 'overdue': isOverdue }">
-          ⏰ {{ formatDueDate }}
+          <i class="fas fa-clock"></i>
+          {{ isOverdue ? 'Overdue -' : '' }} {{ formatDueDate }}
         </span>
         <span v-if="task.categoryId && category" class="category-badge" :style="{ backgroundColor: category.color + '20', color: category.color, borderColor: category.color }">
           {{ category.name }}

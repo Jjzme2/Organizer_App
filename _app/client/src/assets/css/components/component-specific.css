@@ -2,6 +2,13 @@
     padding: var(--spacing-lg);
   }
   
+  .brand-name {
+    font-size: 1.5rem;
+    font-weight: 600;
+    display: inline-block;
+    vertical-align: middle;
+    line-height: 1;
+  }
   
   
   .category-item {
@@ -242,21 +249,21 @@
   
   .nav-brand {
     display: flex;
+    flex-direction: row;
     align-items: center;
     gap: var(--spacing-sm);
     color: var(--color-text);
-    font-weight: 600;
-    font-size: 1.25rem;
-    transition: color 0.2s ease;
-  }
-  
-  .nav-brand:hover {
-    color: var(--color-primary);
+    text-decoration: none;
   }
   
   .nav-logo {
-    height: 2rem;
-    width: auto;
+    width: 1.5rem !important;
+    height: 1.5rem !important;
+    max-width: 1.5rem !important;
+    max-height: 1.5rem !important;
+    object-fit: contain;
+    display: inline-block;
+    vertical-align: middle;
   }
   
   .nav-links {
@@ -383,10 +390,6 @@
   @media (max-width: 768px) {
     .navbar-content {
       padding: 0 var(--spacing-md);
-    }
-  
-    .brand-name {
-      font-size: 1rem;
     }
   
     .nav-links {

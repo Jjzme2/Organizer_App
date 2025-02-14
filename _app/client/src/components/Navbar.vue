@@ -1,8 +1,8 @@
 <template>
   <nav class="bg-primary text-white py-3">
     <div class="container d-flex justify-content-between align-items-center">
-      <div class="nav-brand" @click="navTo('/')" style="cursor: pointer;">
-        <!-- <img src="../assets/logo.png" alt="Logo" class="nav-logo" /> -->
+      <div class="nav-brand d-flex align-items-center" @click="navTo('/')" style="cursor: pointer;">
+        <img src="/icons/app-icon.svg" alt="Logo" class="nav-logo" style="width: 1.5rem; height: 1.5rem;" />
         <span class="brand-name">ILYTAT Organizer</span>
       </div>
       <!-- <ul class="nav d-flex gap-4">
@@ -32,9 +32,9 @@
             </div>
           </div>
         </template>
-        <template v-else>
+        <!-- <template v-else>
           <button class="btn btn-outline-light" @click="navTo('/login#login-form')">Login</button>
-        </template>
+        </template> -->
       </div>
     </div>
   </nav>

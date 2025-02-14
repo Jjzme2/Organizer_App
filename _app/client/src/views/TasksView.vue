@@ -103,74 +103,87 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
-import { useTaskStore } from '../stores/tasks'
-import { useRoute, useRouter } from 'vue-router'
-import PaginatedTaskList from '../components/pagination/TaskList_Paginated.vue'
-import TaskForm from '../components/forms/TaskForm.vue'
-import MessageBox from '../components/MessageBox.vue'
-import BaseModal from '../components/modals/BaseModal.vue'
-import CategoryManagement from '../components/CategoryManagement.vue'
-import QuoteBanner from '../components/Quotes/QuoteBanner.vue'
+import { useTaskStore } from '@/stores/tasks'
+import { useMessageStore } from '@/stores/messages'
+import { useRoute } from 'vue-router'
+import BaseModal from '@/components/modals/BaseModal.vue'
+import TaskForm from '@/components/forms/TaskForm.vue'
+import CategoryManagement from '@/components/CategoryManagement.vue'
+import PaginatedTaskList from '@/components/pagination/TaskList_Paginated.vue'
+import QuoteBanner from '@/components/Quotes/QuoteBanner.vue'
+import MessageBox from '@/components/MessageBox.vue'
 
 const taskStore = useTaskStore()
-const error = ref(null)
+const messageStore = useMessageStore()
+const route = useRoute()
+
 const showAddTaskModal = ref(false)
 const showCategoryModal = ref(false)
 const editingTask = ref(null)
+const error = ref(null)
 
-const route = useRoute()
-const router = useRouter()
-
-// Computed properties
+// Computed properties for task lists
 const incompleteTasks = computed(() => taskStore.incompleteTasks)
-const completedTasks = computed(() => taskStore.completedTasks)
 const recentlyCompletedTasks = computed(() => taskStore.recentlyCompletedTasks)
 
 // Task handlers
 async function handleTaskComplete(taskId) {
   try {
     await taskStore.toggleTaskComplete(taskId)
+    const task = taskStore.getTaskById(taskId)
+    if (task.completed) {
+      messageStore.success('Task marked as complete!', 'Task Updated', { position: 'bottom-right' })
+    } else {
+      messageStore.info('Task marked as incomplete', 'Task Updated', { position: 'bottom-right' })
+    }
   } catch (err) {
-    error.value = 'Failed to update task completion status'
+    error.value = 'Failed to update task status'
+    messageStore.error('Failed to update task status', 'Error')
   }
 }
 
 async function handlePriorityUpdate({ id, priority }) {
   try {
-    await taskStore.updateTaskPriority({ id, priority })
+    await taskStore.updateTaskPriority(id, priority)
+    messageStore.info('Task priority updated', 'Priority Changed', { position: 'bottom-right' })
   } catch (err) {
     error.value = 'Failed to update task priority'
+    messageStore.error('Failed to update task priority', 'Error')
   }
 }
 
 async function handleStatusUpdate({ id, status }) {
   try {
-    await taskStore.updateTaskStatus({ id, status })
+    await taskStore.updateTaskStatus(id, status)
+    messageStore.info('Task status updated', 'Status Changed', { position: 'bottom-right' })
   } catch (err) {
     error.value = 'Failed to update task status'
+    messageStore.error('Failed to update task status', 'Error')
   }
 }
 
 async function handleAddNote({ id, note }) {
   try {
-    await taskStore.addTaskNote({ id, note })
+    await taskStore.addTaskNote(id, note)
+    messageStore.success('Note added to task', 'Note Added', { position: 'bottom-right' })
   } catch (err) {
-    error.value = 'Failed to add note to task'
+    error.value = 'Failed to add note'
+    messageStore.error('Failed to add note to task', 'Error')
   }
 }
 
 function handleTaskEdit(task) {
-  editingTask.value = { ...task }
+  editingTask.value = task
   showAddTaskModal.value = true
 }
 
 async function handleTaskDelete(taskId) {
-  if (confirm('Are you sure you want to delete this task?')) {
-    try {
-      await taskStore.deleteTask(taskId)
-    } catch (err) {
-      error.value = 'Failed to delete task'
-    }
+  try {
+    await taskStore.deleteTask(taskId)
+    messageStore.warning('Task has been deleted', 'Task Deleted', { position: 'bottom-right' })
+  } catch (err) {
+    error.value = 'Failed to delete task'
+    messageStore.error('Failed to delete task', 'Error')
   }
 }
 
@@ -178,12 +191,15 @@ async function handleTaskSubmit(taskData) {
   try {
     if (editingTask.value) {
       await taskStore.updateTask(editingTask.value.id, taskData)
+      messageStore.success('Task updated successfully', 'Task Updated')
     } else {
       await taskStore.createTask(taskData)
+      messageStore.success('New task created', 'Task Created')
     }
     closeTaskModal()
   } catch (err) {
     error.value = 'Failed to save task'
+    messageStore.error('Failed to save task', 'Error')
   }
 }
 
@@ -195,14 +211,14 @@ function closeTaskModal() {
 onMounted(async () => {
   try {
     await taskStore.fetchTasks()
+    
     // Show new task modal if route meta indicates
-    if (route.meta.showNewModal) {
+    if (route.meta.showNewTask) {
       showAddTaskModal.value = true
-      // Remove the meta flag from history
-      router.replace({ name: 'tasks' })
     }
   } catch (err) {
-    console.error('Error fetching tasks:', err)
+    error.value = 'Failed to load tasks'
+    messageStore.error('Failed to load your tasks', 'Error')
   }
 })
 </script>

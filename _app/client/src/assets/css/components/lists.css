@@ -31,14 +31,14 @@
 
   .feature-list {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(2, 3fr);
   gap: var(--spacing-md);
   width: fit-content;
 }
 
 @media (max-width: 768px) {
   .feature-list {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(1, 1fr);
   }
 }
 

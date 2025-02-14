@@ -16,8 +16,8 @@
     <div v-else-if="error" class="verification-status error">
       <h1>Verification Failed</h1>
       <p>{{ error }}</p>
-      <button @click="resendVerification" :disabled="resending" class="btn">
-        {{ resending ? 'Sending...' : 'Resend Verification Email' }}
+      <button @click="sendVerification" :disabled="sending" class="btn">
+        {{ sending ? 'Sending...' : 'Send Verification Email' }}
       </button>
     </div>
   </div>
@@ -34,7 +34,7 @@ const authStore = useAuthStore()
 const loading = ref(true)
 const error = ref('')
 const success = ref('')
-const resending = ref(false)
+const sending = ref(false)
 
 onMounted(async () => {
   try {
@@ -47,18 +47,18 @@ onMounted(async () => {
   }
 })
 
-async function resendVerification() {
-  if (resending.value) return
+async function sendVerification() {
+  if (sending.value) return
 
-  resending.value = true
+  sending.value = true
   try {
-    const result = await authStore.resendVerification()
+    const result = await authStore.sendVerification()
     success.value = result.message
     error.value = ''
   } catch (err) {
     error.value = err.message
   } finally {
-    resending.value = false
+    sending.value = false
   }
 }
 </script>

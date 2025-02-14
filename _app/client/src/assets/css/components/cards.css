@@ -608,3 +608,48 @@
 .wisdom { background: var(--color-warning-light); color: var(--color-warning); }
 .leadership { background: var(--color-info-light); color: var(--color-info); }
 .personal_growth { background: var(--color-purple-light); color: var(--color-purple); }
+
+.task-meta {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  margin-top: auto;
+  flex-wrap: wrap;
+}
+
+.due-date {
+  font-size: 0.875rem;
+  color: var(--color-text-lighter);
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.due-date.overdue {
+  color: var(--color-error);
+  font-weight: var(--font-weight-medium);
+  padding: 0.25rem 0.5rem;
+  background-color: var(--color-error-light);
+  border-radius: var(--border-radius-sm);
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+.completion-date {
+  font-size: 0.875rem;
+  color: var(--color-success);
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
