@@ -1,36 +1,44 @@
-const express = require("express");
-const router = express.Router();
-const taskController = require("../../.controllers/taskController");
-const { authenticateToken } = require("../../middleware/authMiddleware");
-const logger = require("../../utils/logger");
+const express = require('express');
+const { createResourceRouter } = require('../../utils/routeFactory');
+const taskController = require('../../.controllers/taskController');
+const { authenticateToken } = require('../../middleware/authMiddleware');
 
-// Middleware to log route access
-const logRequest = (req, res, next) => {
-    logger.info(`Task API request: ${req.method} ${req.originalUrl}`);
-    logger.debug('Request body:', req.body);
-    next();
+// Define custom routes specific to tasks
+const customRoutes = {
+    // Task-specific routes
+    getUpcoming: { 
+        method: 'get', 
+        path: '/upcoming'
+    },
+    getOverdue: { 
+        method: 'get', 
+        path: '/overdue'
+    },
+    toggle: { 
+        method: 'patch', 
+        path: '/:id/toggle'
+    },
+    updateStatus: { 
+        method: 'patch', 
+        path: '/:id/status'
+    }
 };
 
-router.use(logRequest);
+// Create and configure the router
+const router = createResourceRouter({
+    controller: taskController,
+    basePath: '/tasks',
+    routes: customRoutes,
+    middleware: [authenticateToken]
+});
 
-// Get all tasks (with optional query parameters for filtering)
-router.get("/", authenticateToken, taskController.getAllItems);
-
-// Get a task by Name
-router.get("/:name", authenticateToken, taskController.getItemByName);
-
-// Create a new task
-router.post("/", authenticateToken, taskController.createItem);
-
-// Update a task
-router.put("/:id", authenticateToken, taskController.updateItem);
-
-// Deactivate a task
-router.put("/:id/deactivate", authenticateToken, taskController.deactivateItem);
-
-// Delete a task
-router.delete("/:id", authenticateToken, taskController.deleteItem);
-
-
+// Error handling middleware
+router.use((err, req, res, next) => {
+  console.error('Task Route Error:', err);
+  res.status(err.statusCode || 500).json({
+    error: err.message || 'Internal Server Error',
+    code: err.code || 'UNKNOWN_ERROR'
+  });
+});
 
 module.exports = router;

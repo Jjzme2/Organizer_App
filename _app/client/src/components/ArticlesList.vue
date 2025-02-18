@@ -27,19 +27,19 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
 import ArticleCard from './cards/ArticleCard.vue'
 
-const title = 'Articles'
-const articles = ref([])
-
-// Placeholder for fetching articles – replace with actual API/service call if needed
-onMounted(async () => {
-  // Example: articles.value = await fetchArticles()
-  articles.value = [
-    { id: 1, title: 'Article One', content: 'Content for article one.' },
-    { id: 2, title: 'Article Two', content: 'Content for article two.' }
-  ]
+defineProps({
+  articles: {
+    type: Array,
+    required: true,
+    default: () => []
+  },
+  title: {
+    type: String,
+    default: 'Articles'
+  }
 })
-</script>
 
+defineEmits(['edit', 'delete'])
+</script>

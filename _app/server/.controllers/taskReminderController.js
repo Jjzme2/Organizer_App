@@ -1,135 +1,259 @@
 const { Op } = require("sequelize");
 const TaskReminder = require("../models/TaskReminder");
 const Task = require("../models/Task");
-const logger = require("../utils/logger");
+const BaseController = require("./base/baseController");
+const { AuthenticationError, NotFoundError, AppError } = require("../utils/errorUtils");
 
-exports.getAllItems = async (req, res) => {
-  try {
-    if (!req.user || !req.user.id) {
-      logger.error('User not authenticated in getAllItems');
-      return res.status(401).json({ error: "User not authenticated" });
-    }
-
-    const reminders = await TaskReminder.findAll({
-      include: [{
+class TaskReminderController extends BaseController {
+  constructor() {
+    super(TaskReminder, "TaskReminder", {
+      searchFields: ['notes'],
+      includes: [{
         model: Task,
-        where: { userId: req.user.id },
-        attributes: ['id', 'name']
+        attributes: ['id', 'title', 'description', 'dueDate']
       }],
-      order: [['reminderTime', 'ASC']]
-    });
-
-    res.json(reminders);
-  } catch (error) {
-    logger.error('Error in getAllItems:', error);
-    res.status(500).json({ error: "Failed to get reminders", message: error.message });
-  }
-};
-
-exports.getItemById = async (req, res) => {
-  try {
-    if (!req.user || !req.user.id) {
-      logger.error('User not authenticated in getItemById');
-      return res.status(401).json({ error: "User not authenticated" });
-    }
-
-    const reminder = await TaskReminder.findOne({
-      where: { id: req.params.id },
-      include: [{
-        model: Task,
-        where: { userId: req.user.id },
-        attributes: ['id', 'name']
-      }]
-    });
-
-    if (!reminder) {
-      return res.status(404).json({ error: "Reminder not found" });
-    }
-
-    res.json(reminder);
-  } catch (error) {
-    logger.error('Error in getItemById:', error);
-    res.status(500).json({ error: "Failed to get reminder", message: error.message });
-  }
-};
-
-exports.createItem = async (req, res) => {
-  try {
-    if (!req.user || !req.user.id) {
-      logger.error('User not authenticated in createItem');
-      return res.status(401).json({ error: "User not authenticated" });
-    }
-
-    // Verify the task belongs to the user
-    const task = await Task.findOne({
-      where: {
-        id: req.body.taskId,
-        userId: req.user.id
+      toggleFields: {
+        isAcknowledged: true,
+        isRecurring: true
       }
     });
-
-    if (!task) {
-      return res.status(404).json({ error: "Task not found" });
-    }
-
-    const reminder = await TaskReminder.create(req.body);
-    res.status(201).json(reminder);
-  } catch (error) {
-    logger.error('Error in createItem:', error);
-    res.status(500).json({ error: "Failed to create reminder", message: error.message });
   }
-};
 
-exports.updateItem = async (req, res) => {
-  try {
-    if (!req.user || !req.user.id) {
-      logger.error('User not authenticated in updateItem');
-      return res.status(401).json({ error: "User not authenticated" });
+  // Override getAll to include task information
+  getAll = async (req, res) => {
+    try {
+      if (!req.user || !req.user.id) {
+        throw new AuthenticationError();
+      }
+
+      const reminders = await this.model.findAll({
+        include: [{
+          model: Task,
+          where: { userId: req.user.id },
+          attributes: ['id', 'name', 'dueDate', 'priority']
+        }],
+        order: [['reminderTime', 'ASC']]
+      });
+
+      res.json(reminders);
+    } catch (error) {
+      this.logger.error('Error in getAll reminders:', error);
+      throw new AppError("Failed to get reminders", 500, "REMINDER_FETCH_ERROR");
     }
+  };
 
-    const reminder = await TaskReminder.findOne({
-      where: { id: req.params.id },
-      include: [{
-        model: Task,
-        where: { userId: req.user.id }
-      }]
-    });
+  // Override getById to include task information
+  getById = async (req, res) => {
+    try {
+      if (!req.user || !req.user.id) {
+        throw new AuthenticationError();
+      }
 
-    if (!reminder) {
-      return res.status(404).json({ error: "Reminder not found" });
+      const reminder = await this.model.findOne({
+        where: { id: req.params.id },
+        include: [{
+          model: Task,
+          where: { userId: req.user.id },
+          attributes: ['id', 'name', 'dueDate', 'priority']
+        }]
+      });
+
+      if (!reminder) {
+        throw new NotFoundError("Reminder not found");
+      }
+
+      res.json(reminder);
+    } catch (error) {
+      this.logger.error('Error in getById reminder:', error);
+      throw new AppError("Failed to get reminder", 500, "REMINDER_FETCH_ERROR");
     }
+  };
 
-    await reminder.update(req.body);
-    res.json(reminder);
-  } catch (error) {
-    logger.error('Error in updateItem:', error);
-    res.status(500).json({ error: "Failed to update reminder", message: error.message });
-  }
-};
+  // Get upcoming reminders
+  getUpcoming = async (req, res) => {
+    try {
+      if (!req.user || !req.user.id) {
+        throw new AuthenticationError();
+      }
 
-exports.deleteItem = async (req, res) => {
-  try {
-    if (!req.user || !req.user.id) {
-      logger.error('User not authenticated in deleteItem');
-      return res.status(401).json({ error: "User not authenticated" });
+      const { hours = 24, page = 1, limit = 10 } = req.query;
+      const offset = (page - 1) * limit;
+
+      const endTime = new Date();
+      endTime.setHours(endTime.getHours() + parseInt(hours));
+
+      const { rows: reminders, count } = await this.model.findAndCountAll({
+        where: {
+          userId: req.user.id,
+          isAcknowledged: false,
+          reminderTime: {
+            [Op.between]: [new Date(), endTime]
+          }
+        },
+        order: [['reminderTime', 'ASC']],
+        limit: parseInt(limit),
+        offset: parseInt(offset),
+        include: this.options.includes
+      });
+
+      res.json({
+        items: reminders,
+        total: count,
+        page: parseInt(page),
+        totalPages: Math.ceil(count / limit)
+      });
+    } catch (error) {
+      this.logger.error('Error in getUpcoming:', error);
+      throw new AppError("Failed to get upcoming reminders", 500, "REMINDER_FETCH_ERROR");
     }
+  };
 
-    const reminder = await TaskReminder.findOne({
-      where: { id: req.params.id },
-      include: [{
-        model: Task,
-        where: { userId: req.user.id }
-      }]
-    });
+  // Get overdue reminders
+  getOverdue = async (req, res) => {
+    try {
+      if (!req.user || !req.user.id) {
+        throw new AuthenticationError();
+      }
 
-    if (!reminder) {
-      return res.status(404).json({ error: "Reminder not found" });
+      const { page = 1, limit = 10 } = req.query;
+      const offset = (page - 1) * limit;
+
+      const { rows: reminders, count } = await this.model.findAndCountAll({
+        where: {
+          userId: req.user.id,
+          isAcknowledged: false,
+          reminderTime: {
+            [Op.lt]: new Date()
+          }
+        },
+        order: [['reminderTime', 'ASC']],
+        limit: parseInt(limit),
+        offset: parseInt(offset),
+        include: this.options.includes
+      });
+
+      res.json({
+        items: reminders,
+        total: count,
+        page: parseInt(page),
+        totalPages: Math.ceil(count / limit)
+      });
+    } catch (error) {
+      this.logger.error('Error in getOverdue:', error);
+      throw new AppError("Failed to get overdue reminders", 500, "REMINDER_FETCH_ERROR");
     }
+  };
 
-    await reminder.destroy();
-    res.json({ message: "Reminder deleted successfully" });
-  } catch (error) {
-    logger.error('Error in deleteItem:', error);
-    res.status(500).json({ error: "Failed to delete reminder", message: error.message });
-  }
-};
+  // Get recurring reminders
+  getRecurring = async (req, res) => {
+    try {
+      if (!req.user || !req.user.id) {
+        throw new AuthenticationError();
+      }
+
+      const { page = 1, limit = 10 } = req.query;
+      const offset = (page - 1) * limit;
+
+      const { rows: reminders, count } = await this.model.findAndCountAll({
+        where: {
+          userId: req.user.id,
+          isRecurring: true
+        },
+        order: [['reminderTime', 'ASC']],
+        limit: parseInt(limit),
+        offset: parseInt(offset),
+        include: this.options.includes
+      });
+
+      res.json({
+        items: reminders,
+        total: count,
+        page: parseInt(page),
+        totalPages: Math.ceil(count / limit)
+      });
+    } catch (error) {
+      this.logger.error('Error in getRecurring:', error);
+      throw new AppError("Failed to get recurring reminders", 500, "REMINDER_FETCH_ERROR");
+    }
+  };
+
+  // Get reminder statistics
+  getStats = async (req, res) => {
+    try {
+      if (!req.user || !req.user.id) {
+        throw new AuthenticationError();
+      }
+
+      const stats = await this.model.findAll({
+        where: { userId: req.user.id },
+        attributes: [
+          'isAcknowledged',
+          'isRecurring',
+          [sequelize.fn('COUNT', sequelize.col('id')), 'count']
+        ],
+        group: ['isAcknowledged', 'isRecurring']
+      });
+
+      const overdueCount = await this.model.count({
+        where: {
+          userId: req.user.id,
+          isAcknowledged: false,
+          reminderTime: {
+            [Op.lt]: new Date()
+          }
+        }
+      });
+
+      const upcomingCount = await this.model.count({
+        where: {
+          userId: req.user.id,
+          isAcknowledged: false,
+          reminderTime: {
+            [Op.gt]: new Date()
+          }
+        }
+      });
+
+      res.json({
+        stats,
+        overdueCount,
+        upcomingCount
+      });
+    } catch (error) {
+      this.logger.error('Error in getStats:', error);
+      throw new AppError("Failed to get reminder statistics", 500, "REMINDER_STATS_ERROR");
+    }
+  };
+
+  // Acknowledge a reminder
+  acknowledgeReminder = async (req, res) => {
+    try {
+      if (!req.user || !req.user.id) {
+        throw new AuthenticationError();
+      }
+
+      const reminder = await this.model.findOne({
+        where: { id: req.params.id },
+        include: [{
+          model: Task,
+          where: { userId: req.user.id }
+        }]
+      });
+
+      if (!reminder) {
+        throw new NotFoundError("Reminder not found");
+      }
+
+      reminder.acknowledged = true;
+      reminder.acknowledgedAt = new Date();
+      await reminder.save();
+
+      res.json(reminder);
+    } catch (error) {
+      this.logger.error('Error in acknowledgeReminder:', error);
+      throw new AppError("Failed to acknowledge reminder", 500, "REMINDER_UPDATE_ERROR");
+    }
+  };
+}
+
+module.exports = new TaskReminderController();

@@ -1,28 +1,48 @@
-const express = require("express");
-const router = express.Router();
-const categoryController = require("../../.controllers/categoryController");
-const { authenticateToken } = require("../../middleware/authMiddleware");
-const logger = require("../../utils/logger");
+const { createResourceRouter } = require('../../utils/routeFactory');
+const categoryController = require('../../.controllers/categoryController');
+const { authenticateToken } = require('../../middleware/authMiddleware');
 
-// Middleware to log route access
-const logRequest = (req, res, next) => {
-    logger.info(`Category API request: ${req.method} ${req.originalUrl}`);
-    logger.debug('Request body:', req.body);
-    next();
+// Define custom routes specific to categories
+const customRoutes = {
+    default: {
+        method: 'get',
+        path: '/',
+        handler: (req, res, next) => categoryController.getUserCategories(req.user.id)
+            .then(categories => res.json(categories))
+            .catch(next)
+    },
+    getActive: { 
+        method: 'get', 
+        path: '/active'
+    },
+    getFeatured: { 
+        method: 'get', 
+        path: '/featured'
+    },
+    getStats: { 
+        method: 'get', 
+        path: '/stats'
+    },
+    toggleActive: { 
+        method: 'patch', 
+        path: '/:id/toggle-active'
+    },
+    toggleFeatured: { 
+        method: 'patch', 
+        path: '/:id/toggle-featured'
+    },
+    updateStatus: { 
+        method: 'patch', 
+        path: '/:id/status'
+    }
 };
 
-router.use(logRequest);
-
-// Get all categories
-router.get("/", authenticateToken, categoryController.getAllCategories);
-
-// Create a new category
-router.post("/", authenticateToken, categoryController.createCategory);
-
-// Update a category
-router.put("/:id", authenticateToken, categoryController.updateCategory);
-
-// Delete a category
-router.delete("/:id", authenticateToken, categoryController.deleteCategory);
+// Create and configure the router
+const router = createResourceRouter({
+    controller: categoryController,
+    basePath: '/categories',
+    routes: customRoutes,
+    middleware: [authenticateToken]
+});
 
 module.exports = router;

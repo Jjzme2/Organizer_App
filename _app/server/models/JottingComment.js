@@ -16,7 +16,7 @@ const JottingComment = sequelize.define("JottingComment", {
       len: [1, 1000] // Maximum length of 1000 characters
     }
   },
-  jottingId: {
+  parentId: {
     type: DataTypes.UUID,
     references: {
       model: 'jottings',
@@ -47,7 +47,7 @@ const JottingComment = sequelize.define("JottingComment", {
   indexes: [
     {
       name: 'idx_jotting_comments_jotting',
-      fields: ['jottingId']
+      fields: ['parentId']
     },
     {
       name: 'idx_jotting_comments_user',
@@ -63,7 +63,7 @@ JottingComment.belongsTo(User, {
 });
 
 JottingComment.belongsTo(Jotting, {
-  foreignKey: 'jottingId',
+  foreignKey: 'parentId',
   onDelete: 'CASCADE'
 });
 

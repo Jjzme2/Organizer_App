@@ -2,13 +2,9 @@ const express = require("express");
 const router = express.Router();
 const articleCommentController = require("../../.controllers/articleCommentController");
 const { authenticateToken } = require("../../middleware/authMiddleware");
-const logger = require("../../utils/logger");
+const { createRequestLogger } = require("../../middleware/loggingMiddleware");
 
-const logRequest = (req, res, next) => {
-    logger.info(`ArticleComment API request: ${req.method} ${req.originalUrl}`);
-    logger.debug('Request body:', req.body);
-    next();
-};
+const logRequest = createRequestLogger('ArticleComment');
 
 router.use(logRequest);
 router.use(authenticateToken);

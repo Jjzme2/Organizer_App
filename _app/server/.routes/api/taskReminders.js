@@ -1,22 +1,18 @@
 const express = require("express");
 const router = express.Router();
 const taskReminderController = require("../../.controllers/taskReminderController");
-const { authenticateToken } = require("../../middleware/authMiddleware");
-const logger = require("../../utils/logger");
+const { authenticateToken } = require("../../utils/auth");
+const { createRequestLogger } = require("../../middleware/loggingMiddleware");
 
-const logRequest = (req, res, next) => {
-    logger.info(`TaskReminder API request: ${req.method} ${req.originalUrl}`);
-    logger.debug('Request body:', req.body);
-    next();
-};
+const logRequest = createRequestLogger('TaskReminder');
 
 router.use(logRequest);
 router.use(authenticateToken);
 
-router.get("/", taskReminderController.getAllItems);
-router.get("/:id", taskReminderController.getItemById);
-router.post("/", taskReminderController.createItem);
-router.put("/:id", taskReminderController.updateItem);
-router.delete("/:id", taskReminderController.deleteItem);
+router.get("/task/:taskId", taskReminderController.getRemindersForTask);
+router.get("/", taskReminderController.getUserReminders);
+router.post("/", taskReminderController.createReminder);
+router.put("/:id", taskReminderController.updateReminder);
+router.delete("/:id", taskReminderController.deleteReminder);
 
 module.exports = router;

@@ -58,6 +58,9 @@ app.use(middleware.apiMiddleware); // Use your custom API middleware
 const apiRoutes = require('./.routes/api');
 app.use('/api', apiRoutes); // Mount all API routes under '/api'
 
+const devRoutes = require('./.routes/dev');
+app.use('/dev', devRoutes); // Mount all development routes under '/dev'
+
 // Serve static files from the client build directory
 app.use(express.static(path.join(__dirname, '../client/dist')));
 

@@ -1,113 +1,166 @@
-const Jotting = require("../models/Jotting");
-const logger = require("../utils/logger");
-const { AuthenticationError, NotFoundError, AppError } = require("../utils/errorUtils");
+const BaseController = require('./base/baseController');
+const { Jotting, Category, JottingComment, User } = require('../models');
+const { ApiError } = require('../utils/errorUtils');
+const { Op } = require('sequelize');
 
-exports.getAllJottings = async (req, res) => {
-  try {
-    if (!req.user || !req.user.id) {
-      throw new AuthenticationError();
+class JottingController extends BaseController {
+    constructor() {
+        super(Jotting, 'Jotting');
+        this.defaultIncludes = [
+            {
+                model: Category,
+                as: 'category',
+                attributes: ['id', 'name']
+            },
+            {
+                model: JottingComment,
+                as: 'comments',
+                include: [{
+                    model: User,
+                    as: 'user',
+                    attributes: ['id', 'username']
+                }]
+            }
+        ];
     }
 
-    const jottings = await Jotting.findAll({
-      where: { userId: req.user.id },
-      order: [['createdAt', 'DESC']]
-    });
-
-    res.json(jottings);
-  } catch (error) {
-    logger.error('Error in getAllJottings:', error);
-    throw new AppError("Failed to get jottings", 500, "JOTTING_FETCH_ERROR");
-  }
-};
-
-exports.getJottingById = async (req, res) => {
-  try {
-    if (!req.user || !req.user.id) {
-      throw new AuthenticationError();
+    /**
+     * Get all jottings for a user with optional filtering
+     * @param {number} userId - User ID
+     * @param {Object} filters - Query filters
+     */
+    async getUserJottings(userId, filters = {}) {
+        const options = {
+            where: { userId, ...filters },
+            include: this.defaultIncludes,
+            order: [['createdAt', 'DESC']]
+        };
+        return this.getAll(options);
     }
 
-    const jotting = await Jotting.findOne({
-      where: {
-        id: req.params.id,
-        userId: req.user.id
-      }
-    });
-
-    if (!jotting) {
-      throw new NotFoundError("Jotting not found");
+    /**
+     * Get jottings by category
+     * @param {number} userId - User ID
+     * @param {number} categoryId - Category ID
+     */
+    async getJottingsByCategory(userId, categoryId) {
+        const options = {
+            where: { userId, categoryId },
+            include: this.defaultIncludes
+        };
+        return this.getAll(options);
     }
 
-    res.json(jotting);
-  } catch (error) {
-    logger.error('Error in getJottingById:', error);
-    throw new AppError("Failed to get jotting", 500, "JOTTING_FETCH_ERROR");
-  }
-};
-
-exports.createJotting = async (req, res) => {
-  try {
-    if (!req.user || !req.user.id) {
-      throw new AuthenticationError();
+    /**
+     * Get pinned jottings
+     * @param {number} userId - User ID
+     */
+    async getPinnedJottings(userId) {
+        const options = {
+            where: { 
+                userId,
+                isPinned: true 
+            },
+            include: this.defaultIncludes
+        };
+        return this.getAll(options);
     }
 
-    const jotting = await Jotting.create({
-      ...req.body,
-      userId: req.user.id
-    });
-
-    res.status(201).json(jotting);
-  } catch (error) {
-    logger.error('Error in createJotting:', error);
-    throw new AppError("Failed to create jotting", 500, "JOTTING_CREATE_ERROR");
-  }
-};
-
-exports.updateJotting = async (req, res) => {
-  try {
-    if (!req.user || !req.user.id) {
-      throw new AuthenticationError();
+    /**
+     * Toggle jotting pin status
+     * @param {number} jottingId - Jotting ID
+     * @param {number} userId - User ID
+     */
+    async togglePin(jottingId, userId) {
+        const jotting = await this.findOne({ id: jottingId, userId });
+        return this.update(jottingId, { isPinned: !jotting.isPinned });
     }
 
-    const jotting = await Jotting.findOne({
-      where: {
-        id: req.params.id,
-        userId: req.user.id
-      }
-    });
-
-    if (!jotting) {
-      throw new NotFoundError("Jotting not found");
+    /**
+     * Create a new jotting with validation
+     * @param {Object} data - Jotting data
+     */
+    async create(data) {
+        if (!data.content) {
+            throw new ApiError(400, 'Jotting content is required');
+        }
+        if (data.categoryId) {
+            const category = await Category.findByPk(data.categoryId);
+            if (!category) {
+                throw new ApiError(404, 'Category not found');
+            }
+        }
+        return super.create(data);
     }
 
-    await jotting.update(req.body);
-    res.json(jotting);
-  } catch (error) {
-    logger.error('Error in updateJotting:', error);
-    throw new AppError("Failed to update jotting", 500, "JOTTING_UPDATE_ERROR");
-  }
-};
-
-exports.deleteJotting = async (req, res) => {
-  try {
-    if (!req.user || !req.user.id) {
-      throw new AuthenticationError();
+    /**
+     * Update a jotting with validation
+     * @param {number} id - Jotting ID
+     * @param {Object} data - Update data
+     */
+    async update(id, data) {
+        if (data.categoryId) {
+            const category = await Category.findByPk(data.categoryId);
+            if (!category) {
+                throw new ApiError(404, 'Category not found');
+            }
+        }
+        return super.update(id, data);
     }
 
-    const jotting = await Jotting.findOne({
-      where: {
-        id: req.params.id,
-        userId: req.user.id
-      }
-    });
-
-    if (!jotting) {
-      throw new NotFoundError("Jotting not found");
+    /**
+     * Search jottings by content or tags
+     * @param {number} userId - User ID
+     * @param {string} query - Search query
+     */
+    async searchJottings(userId, query) {
+        const options = {
+            where: {
+                userId,
+                [Op.or]: [
+                    { content: { [Op.like]: `%${query}%` } },
+                    { tags: { [Op.like]: `%${query}%` } }
+                ]
+            },
+            include: this.defaultIncludes
+        };
+        return this.getAll(options);
     }
 
-    await jotting.destroy();
-    res.json({ message: "Jotting deleted successfully" });
-  } catch (error) {
-    logger.error('Error in deleteJotting:', error);
-    throw new AppError("Failed to delete jotting", 500, "JOTTING_DELETE_ERROR");
-  }
-};
+    /**
+     * Get jottings by date range
+     * @param {number} userId - User ID
+     * @param {Date} startDate - Start date
+     * @param {Date} endDate - End date
+     */
+    async getJottingsByDateRange(userId, startDate, endDate) {
+        const options = {
+            where: {
+                userId,
+                createdAt: {
+                    [Op.between]: [startDate, endDate]
+                }
+            },
+            include: this.defaultIncludes,
+            order: [['createdAt', 'DESC']]
+        };
+        return this.getAll(options);
+    }
+
+    /**
+     * Get recent jottings
+     * @param {number} userId - User ID
+     * @param {number} limit - Number of jottings to return
+     */
+    async getRecentJottings(userId, limit = 5) {
+        const options = {
+            where: { userId },
+            include: this.defaultIncludes,
+            order: [['createdAt', 'DESC']],
+            limit
+        };
+        return this.getAll(options);
+    }
+}
+
+module.exports = new JottingController();

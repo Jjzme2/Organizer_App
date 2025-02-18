@@ -1,12 +1,10 @@
 const express = require("express");
 const router = express.Router();
 const contactILYTATController = require("../../.controllers/_contactController");
-const logger = require("../../utils/logger");
+const { createRequestLogger } = require("../../middleware/loggingMiddleware");
 
-const logRequest = (req, res, next) => {
-    logger.info(`Incoming request: ${req.method} ${req.originalUrl}`);
-    next();
-};
+// Create request logger for contact
+const logRequest = createRequestLogger('Contact');
 
 router.use(logRequest);
 

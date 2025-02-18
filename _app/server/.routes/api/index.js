@@ -1,77 +1,43 @@
-const express = require("express");
+const express = require('express');
 const router = express.Router();
+const { authenticateToken } = require('../../middleware/authMiddleware');
 
-const healthRoutes = require("./health");
-const testRoutes = require("./test");
-const taskRoutes = require("./tasks");
-const authRoutes = require("./auth");
-const userRoutes = require("./user");
-const categoryRoutes = require("./categories");
-const taskReminderRoutes = require("./taskReminders");
-const quoteRoutes = require("./quotes");
-const jottingRoutes = require("./jottings");
-const jottingCommentsRoutes = require("./jottingComments");
-const articleRoutes = require("./articles");
-const articleCommentsRoutes = require("./articleComments");
-const contactILYTATRoutes = require("./contactILYTAT");
+// Import route modules
+const tasksRouter = require('./tasks');
+const articlesRouter = require('./articles');
+const quotesRouter = require('./quotes');
+const jottingsRouter = require('./jottings');
+const categoriesRouter = require('./categories');
+const usersRouter = require('./users');
+const commentsRouter = require('./comments');
 
-const routes = [
-    {
-        path: "/health",
-        routes: healthRoutes
-    },
-    {
-        path: "/test",
-        routes: testRoutes
-    },
-    {
-        path: "/tasks",
-        routes: taskRoutes
-    },
-    {
-        path: "/auth",
-        routes: authRoutes
-    },
-    {
-        path: "/users",
-        routes: userRoutes
-    },
-    {
-        path: "/categories",
-        routes: categoryRoutes
-    },
-    {
-        path: "/task-reminders",
-        routes: taskReminderRoutes
-    },
-    {
-        path: "/quotes",
-        routes: quoteRoutes
-    },
-	{
-		path: "/jottings",
-		routes: jottingRoutes
-	},
-	{
-		path: "/jotting-comments",
-		routes: jottingCommentsRoutes
-	},
-	{
-		path: "/articles",
-		routes: articleRoutes
-	},
-	{
-		path: "/article-comments",
-		routes: articleCommentsRoutes
-	},
-	{
-		path: "/contact-ilytat",
-		routes: contactILYTATRoutes
-	}
-];
+// Apply authentication middleware to all routes except auth routes
+router.use((req, res, next) => {
+    // Skip authentication for login and register routes
+    if (req.path.startsWith('/auth/')) {
+        return next();
+    }
+    authenticateToken(req, res, next);
+});
 
-routes.forEach((route) => {
-    router.use(route.path, route.routes);
+// Mount routes
+router.use('/tasks', tasksRouter);
+router.use('/articles', articlesRouter);
+router.use('/quotes', quotesRouter);
+router.use('/jottings', jottingsRouter);
+router.use('/categories', categoriesRouter);
+router.use('/users', usersRouter);
+router.use('/comments', commentsRouter);
+
+// Error handling middleware
+router.use((err, req, res, next) => {
+    console.error(err.stack);
+    res.status(err.status || 500).json({
+        error: {
+            message: err.message || 'Internal Server Error',
+            code: err.code || 'INTERNAL_SERVER_ERROR'
+        }
+    });
 });
 
 module.exports = router;

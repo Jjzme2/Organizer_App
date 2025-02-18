@@ -21,7 +21,9 @@ function apiMiddleware(req, res, next) {
       method: req.method,
       url: req.url,
       statusCode: res.statusCode,
-      data: typeof data === 'string' ? JSON.parse(data) : data
+      data: typeof data === 'string' ? 
+        (data.startsWith('{') || data.startsWith('[') ? JSON.parse(data) : data) 
+        : data
     });
     return oldSend.apply(res, arguments);
   };
