@@ -5,7 +5,7 @@
     "devClient": "cd _app/client && npm run dev",
     "start": "npm run build && cd _app/server && node index.js",
     "migrate": "cd _app/server && npm run migrate",
-    "heroku-postbuild": "cd _app/client && npm install && npm run build && cd ../server && npm install",
+    "heroku-postbuild": "export NODE_OPTIONS='--max_old_space_size=2048' && cd _app/client && npm install && npm run build && cd ../server && npm install",
     "heroku:log": "heroku logs --tail --app ilytat-organizer"
   },
   "dependencies": {
