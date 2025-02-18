@@ -81,6 +81,7 @@
 import { ref, reactive } from 'vue'
 import { useQuoteStore } from '../../stores/quote'
 import BaseModal from '../modals/BaseModal.vue'
+import type { Quote } from '@/types'
 
 const props = defineProps<{
   show: boolean
@@ -102,31 +103,25 @@ const formData = reactive({
 })
 
 const handleSubmit = async () => {
-  errors.text = ''
+  if (!formData.text.trim() || !formData.author.trim()) return
 
-  if (!formData.text.trim()) {
-    errors.text = 'Quote text is required'
-    return
-  }
-
-  if (formData.text.length > 1000) {
-    errors.text = 'Quote text must be less than 1000 characters'
-    return
-  }
-
+  submitting.value = true
   try {
-    submitting.value = true
-    const quote = await quoteStore.createQuote({
-      ...formData,
-      author: formData.author.trim() || 'Unknown'
-    })
-    emit('quote-added', quote)
-    emit('update:show', false)
-    // Reset form
-    formData.text = ''
-    formData.author = 'Unknown'
-    formData.source = ''
-    formData.category = 'motivation'
+    const quoteData: Partial<Quote> = {
+      text: formData.text,
+      author: formData.author,
+      source: formData.source,
+      category: formData.category as Quote['category']
+    }
+
+    const result = await quoteStore.createQuote(quoteData)
+    if (result) {
+      emit('quote-added', result)
+      formData.text = ''
+      formData.author = 'Unknown'
+      formData.source = ''
+      formData.category = 'motivation'
+    }
   } catch (error: any) {
     errors.text = error.message || 'Failed to add quote'
   } finally {

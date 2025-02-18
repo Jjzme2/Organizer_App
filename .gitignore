@@ -1,4 +1,5 @@
 # Ignore personal notes
 _dev/Info/notes/personal/
+_dev/info/notes/.cascade Notes/
 
 node_modules/

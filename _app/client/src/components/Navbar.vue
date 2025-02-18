@@ -5,12 +5,29 @@
         <img src="/icons/app-icon.svg" alt="Logo" class="nav-logo" style="width: 1.5rem; height: 1.5rem;" />
         <span class="brand-name">ILYTAT Organizer</span>
       </div>
-      <!-- <ul class="nav d-flex gap-4">
-        <li><span class="nav-link" :class="{ 'active': $route.path === '/' }" @click="navTo('/')">Home</span></li>
-        <li><span class="nav-link" :class="{ 'active': $route.path === '/tasks' }" @click="navTo('/tasks')">Tasks</span></li>
-        <li><span class="nav-link" :class="{ 'active': $route.path === '/calendar' }" @click="navTo('/calendar')">Calendar</span></li>
-        <li><span class="nav-link" :class="{ 'active': $route.path === '/notebook' }" @click="navTo('/notebook')">Notebook</span></li>
-      </ul> -->
+      <ul class="nav d-flex gap-4">
+        <li><router-link to="/" class="nav-link" :class="{ 'active': $route.path === '/' }">Home</router-link></li>
+        <li>
+          <router-link
+            to="/tasks/incomplete"
+            class="nav-link"
+            :class="{ active: $route.path === '/tasks/incomplete' }"
+          >
+            <i class="fas fa-tasks"></i> Incomplete Tasks
+          </router-link>
+        </li>
+        <li>
+          <router-link
+            to="/tasks/by-category"
+            class="nav-link"
+            :class="{ active: $route.path === '/tasks/by-category' }"
+          >
+            <i class="fas fa-folder"></i> By Category
+          </router-link>
+        </li>
+        <li><router-link to="/calendar" class="nav-link" :class="{ 'active': $route.path === '/calendar' }">Calendar</router-link></li>
+        <li><router-link to="/notebook" class="nav-link" :class="{ 'active': $route.path === '/notebook' }">Notebook</router-link></li>
+      </ul>
       <div class="d-flex align-items-center gap-3" style="cursor: pointer; margin-right: 10px;">
         <template v-if="isAuthenticated">
           <div class="user-menu" @click="toggleDropdown" ref="userMenu">
@@ -32,9 +49,6 @@
             </div>
           </div>
         </template>
-        <!-- <template v-else>
-          <button class="btn btn-outline-light" @click="navTo('/login#login-form')">Login</button>
-        </template> -->
       </div>
     </div>
   </nav>

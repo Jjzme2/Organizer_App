@@ -51,6 +51,12 @@ const router = createRouter({
       meta: { requiresAuth: true }
     },
     {
+      path: '/tasks/by-category',
+      name: 'tasks-by-category',
+      component: () => import('../views/TasksByCategoryView.vue'),
+      meta: { requiresAuth: true }
+    },
+    {
       path: '/tasks/incomplete',
       name: 'incomplete-tasks',
       component: () => import('../views/IncompleteTasksView.vue'),

@@ -1,53 +1,46 @@
 <template>
   <form @submit.prevent="handleSubmit" class="task-form">
     <div class="form-group">
-      <label for="taskName">Task Name</label>
+      <label for="title">Title</label>
       <input
-        id="taskName"
-        v-model="form.name"
         type="text"
-        required
-        placeholder="What needs to be done?"
+        id="title"
+        v-model="form.title"
         :disabled="submitting"
+        class="form-control"
+        required
       />
     </div>
 
     <div class="form-group">
-      <label for="taskDescription">Description (Optional)</label>
+      <label for="description">Description</label>
       <textarea
-        id="taskDescription"
+        id="description"
         v-model="form.description"
-        rows="3"
-        placeholder="Add more details about this task..."
         :disabled="submitting"
+        class="form-control"
+        rows="3"
       ></textarea>
     </div>
 
     <div class="form-group">
-      <label for="taskCategory">Category</label>
-      <select
-        id="taskCategory"
-        v-model="form.categoryId"
+      <label for="dueDate">Due Date</label>
+      <input
+        type="datetime-local"
+        id="dueDate"
+        v-model="form.dueDate"
         :disabled="submitting"
-      >
-        <option value="">No Category</option>
-        <option
-          v-for="category in categoryStore.categories"
-          :key="category.id"
-          :value="category.id"
-          :style="{ color: category.color }"
-        >
-          {{ category.name }}
-        </option>
-      </select>
+        class="form-control"
+      />
     </div>
 
     <div class="form-group">
-      <label for="taskPriority">Priority</label>
+      <label for="priority">Priority</label>
       <select
-        id="taskPriority"
+        id="priority"
         v-model="form.priority"
         :disabled="submitting"
+        class="form-control"
       >
         <option value="low">Low</option>
         <option value="medium">Medium</option>
@@ -56,202 +49,236 @@
     </div>
 
     <div class="form-group">
-      <label for="taskStatus">Status</label>
-      <select
-        id="taskStatus"
-        v-model="form.status"
-        :disabled="submitting"
-      >
-        <option value="pending">Pending</option>
-        <option value="in_progress">In Progress</option>
-        <option value="completed">Completed</option>
-      </select>
-    </div>
-
-    <div class="form-group">
-      <label for="taskDueDate">Due Date (Optional)</label>
-      <input
-        id="taskDueDate"
-        v-model="form.dueDate"
-        type="datetime-local"
-        :disabled="submitting"
-      />
-    </div>
-
-    <div class="form-group">
-      <label for="taskNotes">Notes</label>
-      <div class="notes-list">
-        <div v-for="(note, index) in formattedNotes" :key="index" class="note-item">
-          <template v-for="(segment, sIndex) in note.split('|')" :key="`${index}-${sIndex}`">
-            <span class="note-segment" :class="{ 'primary': sIndex === 0 }">
-              {{ segment.trim() }}
-            </span>
-          </template>
-        </div>
-
-        <input
-          v-model="newNote"
-          type="text"
-          placeholder="Add note (use | to separate segments)..."
-          @keyup.enter="handleAddNote"
+      <label for="category">Category</label>
+      <div class="category-select-container">
+        <select
+          id="category"
+          v-model="form.category"
+          :disabled="submitting"
+          class="form-control"
         >
+          <option value="">Uncategorized</option>
+          <option
+            v-for="category in categories"
+            :key="category.id"
+            :value="category.id"
+          >
+            {{ category.name }}
+          </option>
+        </select>
         <button
           type="button"
-          class="btn btn-secondary"
-          @click="handleAddNote"
-          :disabled="!newNote.trim()"
+          class="btn btn-outline-secondary btn-sm"
+          @click="showNewCategoryInput = true"
+          v-if="!showNewCategoryInput"
         >
-          Add Note
+          <i class="fas fa-plus"></i> New Category
         </button>
       </div>
-    </div>
-
-    <div class="form-group">
-      <label for="taskDifficulty">Expected Difficulty</label>
-      <BaseSlider
-        v-model="form.expectedDifficulty"
-        id="taskDifficulty"
-        label="Expected Difficulty"
-        :disabled="submitting"
-        :value-labels="difficultyLabels"
-        min-label="Easy"
-        middle-label="Moderate"
-        max-label="Hard"
-      />
-    </div>
-
-    <div class="form-group">
-      <label>Reminder</label>
-      <div class="reminder-controls">
-        <input
-          type="datetime-local"
-          v-model="form.reminderTime"
-          :min="minDateTime"
-        />
-        <button
-          type="button"
-          class="btn btn-secondary"
-          @click="clearReminder"
-          v-if="form.reminderTime"
-        >
-          Clear Reminder
-        </button>
+      <div v-if="showNewCategoryInput" class="new-category-input mt-2">
+        <div class="input-group">
+          <input
+            v-model="newCategoryName"
+            type="text"
+            class="form-control"
+            placeholder="Enter new category name"
+            @keyup.enter="createCategory"
+          />
+          <div class="input-group-append">
+            <button
+              type="button"
+              class="btn btn-primary"
+              @click="createCategory"
+              :disabled="!newCategoryName.trim()"
+            >
+              Add
+            </button>
+            <button
+              type="button"
+              class="btn btn-secondary"
+              @click="cancelNewCategory"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
       </div>
     </div>
 
     <div class="form-actions">
-      <button type="button" class="btn" @click="$emit('cancel')" :disabled="submitting">
-        Cancel
+      <button
+        type="submit"
+        class="btn btn-primary"
+        :disabled="submitting || !form.title.trim()"
+      >
+        {{ submitting ? 'Saving...' : (isEditing ? 'Update' : 'Create') }}
       </button>
-      <button type="submit" class="btn btn-primary" :disabled="submitting">
-        <span v-if="submitting" class="loading-spinner"></span>
-        {{ isEditing ? 'Save Changes' : 'Create Task' }}
+      <button
+        type="button"
+        class="btn btn-secondary"
+        @click="$emit('cancel')"
+        :disabled="submitting"
+      >
+        Cancel
       </button>
     </div>
   </form>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
-import BaseSlider from '../ui/BaseSlider.vue'
-import { reminderService } from '../../services/reminderService'
-import { useCategoryStore } from '../../stores/categories'
-import type { Task, TaskFormData } from '../../types/task'
+import { ref, reactive, onMounted } from 'vue'
+import { useCategoryStore } from '@/stores/categories'
+import type { Task } from '@/types'
 
 const props = defineProps<{
-  task: Task | null
+  task?: Task
   submitting: boolean
   isEditing: boolean
 }>()
 
+const emit = defineEmits<{
+  (e: 'submit', task: Omit<Task, 'id' | 'createdAt' | 'updatedAt'>): void
+  (e: 'cancel'): void
+}>()
+
 const categoryStore = useCategoryStore()
+const categories = ref<{ id: string; name: string }[]>([])
+const showNewCategoryInput = ref(false)
+const newCategoryName = ref('')
+
+const form = reactive<Omit<Task, 'id' | 'createdAt' | 'updatedAt'>>({
+  title: props.task?.title || '',
+  description: props.task?.description || '',
+  dueDate: props.task?.dueDate || '',
+  priority: props.task?.priority || 'low',
+  category: props.task?.category || '',
+  completed: props.task?.completed || false,
+  status: props.task?.status || 'pending',
+  notes: props.task?.notes || []
+})
 
 onMounted(async () => {
-  if (categoryStore.categories.length === 0) {
-    await categoryStore.fetchCategories()
-  }
+  await categoryStore.fetchCategories()
+  categories.value = categoryStore.categories
 })
 
-const emit = defineEmits(['submit', 'cancel'])
-
-const getDefaultForm = (): TaskFormData => ({
-  name: '',
-  description: '',
-  dueDate: new Date(new Date(new Date().setDate(new Date().getDate() + 3)).setHours(0, 0, 0, 0)).toISOString().slice(0, 16),
-  notes: '',
-  priority: 'medium' as const,
-  status: 'pending' as const,
-  expectedDifficulty: 5,
-  reminderTime: '',
-  categoryId: ''
-})
-
-const formatDateForInput = (dateString) => {
-  if (!dateString) return ''
-  const date = new Date(dateString)
-  return date.toISOString().slice(0, 16) // Format as YYYY-MM-DDTHH:mm
-}
-
-const form = ref<TaskFormData>(props.task ? {
-  name: props.task.name,
-  description: props.task.description,
-  dueDate: formatDateForInput(props.task.dueDate),
-  notes: Array.isArray(props.task.notes) ? props.task.notes.join('\n') : '',
-  priority: props.task.priority,
-  status: props.task.status,
-  expectedDifficulty: props.task.expectedDifficulty,
-  reminderTime: '',
-  categoryId: props.task.categoryId || ''
-} : getDefaultForm())
-
-const difficultyLabels = {
-  '1': 'Very Easy',
-  '2': 'Easy',
-  '3': 'Fairly Easy',
-  '4': 'Slightly Easy',
-  '5': 'Moderate',
-  '6': 'Slightly Hard',
-  '7': 'Fairly Hard',
-  '8': 'Hard',
-  '9': 'Very Hard',
-  '10': 'Extremely Hard'
-}
-
-const minDateTime = computed(() => {
-  const now = new Date()
-  now.setMinutes(now.getMinutes() + 5) // Minimum 5 minutes from now
-  return now.toISOString().slice(0, 16)
-})
-
-const newNote = ref('')
-const formattedNotes = computed(() => {
-  if (!form.value.notes) return [];
-  return form.value.notes.split('\n').filter(note => note.trim());
-})
-
-function handleAddNote() {
-  if (!newNote.value.trim()) return;
-  const notes = formattedNotes.value;
-  notes.push(newNote.value);
-  form.value.notes = notes.join('\n');
-  newNote.value = '';
-}
-
-async function handleSubmit() {
-  if (!form.value.name.trim()) return
-
+async function createCategory() {
+  if (!newCategoryName.value.trim()) return
+  
   try {
-    const task = await emit('submit', form.value)
-
-    if (form.value.reminderTime && task?.id) {
-      await reminderService.createReminder(task.id, form.value.reminderTime)
-    }
+    const newCategory = await categoryStore.createCategory({
+      name: newCategoryName.value.trim()
+    })
+    categories.value.push(newCategory)
+    form.category = newCategory.id
+    showNewCategoryInput.value = false
+    newCategoryName.value = ''
   } catch (error) {
-    console.error('Error handling task submission:', error)
+    console.error('Failed to create category:', error)
   }
 }
 
-function clearReminder() {
-  form.value.reminderTime = ''
+function cancelNewCategory() {
+  showNewCategoryInput.value = false
+  newCategoryName.value = ''
+}
+
+function handleSubmit() {
+  emit('submit', form)
 }
 </script>
+
+<style scoped>
+.task-form {
+  display: grid;
+  gap: 1rem;
+}
+
+.form-group {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.form-control {
+  padding: 0.5rem;
+  border: 1px solid var(--border-color);
+  border-radius: 0.25rem;
+  background: var(--input-bg-color);
+  color: var(--text-color);
+}
+
+.form-control:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 2px var(--primary-color-light);
+}
+
+.category-select-container {
+  display: flex;
+  gap: 1rem;
+  align-items: start;
+}
+
+.new-category-input {
+  margin-top: 0.5rem;
+}
+
+.input-group {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.input-group-append {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.form-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+  margin-top: 1rem;
+}
+
+.btn {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 0.25rem;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.2s;
+}
+
+.btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.btn-primary {
+  background: var(--primary-color);
+  color: white;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: var(--primary-color-dark);
+}
+
+.btn-secondary {
+  background: var(--surface-secondary-color);
+  color: var(--text-color);
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: var(--surface-secondary-color-dark);
+}
+
+.btn-outline-secondary {
+  background: transparent;
+  border: 1px solid var(--border-color);
+  color: var(--text-color);
+}
+
+.btn-outline-secondary:hover:not(:disabled) {
+  background: var(--surface-secondary-color);
+}
+</style>

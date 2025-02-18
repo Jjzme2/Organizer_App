@@ -24,8 +24,8 @@
             <select v-model="sortBy" class="sort-select">
               <option value="completedAt-desc">Recently Completed</option>
               <option value="completedAt-asc">Oldest Completed</option>
-              <option value="name-asc">Name (A-Z)</option>
-              <option value="name-desc">Name (Z-A)</option>
+              <option value="title-asc">Title (A-Z)</option>
+              <option value="title-desc">Title (Z-A)</option>
             </select>
           </div>
         </div>
@@ -79,20 +79,30 @@ const sortedTasks = computed(() => {
     ? [...completedTasks.value, ...deactivatedTasks.value]
     : completedTasks.value
 
-  const [field, direction] = sortBy.value.split('-')
-
-  return tasks.sort((a, b) => {
-    if (field === 'completedAt') {
-      const dateA = new Date(a.completedAt).getTime()
-      const dateB = new Date(b.completedAt).getTime()
-      return direction === 'desc' ? dateB - dateA : dateA - dateB
-    } else if (field === 'name') {
-      return direction === 'desc'
-        ? b.name.localeCompare(a.name)
-        : a.name.localeCompare(b.name)
-    }
-    return 0
-  })
+  switch (sortBy.value) {
+    case 'completedAt-desc':
+      return [...tasks].sort((a, b) => {
+        const dateA = new Date(a.completedAt).getTime()
+        const dateB = new Date(b.completedAt).getTime()
+        return dateB - dateA
+      })
+    case 'completedAt-asc':
+      return [...tasks].sort((a, b) => {
+        const dateA = new Date(a.completedAt).getTime()
+        const dateB = new Date(b.completedAt).getTime()
+        return dateA - dateB
+      })
+    case 'title-asc':
+      return [...tasks].sort((a, b) => 
+        a.title.toLowerCase().localeCompare(b.title.toLowerCase())
+      )
+    case 'title-desc':
+      return [...tasks].sort((a, b) => 
+        b.title.toLowerCase().localeCompare(a.title.toLowerCase())
+      )
+    default:
+      return tasks
+  }
 })
 
 async function toggleTaskComplete(taskId) {
