@@ -1,12 +1,5 @@
 <template>
   <div class="articles-view">
-    <header class="page-header">
-      <h1>Articles</h1>
-      <button @click="handleNewArticle" class="btn btn-primary">
-        <p style="display: flex; align-items: center; color: black; gap: 5px;">📝 Save New Article</p>
-      </button>
-    </header>
-
     <div class="content">
       <!-- Loading State -->
       <div v-if="loading" class="loading-state">
@@ -20,39 +13,28 @@
         <button @click="loadArticles" class="btn btn-secondary">Retry</button>
       </div>
 
-      <!-- Empty State -->
-      <div v-else-if="sortedArticles.length === 0" class="empty-state">
-        <i class="fas fa-book-open"></i>
-        <h2>No Articles Saved Yet</h2>
-        <p>An article is an extended form of a jotting, capturing detailed ideas and insights.</p>
-        <button @click="handleNewArticle" class="btn btn-primary">
-          Save Your First Article
-        </button>
-      </div>
-
       <!-- Articles List -->
-      <div v-else class="articles-grid">
-        <article v-for="article in sortedArticles" :key="article.id" class="article-card">
-          <div class="article-card__header">
-            <h3>{{ article.title }}</h3>
-          </div>
-          
-          <p class="article-card__description">{{ article.content }}</p>
-          
-          <div class="article-card__meta">
-            <span class="date">{{ formatDate(article.createdAt) }}</span>
-          </div>
-          
-          <div class="article-card__actions">
-            <a :href="article.url" target="_blank" class="btn btn-text">
-              <i class="fas fa-external-link-alt"></i> Open
-            </a>
-            <button @click="deleteArticle(article.id)" class="btn btn-text btn-danger">
-              <p>❌ Delete</p>
+      <ArticlesList
+        v-else
+        :articles="sortedArticles"
+        @edit="editArticle"
+        @delete="deleteArticle"
+      >
+        <template #actions>
+          <button @click="handleNewArticle" class="btn btn-primary">
+            <p>New Article</p>
+          </button>
+        </template>
+        <template #empty>
+          <div class="empty-state">
+            <h2>No Articles Yet</h2>
+            <p>Start writing your thoughts and ideas.</p>
+            <button @click="handleNewArticle" class="btn btn-primary">
+              Write Your First Article
             </button>
           </div>
-        </article>
-      </div>
+        </template>
+      </ArticlesList>
     </div>
 
     <!-- Article Modal -->
@@ -71,6 +53,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useArticleStore } from '../stores/article'
 import { useRoute, useRouter } from 'vue-router'
 import NoteModal from '../components/modals/NoteModal.vue'
+import ArticlesList from '../components/ArticlesList.vue'
 
 // Store and router setup
 const articleStore = useArticleStore()
@@ -81,6 +64,7 @@ const router = useRouter()
 const loading = ref(true)
 const error = ref(null)
 const editingArticle = ref(null)
+const showNewArticleModal = ref(false)
 
 // Modal state
 const showModal = computed({
@@ -88,12 +72,9 @@ const showModal = computed({
   set: (value) => {
     if (!value) {
       closeModal()
-    } else {
-      showNewArticleModal.value = true
     }
   }
 })
-const showNewArticleModal = ref(false)
 
 // Computed properties
 const sortedArticles = computed(() => {
@@ -134,9 +115,14 @@ function handleNewArticle() {
   showNewArticleModal.value = true
 }
 
-function closeModal() {
+function editArticle(article) {
   showNewArticleModal.value = false
+  editingArticle.value = { ...article }
+}
+
+function closeModal() {
   editingArticle.value = null
+  showNewArticleModal.value = false
 }
 
 async function saveArticle(articleData) {

@@ -1,113 +1,133 @@
-const Article = require("../models/Article");
-const logger = require("../utils/logger");
-const { AuthenticationError, NotFoundError, AppError } = require("../utils/errorUtils");
+const BaseController = require('./base/baseController');
+const { Article, Category, Comment, User } = require('../models');
+const { ApiError } = require('../utils/errorUtils');
 
-exports.getAllArticles = async (req, res) => {
-  try {
-    if (!req.user || !req.user.id) {
-      throw new AuthenticationError();
+class ArticleController extends BaseController {
+    constructor() {
+        super(Article, 'Article');
+        this.defaultIncludes = [
+            {
+                model: Category,
+                as: 'category',
+                attributes: ['id', 'name']
+            },
+            {
+                model: Comment,
+                as: 'comments',
+                include: [{
+                    model: User,
+                    as: 'user',
+                    attributes: ['id', 'username']
+                }]
+            }
+        ];
     }
 
-    const articles = await Article.findAll({
-      where: { userId: req.user.id },
-      order: [['createdAt', 'DESC']]
-    });
-
-    res.json(articles);
-  } catch (error) {
-    logger.error('Error in getAllArticles:', error);
-    throw new AppError("Failed to get articles", 500, "ARTICLE_FETCH_ERROR");
-  }
-};
-
-exports.getArticleById = async (req, res) => {
-  try {
-    if (!req.user || !req.user.id) {
-      throw new AuthenticationError();
+    /**
+     * Get all articles for a user with optional filtering
+     * @param {number} userId - User ID
+     * @param {Object} filters - Query filters
+     */
+    async getUserArticles(userId, filters = {}) {
+        const options = {
+            where: { userId, ...filters },
+            include: this.defaultIncludes,
+            order: [['createdAt', 'DESC']]
+        };
+        return this.getAll(options);
     }
 
-    const article = await Article.findOne({
-      where: {
-        id: req.params.id,
-        userId: req.user.id
-      }
-    });
-
-    if (!article) {
-      throw new NotFoundError("Article not found");
+    /**
+     * Get articles by category
+     * @param {number} userId - User ID
+     * @param {number} categoryId - Category ID
+     */
+    async getArticlesByCategory(userId, categoryId) {
+        const options = {
+            where: { userId, categoryId },
+            include: this.defaultIncludes
+        };
+        return this.getAll(options);
     }
 
-    res.json(article);
-  } catch (error) {
-    logger.error('Error in getArticleById:', error);
-    throw new AppError("Failed to get article", 500, "ARTICLE_FETCH_ERROR");
-  }
-};
-
-exports.createArticle = async (req, res) => {
-  try {
-    if (!req.user || !req.user.id) {
-      throw new AuthenticationError();
+    /**
+     * Get featured articles
+     * @param {number} userId - User ID
+     */
+    async getFeaturedArticles(userId) {
+        const options = {
+            where: { 
+                userId,
+                isFeatured: true 
+            },
+            include: this.defaultIncludes
+        };
+        return this.getAll(options);
     }
 
-    const article = await Article.create({
-      ...req.body,
-      userId: req.user.id
-    });
-
-    res.status(201).json(article);
-  } catch (error) {
-    logger.error('Error in createArticle:', error);
-    throw new AppError("Failed to create article", 500, "ARTICLE_CREATE_ERROR");
-  }
-};
-
-exports.updateArticle = async (req, res) => {
-  try {
-    if (!req.user || !req.user.id) {
-      throw new AuthenticationError();
+    /**
+     * Toggle article featured status
+     * @param {number} articleId - Article ID
+     * @param {number} userId - User ID
+     */
+    async toggleFeatured(articleId, userId) {
+        const article = await this.findOne({ id: articleId, userId });
+        return this.update(articleId, { isFeatured: !article.isFeatured });
     }
 
-    const article = await Article.findOne({
-      where: {
-        id: req.params.id,
-        userId: req.user.id
-      }
-    });
-
-    if (!article) {
-      throw new NotFoundError("Article not found");
+    /**
+     * Create a new article with validation
+     * @param {Object} data - Article data
+     */
+    async create(data) {
+        if (!data.title) {
+            throw new ApiError(400, 'Article title is required');
+        }
+        if (!data.content) {
+            throw new ApiError(400, 'Article content is required');
+        }
+        if (data.categoryId) {
+            const category = await Category.findByPk(data.categoryId);
+            if (!category) {
+                throw new ApiError(404, 'Category not found');
+            }
+        }
+        return super.create(data);
     }
 
-    await article.update(req.body);
-    res.json(article);
-  } catch (error) {
-    logger.error('Error in updateArticle:', error);
-    throw new AppError("Failed to update article", 500, "ARTICLE_UPDATE_ERROR");
-  }
-};
-
-exports.deleteArticle = async (req, res) => {
-  try {
-    if (!req.user || !req.user.id) {
-      throw new AuthenticationError();
+    /**
+     * Update an article with validation
+     * @param {number} id - Article ID
+     * @param {Object} data - Update data
+     */
+    async update(id, data) {
+        if (data.categoryId) {
+            const category = await Category.findByPk(data.categoryId);
+            if (!category) {
+                throw new ApiError(404, 'Category not found');
+            }
+        }
+        return super.update(id, data);
     }
 
-    const article = await Article.findOne({
-      where: {
-        id: req.params.id,
-        userId: req.user.id
-      }
-    });
-
-    if (!article) {
-      throw new NotFoundError("Article not found");
+    /**
+     * Search articles by title or content
+     * @param {number} userId - User ID
+     * @param {string} query - Search query
+     */
+    async searchArticles(userId, query) {
+        const options = {
+            where: {
+                userId,
+                [Op.or]: [
+                    { title: { [Op.like]: `%${query}%` } },
+                    { content: { [Op.like]: `%${query}%` } }
+                ]
+            },
+            include: this.defaultIncludes
+        };
+        return this.getAll(options);
     }
+}
 
-    await article.destroy();
-    res.json({ message: "Article deleted successfully" });
-  } catch (error) {
-    logger.error('Error in deleteArticle:', error);
-    throw new AppError("Failed to delete article", 500, "ARTICLE_DELETE_ERROR");
-  }
-};
+module.exports = new ArticleController();

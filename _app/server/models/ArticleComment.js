@@ -16,7 +16,7 @@ const ArticleComment = sequelize.define("ArticleComment", {
       len: [1, 1000] // Maximum length of 1000 characters
     }
   },
-  articleId: {
+  parentId: {
     type: DataTypes.UUID,
     references: {
       model: 'articles',
@@ -47,7 +47,7 @@ const ArticleComment = sequelize.define("ArticleComment", {
   indexes: [
     {
       name: 'idx_article_comments_article',
-      fields: ['articleId']
+      fields: ['parentId']
     },
     {
       name: 'idx_article_comments_user',
@@ -63,7 +63,7 @@ ArticleComment.belongsTo(User, {
 });
 
 ArticleComment.belongsTo(Article, {
-  foreignKey: 'articleId',
+  foreignKey: 'parentId',
   onDelete: 'CASCADE'
 });
 

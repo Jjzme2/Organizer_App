@@ -82,15 +82,18 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useCategoryStore } from '../stores/categories'
+import { useAuthStore } from '../stores/auth'
 import type { Category, CategoryForm } from '../types/task'
 
 const categoryStore = useCategoryStore()
+const authStore = useAuthStore()
 const submitting = ref(false)
 const editingId = ref<string | null>(null)
 
 const form = ref<CategoryForm>({
   name: '',
-  color: '#808080'
+  color: '#808080',
+  userId: authStore.user?.id
 })
 
 onMounted(async () => {
@@ -100,7 +103,8 @@ onMounted(async () => {
 function resetForm() {
   form.value = {
     name: '',
-    color: '#808080'
+    color: '#808080',
+    userId: authStore.user?.id
   }
   editingId.value = null
 }

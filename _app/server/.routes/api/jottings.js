@@ -1,22 +1,49 @@
-const express = require("express");
-const router = express.Router();
-const jottingController = require("../../.controllers/jottingController");
-const { authenticateToken } = require("../../middleware/authMiddleware");
-const logger = require("../../utils/logger");
+const { createResourceRouter } = require('../../utils/routeFactory');
+const jottingController = require('../../.controllers/jottingController');
+const { authenticateToken } = require('../../middleware/authMiddleware');
 
-const logRequest = (req, res, next) => {
-    logger.info(`Jotting API request: ${req.method} ${req.originalUrl}`);
-    logger.debug('Request body:', req.body);
-    next();
+// Define custom routes specific to jottings
+const customRoutes = {
+    getPinned: { 
+        method: 'get', 
+        path: '/pinned'
+    },
+    getArchived: { 
+        method: 'get', 
+        path: '/archived'
+    },
+    getFavorites: { 
+        method: 'get', 
+        path: '/favorites'
+    },
+    getByTag: { 
+        method: 'get', 
+        path: '/tag/:tag'
+    },
+    togglePin: { 
+        method: 'patch', 
+        path: '/:id/toggle-pin'
+    },
+    toggleArchive: { 
+        method: 'patch', 
+        path: '/:id/toggle-archive'
+    },
+    toggleFavorite: { 
+        method: 'patch', 
+        path: '/:id/toggle-favorite'
+    },
+    updateStatus: { 
+        method: 'patch', 
+        path: '/:id/status'
+    }
 };
 
-router.use(logRequest);
-router.use(authenticateToken);
-
-router.get("/", jottingController.getAllJottings);
-router.get("/:id", jottingController.getJottingById);
-router.post("/", jottingController.createJotting);
-router.put("/:id", jottingController.updateJotting);
-router.delete("/:id", jottingController.deleteJotting);
+// Create and configure the router
+const router = createResourceRouter({
+    controller: jottingController,
+    basePath: '/jottings',
+    routes: customRoutes,
+    middleware: [authenticateToken]
+});
 
 module.exports = router;

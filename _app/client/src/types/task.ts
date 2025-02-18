@@ -22,6 +22,7 @@ export interface Task extends TaskFormData {
 export interface CategoryForm {
   name: string
   color: string
+  userId: string
 }
 
 export interface Category extends CategoryForm {

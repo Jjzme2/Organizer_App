@@ -1,28 +1,24 @@
 const express = require("express");
 const router = express.Router();
 const jottingCommentController = require("../../.controllers/jottingCommentController");
-const { authenticateToken } = require("../../middleware/authMiddleware");
-const logger = require("../../utils/logger");
+const { authenticateToken } = require("../../utils/auth");
+const { createRequestLogger } = require("../../middleware/loggingMiddleware");
 
-const logRequest = (req, res, next) => {
-    logger.info(`JottingComment API request: ${req.method} ${req.originalUrl}`);
-    logger.debug('Request body:', req.body);
-    next();
-};
+// Create request logger for jotting comments
+const logRequest = createRequestLogger('JottingComment');
 
 router.use(logRequest);
-router.use(authenticateToken);
 
-// Get all comments for a specific jotting
-router.get("/jotting/:jottingId", jottingCommentController.getAllComments);
+// Get all comments for a jotting
+router.get("/:jottingId", authenticateToken, jottingCommentController.getAllComments);
 
-// Create a new comment for a jotting
-router.post("/jotting/:jottingId", jottingCommentController.createComment);
+// Create a new comment
+router.post("/:jottingId", authenticateToken, jottingCommentController.createComment);
 
 // Update a comment
-router.put("/:id", jottingCommentController.updateComment);
+router.put("/:id", authenticateToken, jottingCommentController.updateComment);
 
 // Delete a comment
-router.delete("/:id", jottingCommentController.deleteComment);
+router.delete("/:id", authenticateToken, jottingCommentController.deleteComment);
 
 module.exports = router;

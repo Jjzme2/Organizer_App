@@ -72,7 +72,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import BaseModal from './BaseModal.vue'
 
 const props = defineProps({
@@ -105,14 +105,25 @@ const form = ref({
   tags: []
 })
 
-onMounted(() => {
-  if (props.note) {
-    form.value = { ...props.note }
-    if (props.type === 'Jotting' && props.note.tags) {
-      tagInput.value = props.note.tags.join(', ')
+// Watch for note changes to update form
+watch(() => props.note, (newNote) => {
+  if (newNote) {
+    form.value = { ...newNote }
+    if (props.type === 'Jotting' && newNote.tags) {
+      tagInput.value = newNote.tags.join(', ')
     }
+  } else {
+    // Reset form when note is null
+    form.value = {
+      title: '',
+      content: '',
+      url: '',
+      isPublic: false,
+      tags: []
+    }
+    tagInput.value = ''
   }
-})
+}, { immediate: true })
 
 function handleSubmit() {
   const formData = { ...form.value }
@@ -129,9 +140,7 @@ function handleSubmit() {
 
 function close() {
   emit('update:show', false)
-  emit('close')
-  
-  // Reset form
+  // Reset form on close
   form.value = {
     title: '',
     content: '',

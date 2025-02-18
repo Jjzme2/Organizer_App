@@ -58,7 +58,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useAuthStore } from '../stores/auth'
 import { useTaskStore } from '../stores/tasks'
 import { useArticleStore } from '../stores/article'
@@ -72,15 +72,34 @@ const jottingStore = useJottingStore()
 const user = computed(() => authStore.user)
 
 // Time formatting
-const formattedDateTime = computed(() => {
-  const now = new Date()
-  return new Intl.DateTimeFormat('en-US', {
-    weekday: 'long',
-    month: 'long',
-    day: 'numeric',
-    hour: 'numeric',
-    minute: '2-digit'
-  }).format(now)
+const formattedDateTime = ref('')
+let timeInterval
+
+onMounted(() => {
+  const updateTime = () => {
+    const now = new Date()
+    formattedDateTime.value = new Intl.DateTimeFormat('en-US', {
+      weekday: 'long',
+      month: 'long',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+      // second: '2-digit'
+    }).format(now)
+  }
+  
+  // Initial update
+  updateTime()
+  
+  // Set up interval to update every second
+  timeInterval = setInterval(updateTime, 1000)
+})
+
+onUnmounted(() => {
+  // Clean up interval when component is unmounted
+  if (timeInterval) {
+    clearInterval(timeInterval)
+  }
 })
 
 // Task stats

@@ -1,12 +1,5 @@
 <template>
   <div class="jottings-view">
-    <header class="page-header">
-      <h1>Jottings</h1>
-      <button @click="handleNewJotting" class="btn btn-primary">
-        <p style="display: flex; align-items: center; color: black; gap: 5px;"> New Jotting</p>
-      </button>
-    </header>
-
     <div class="content">
       <!-- Loading State -->
       <div v-if="loading" class="loading-state">
@@ -20,45 +13,29 @@
         <button @click="loadJottings" class="btn btn-secondary">Retry</button>
       </div>
 
-      <!-- Empty State -->
-      <div v-else-if="sortedJottings.length === 0" class="empty-state">
-        <i class="fas fa-feather-alt"></i>
-        <h2>No Jottings Yet</h2>
-        <p>Quick notes and thoughts to capture your ideas.</p>
-        <button @click="handleNewJotting" class="btn btn-primary">
-          Write Your First Jotting
-        </button>
-      </div>
-
-      <!-- Jottings Grid -->
-      <div v-else class="jottings-grid">
-        <div v-for="jotting in sortedJottings" :key="jotting.id" class="jotting-card">
-          <div class="jotting-card__header">
-            <h3>{{ jotting.title }}</h3>
-            <div class="jotting-actions">
-              <button @click="editJotting(jotting)" class="btn btn-text">
-                <p style="display: flex; align-items: center; gap: 5px;"> Edit</p>
-              </button>
-              <button @click="deleteJotting(jotting.id)" class="btn btn-text btn-danger">
-                <p style="display: flex; align-items: center; gap: 5px;"> Delete</p>
-              </button>
-            </div>
+      <!-- Jottings List -->
+      <JottingsList
+        v-else
+        :jottings="sortedJottings"
+        @edit="editJotting"
+        @delete="deleteJotting"
+      >
+        <template #actions>
+          <button @click="handleNewJotting" class="btn btn-primary">
+            <p>New Jotting</p>
+          </button>
+        </template>
+        <template #empty>
+          <div class="empty-state">
+            <i class="fas fa-feather-alt"></i>
+            <h2>No Jottings Yet</h2>
+            <p>Quick notes and thoughts to capture your ideas.</p>
+            <button @click="handleNewJotting" class="btn btn-primary">
+              Write Your First Jotting
+            </button>
           </div>
-          
-          <div class="jotting-card__content">
-            <p>{{ jotting.content }}</p>
-          </div>
-          
-          <div class="jotting-card__footer">
-            <div class="tags" v-if="jotting.tags?.length">
-              <span v-for="tag in jotting.tags" :key="tag" class="tag">
-                #{{ tag }}
-              </span>
-            </div>
-            <span class="date">{{ formatDate(jotting.createdAt) }}</span>
-          </div>
-        </div>
-      </div>
+        </template>
+      </JottingsList>
     </div>
 
     <!-- Jotting Modal -->
@@ -77,6 +54,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useJottingStore } from '../stores/jotting'
 import { useRoute, useRouter } from 'vue-router'
 import NoteModal from '../components/modals/NoteModal.vue'
+import JottingsList from '../components/JottingsList.vue'
 
 // Store and router setup
 const jottingStore = useJottingStore()
@@ -87,6 +65,7 @@ const router = useRouter()
 const loading = ref(true)
 const error = ref(null)
 const editingJotting = ref(null)
+const showNewJottingModal = ref(false)
 
 // Modal state
 const showModal = computed({
@@ -94,12 +73,9 @@ const showModal = computed({
   set: (value) => {
     if (!value) {
       closeModal()
-    } else {
-      showNewJottingModal.value = true
     }
   }
 })
-const showNewJottingModal = ref(false)
 
 // Computed properties
 const sortedJottings = computed(() => {
@@ -141,12 +117,13 @@ function handleNewJotting() {
 }
 
 function editJotting(jotting) {
+  showNewJottingModal.value = false
   editingJotting.value = { ...jotting }
 }
 
 function closeModal() {
-  showNewJottingModal.value = false
   editingJotting.value = null
+  showNewJottingModal.value = false
 }
 
 async function saveJotting(jottingData) {

@@ -1,23 +1,41 @@
-const express = require("express");
-const router = express.Router();
-const quoteController = require("../../.controllers/quoteController");
-const { authenticateToken } = require("../../middleware/authMiddleware");
-const logger = require("../../utils/logger");
+const { createResourceRouter } = require('../../utils/routeFactory');
+const quoteController = require('../../.controllers/quoteController');
+const { authenticateToken } = require('../../middleware/authMiddleware');
 
-const logRequest = (req, res, next) => {
-    logger.info(`Quote API request: ${req.method} ${req.originalUrl}`);
-    logger.debug('Request body:', req.body);
-    next();
+// Define custom routes specific to quotes
+const customRoutes = {
+    getRandom: { 
+        method: 'get', 
+        path: '/random'
+    },
+    getFavorites: { 
+        method: 'get', 
+        path: '/favorites'
+    },
+    getByAuthor: { 
+        method: 'get', 
+        path: '/author/:author'
+    },
+    getByTag: { 
+        method: 'get', 
+        path: '/tag/:tag'
+    },
+    toggleFavorite: { 
+        method: 'patch', 
+        path: '/:id/toggle-favorite'
+    },
+    updateStatus: { 
+        method: 'patch', 
+        path: '/:id/status'
+    }
 };
 
-router.use(logRequest);
-router.use(authenticateToken);
-
-router.get("/", quoteController.getAllQuotes);
-router.get("/random", quoteController.getRandomQuote);
-router.post("/", quoteController.createQuote);
-router.put("/:id/favorite", quoteController.toggleFavorite);
-router.delete("/:id", quoteController.deleteQuote);
-router.put("/:id", quoteController.updateQuote);
+// Create and configure the router
+const router = createResourceRouter({
+    controller: quoteController,
+    basePath: '/quotes',
+    routes: customRoutes,
+    middleware: [authenticateToken]
+});
 
 module.exports = router;

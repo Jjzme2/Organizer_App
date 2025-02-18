@@ -8,6 +8,14 @@ const Category = sequelize.define("Category", {
     defaultValue: DataTypes.UUIDV4,
     primaryKey: true,
   },
+  userId: {
+    type: DataTypes.UUID,
+    allowNull: false,
+    references: {
+      model: 'Users',
+      key: 'id'
+    }
+  },
   name: {
     type: DataTypes.STRING,
     allowNull: false,
@@ -29,6 +37,17 @@ const Category = sequelize.define("Category", {
   freezeTableName: true,
   timestamps: true,
   modelName: 'Category'
+});
+
+// Define association with User
+Category.belongsTo(User, {
+  foreignKey: 'userId',
+  as: 'user'
+});
+
+User.hasMany(Category, {
+  foreignKey: 'userId',
+  as: 'categories'
 });
 
 module.exports = Category;

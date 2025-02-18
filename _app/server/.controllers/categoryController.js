@@ -1,90 +1,186 @@
-const Category = require("../models/Category");
-const logger = require("../utils/logger");
-const { AuthenticationError, NotFoundError, AppError } = require("../utils/errorUtils");
+const BaseController = require('./base/baseController');
+const { Category, Task, Article, Quote, Jotting } = require('../models');
+const { ApiError } = require('../utils/errorUtils');
+const { Op } = require('sequelize');
 
-// Get all categories
-exports.getAllCategories = async (req, res) => {
-  try {
-    if (!req.user || !req.user.id) {
-      throw new AuthenticationError();
+class CategoryController extends BaseController {
+    constructor() {
+        super(Category, 'Category');
+        this.defaultIncludes = [
+            {
+                model: Task,
+                as: 'tasks',
+                attributes: ['id', 'title']
+            },
+            {
+                model: Article,
+                as: 'articles',
+                attributes: ['id', 'title']
+            },
+            {
+                model: Quote,
+                as: 'quotes',
+                attributes: ['id', 'content']
+            },
+            {
+                model: Jotting,
+                as: 'jottings',
+                attributes: ['id', 'content']
+            }
+        ];
     }
 
-    const categories = await Category.findAll({
-      order: [['name', 'ASC']]
-    });
-
-    res.json(categories);
-  } catch (error) {
-    logger.error('Error in getAllCategories:', error);
-    throw new AppError("Failed to get categories", 500, "CATEGORY_FETCH_ERROR");
-  }
-};
-
-// Create a new category
-exports.createCategory = async (req, res) => {
-  try {
-    if (!req.user || !req.user.id) {
-      throw new AuthenticationError();
+    /**
+     * Get all categories for a user with optional filtering
+     * @param {number} userId - User ID
+     * @param {Object} filters - Query filters
+     */
+    async getUserCategories(userId, filters = {}) {
+        const options = {
+            where: { userId, ...filters },
+            include: this.defaultIncludes,
+            order: [['name', 'ASC']]
+        };
+        return this.getAll(options);
     }
 
-    const { name, color } = req.body;
+    /**
+     * Get category with item counts
+     * @param {number} categoryId - Category ID
+     * @param {number} userId - User ID
+     */
+    async getCategoryWithCounts(categoryId, userId) {
+        const category = await this.findOne({ id: categoryId, userId });
+        
+        const [tasks, articles, quotes, jottings] = await Promise.all([
+            Task.count({ where: { categoryId } }),
+            Article.count({ where: { categoryId } }),
+            Quote.count({ where: { categoryId } }),
+            Jotting.count({ where: { categoryId } })
+        ]);
 
-    if (!name) {
-      throw new AppError("Category name is required", 400, "VALIDATION_ERROR");
+        return {
+            ...category.toJSON(),
+            counts: {
+                tasks,
+                articles,
+                quotes,
+                jottings,
+                total: tasks + articles + quotes + jottings
+            }
+        };
     }
 
-    const category = await Category.create({
-      name,
-      color: color || '#808080'
-    });
+    /**
+     * Get categories with item counts
+     * @param {number} userId - User ID
+     */
+    async getCategoriesWithCounts(userId) {
+        const categories = await this.getUserCategories(userId);
+        
+        const categoriesWithCounts = await Promise.all(
+            categories.map(category => this.getCategoryWithCounts(category.id, userId))
+        );
 
-    res.status(201).json(category);
-  } catch (error) {
-    logger.error('Error in createCategory:', error);
-    throw new AppError("Failed to create category", 500, "CATEGORY_CREATE_ERROR");
-  }
-};
-
-// Update a category
-exports.updateCategory = async (req, res) => {
-  try {
-    if (!req.user || !req.user.id) {
-      throw new AuthenticationError();
+        return categoriesWithCounts;
     }
 
-    const category = await Category.findByPk(req.params.id);
+    /**
+     * Create a new category with validation
+     * @param {Object} data - Category data
+     */
+    async create(data) {
+        if (!data.name) {
+            throw new ApiError(400, 'Category name is required');
+        }
 
-    if (!category) {
-      throw new NotFoundError("Category not found");
+        // Check for duplicate category names for the user
+        const existing = await this.findOne({
+            name: data.name,
+            userId: data.userId
+        }).catch(() => null);
+
+        if (existing) {
+            throw new ApiError(400, 'Category with this name already exists');
+        }
+
+        return super.create(data);
     }
 
-    const { name, color } = req.body;
-    await category.update({ name, color });
+    /**
+     * Update a category with validation
+     * @param {number} id - Category ID
+     * @param {Object} data - Update data
+     */
+    async update(id, data) {
+        if (data.name) {
+            // Check for duplicate category names for the user
+            const existing = await this.findOne({
+                name: data.name,
+                userId: data.userId,
+                id: { [Op.ne]: id }
+            }).catch(() => null);
 
-    res.json(category);
-  } catch (error) {
-    logger.error('Error in updateCategory:', error);
-    throw new AppError("Failed to update category", 500, "CATEGORY_UPDATE_ERROR");
-  }
-};
+            if (existing) {
+                throw new ApiError(400, 'Category with this name already exists');
+            }
+        }
 
-// Delete a category
-exports.deleteCategory = async (req, res) => {
-  try {
-    if (!req.user || !req.user.id) {
-      throw new AuthenticationError();
+        return super.update(id, data);
     }
 
-    const category = await Category.findByPk(req.params.id);
+    /**
+     * Delete a category and optionally reassign items
+     * @param {number} id - Category ID
+     * @param {number} newCategoryId - New category ID for reassignment
+     */
+    async deleteAndReassign(id, newCategoryId = null) {
+        const category = await this.getById(id);
 
-    if (!category) {
-      throw new NotFoundError("Category not found");
+        if (newCategoryId) {
+            const newCategory = await this.getById(newCategoryId);
+            if (!newCategory) {
+                throw new ApiError(404, 'New category not found');
+            }
+
+            // Reassign all items to the new category
+            await Promise.all([
+                Task.update({ categoryId: newCategoryId }, { where: { categoryId: id } }),
+                Article.update({ categoryId: newCategoryId }, { where: { categoryId: id } }),
+                Quote.update({ categoryId: newCategoryId }, { where: { categoryId: id } }),
+                Jotting.update({ categoryId: newCategoryId }, { where: { categoryId: id } })
+            ]);
+        }
+
+        return super.delete(id);
     }
 
-    await category.destroy();
-    res.status(204).send();
-  } catch (error) {
-    logger.error('Error in deleteCategory:', error);
-    throw new AppError("Failed to delete category", 500, "CATEGORY_DELETE_ERROR");
-  }
-};
+    /**
+     * Search categories by name
+     * @param {number} userId - User ID
+     * @param {string} query - Search query
+     */
+    async searchCategories(userId, query) {
+        const options = {
+            where: {
+                userId,
+                name: { [Op.like]: `%${query}%` }
+            },
+            include: this.defaultIncludes
+        };
+        return this.getAll(options);
+    }
+
+    /**
+     * Get empty categories
+     * @param {number} userId - User ID
+     */
+    async getEmptyCategories(userId) {
+        const categories = await this.getUserCategories(userId);
+        const categoriesWithCounts = await this.getCategoriesWithCounts(userId);
+        
+        return categoriesWithCounts.filter(category => category.counts.total === 0);
+    }
+}
+
+module.exports = new CategoryController();
