@@ -28,8 +28,8 @@
           :tasks="incompleteTasks"
           :defaultLimit="4"
           @toggle-complete="handleTaskComplete"
-          @update-priority="handlePriorityUpdate"
-          @update-status="handleStatusUpdate"
+          @update-priority="handlePriorityChange"
+          @update-status="handleStatusChange"
           @add-note="handleAddNote"
           @edit="handleTaskEdit"
           @delete="handleTaskDelete"
@@ -50,8 +50,8 @@
           :tasks="recentlyCompletedTasks"
           :defaultLimit="4"
           @toggle-complete="handleTaskComplete"
-          @update-priority="handlePriorityUpdate"
-          @update-status="handleStatusUpdate"
+          @update-priority="handlePriorityChange"
+          @update-status="handleStatusChange"
           @add-note="handleAddNote"
           @edit="handleTaskEdit"
           @delete="handleTaskDelete"
@@ -74,8 +74,10 @@
       <template #default>
         <TaskForm
           :task="editingTask"
+          :submitting="submitting"
+          :is-editing="!!editingTask"
           @submit="handleTaskSubmit"
-          @cancel="closeTaskModal"
+          @cancel="editingTask = null"
         />
       </template>
     </BaseModal>
@@ -121,6 +123,7 @@ const showAddTaskModal = ref(false)
 const showCategoryModal = ref(false)
 const editingTask = ref(null)
 const error = ref(null)
+const submitting = ref(false)
 
 // Computed properties for task lists
 const incompleteTasks = computed(() => taskStore.incompleteTasks)
@@ -142,33 +145,36 @@ async function handleTaskComplete(taskId) {
   }
 }
 
-async function handlePriorityUpdate({ id, priority }) {
+async function handlePriorityChange(taskId, priority) {
   try {
-    await taskStore.updateTaskPriority(id, priority)
-    messageStore.info('Task priority updated', 'Priority Changed', { position: 'bottom-right' })
+    await taskStore.updateTask(taskId, { priority })
+    messageStore.success('Task priority updated')
   } catch (err) {
-    error.value = 'Failed to update task priority'
-    messageStore.error('Failed to update task priority', 'Error')
+    messageStore.error('Failed to update task priority')
   }
 }
 
-async function handleStatusUpdate({ id, status }) {
+async function handleStatusChange(taskId, status) {
   try {
-    await taskStore.updateTaskStatus(id, status)
-    messageStore.info('Task status updated', 'Status Changed', { position: 'bottom-right' })
+    await taskStore.updateTask(taskId, { status })
+    messageStore.success('Task status updated')
   } catch (err) {
-    error.value = 'Failed to update task status'
-    messageStore.error('Failed to update task status', 'Error')
+    messageStore.error('Failed to update task status')
   }
 }
 
-async function handleAddNote({ id, note }) {
+async function handleAddNote(taskId, note) {
   try {
-    await taskStore.addTaskNote(id, note)
-    messageStore.success('Note added to task', 'Note Added', { position: 'bottom-right' })
+    await taskStore.updateTask(taskId, {
+      notes: [...(taskStore.getTaskById(taskId)?.notes || []), {
+        id: Date.now().toString(),
+        content: note,
+        createdAt: new Date().toISOString()
+      }]
+    })
+    messageStore.success('Note added successfully')
   } catch (err) {
-    error.value = 'Failed to add note'
-    messageStore.error('Failed to add note to task', 'Error')
+    messageStore.error('Failed to add note')
   }
 }
 
@@ -188,18 +194,20 @@ async function handleTaskDelete(taskId) {
 }
 
 async function handleTaskSubmit(taskData) {
+  submitting.value = true
   try {
     if (editingTask.value) {
       await taskStore.updateTask(editingTask.value.id, taskData)
-      messageStore.success('Task updated successfully', 'Task Updated')
     } else {
       await taskStore.createTask(taskData)
-      messageStore.success('New task created', 'Task Created')
     }
-    closeTaskModal()
+    editingTask.value = null
+    messageStore.success('Task saved successfully')
   } catch (err) {
     error.value = 'Failed to save task'
     messageStore.error('Failed to save task', 'Error')
+  } finally {
+    submitting.value = false
   }
 }
 

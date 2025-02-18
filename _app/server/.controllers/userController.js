@@ -1,7 +1,7 @@
 const BaseController = require('./base/baseController');
 const { User, Category, Task, Article, Quote, Jotting } = require('../models');
 const { ApiError } = require('../utils/errorUtils');
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { Op } = require('sequelize');
 

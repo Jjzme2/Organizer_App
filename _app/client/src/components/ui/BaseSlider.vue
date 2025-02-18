@@ -8,7 +8,7 @@
         :id="id"
         type="range"
         :value="modelValue"
-        @input="$emit('update:modelValue', $event.target.value)"
+        @input="handleInput($event)"
         :min="min"
         :max="max"
         :step="step"
@@ -74,7 +74,12 @@ const props = defineProps({
   }
 })
 
-defineEmits(['update:modelValue'])
+const emit = defineEmits(['update:modelValue'])
+
+const handleInput = (event: Event) => {
+  const target = event.target as HTMLInputElement
+  emit('update:modelValue', target.value)
+}
 
 const displayValue = computed(() => {
   if (props.valueLabels && props.valueLabels[props.modelValue]) {

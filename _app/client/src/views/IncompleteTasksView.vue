@@ -15,8 +15,8 @@
           <select v-model="sortBy" class="sort-select">
             <option value="dueDate-asc">Due Date (Earliest)</option>
             <option value="dueDate-desc">Due Date (Latest)</option>
-            <option value="name-asc">Name (A-Z)</option>
-            <option value="name-desc">Name (Z-A)</option>
+            <option value="title-asc">Title (A-Z)</option>
+            <option value="title-desc">Title (Z-A)</option>
             <option value="priority-desc">Priority (High to Low)</option>
             <option value="priority-asc">Priority (Low to High)</option>
           </select>
@@ -74,7 +74,7 @@ import { ref, computed } from 'vue'
 import { useTaskStore } from '../stores/tasks'
 import { storeToRefs } from 'pinia'
 import TaskCard from '../components/cards/TaskCard.vue'
-import TaskForm from '../components/forms/TaskForm.vue'
+import TaskForm from '@/components/forms/TaskForm.vue'
 import BaseModal from '../components/modals/BaseModal.vue'
 
 const taskStore = useTaskStore()
@@ -94,10 +94,10 @@ const sortedTasks = computed(() => {
       const dateA = a.dueDate ? new Date(a.dueDate).getTime() : Infinity
       const dateB = b.dueDate ? new Date(b.dueDate).getTime() : Infinity
       return direction === 'desc' ? dateB - dateA : dateA - dateB
-    } else if (field === 'name') {
+    } else if (field === 'title') {
       return direction === 'desc'
-        ? b.name.localeCompare(a.name)
-        : a.name.localeCompare(b.name)
+        ? b.title.toLowerCase().localeCompare(a.title.toLowerCase())
+        : a.title.toLowerCase().localeCompare(b.title.toLowerCase())
     } else if (field === 'priority') {
       const priorityOrder = { high: 3, medium: 2, low: 1 }
       const priorityA = priorityOrder[a.priority] || 0

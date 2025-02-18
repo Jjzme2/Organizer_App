@@ -114,10 +114,15 @@ async function handleSubmit() {
 
   submitting.value = true
   try {
+    const newCategory = {
+      name: form.value.name,
+      color: form.value.color,
+      userId: authStore.user?.id || ''
+    }
     if (editingId.value) {
-      await categoryStore.updateCategory(editingId.value, form.value)
+      await categoryStore.updateCategory(editingId.value, newCategory)
     } else {
-      await categoryStore.createCategory(form.value)
+      await categoryStore.createCategory(newCategory)
     }
     resetForm()
   } catch (error) {
@@ -131,7 +136,8 @@ function editCategory(category: Category) {
   editingId.value = category.id
   form.value = {
     name: category.name,
-    color: category.color
+    color: category.color,
+    userId: category.userId
   }
 }
 
