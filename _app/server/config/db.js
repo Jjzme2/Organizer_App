@@ -17,6 +17,7 @@ const sequelize = new Sequelize(process.env.DB_NAME, process.env.DB_USER, proces
     dialectOptions: {
         connectTimeout: 30000,
         ssl: process.env.NODE_ENV === 'production' ? {
+            require: true,
             rejectUnauthorized: false
         } : false,
         enableKeepAlive: true,
